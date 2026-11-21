@@ -1,0 +1,195 @@
+'use strict';
+/*
+  Mail check, 15.10.2026: Itzik asked for his mail every two hours until 16:00.
+  Runs at 08, 10, 12, 14 and 16 Israel time, numbered for the day. Read only:
+  tools/mail-search.py opens the mailbox with EXAMINE, so nothing is marked,
+  moved or sent. Each check writes one line to the chat and sends a push.
+
+  Usage: node mail-check.js        runs only at the check hours (Israel time)
+         node mail-check.js --now  runs now, for a test
+
+  The cron line runs every hour from 05 to 14 UTC, which covers 08 to 16 Israel
+  in both winter and summer time. The hour filter here picks the real checks.
+*/
+const fs = require('fs');
+const path = require('path');
+const { execFileSync, spawnSync } = require('child_process');
+
+const ROOT = __dirname;
+const CHAT = path.join(ROOT, 'data/chat/chat');
+const STATE = path.join(ROOT, 'data/status/mail-check.json');
+const HOURS = [8, 10, 12, 14, 16];
+// 20.11.2026, Itzik: "לבדוק 3 פעמים ביום חשבוניות וקבלות, להעביר אותם לדרייב ולעדכן אותי בוואטסאפ מה הגיע. בסוף החודש הדפיס".
+// The receipts pass runs at these three hours only, and whatever it finds goes to his WhatsApp too (the print stays on the 1st, manager.js).
+const BILL_HOURS = [8, 13, 18];
+const LINE = /^\[(\d+)\] (\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2}) \| (.*)$/;
+// What counts as an invoice or receipt by its subject, and what does not (card statements, ads).
+const RECEIPT = /(קבלה|חשבונית|receipt|invoice)/i;
+const NOT_RECEIPT = /(פירוט|פרסומת|newsletter)/i;
+
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+const hm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+// Wall clock in Israel, as a local Date, so getHours() is the Israel hour.
+function israelNow() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
+}
+
+function readState(day) {
+  let s = {};
+  try { s = JSON.parse(fs.readFileSync(STATE, 'utf8')); } catch {}
+  return s.day === day ? s : { day, n: 0, seen: [] };
+}
+
+// The search prints "[uid] DD.MM.YYYY HH:MM | from" and the subject on the next line.
+function parseMail(out) {
+  const rows = [];
+  const lines = out.split('\n');
+  lines.forEach((l, i) => {
+    const m = LINE.exec(l);
+    if (!m) return;
+    const [, uid, dd, mo, yy, hh, mi, from] = m;
+    rows.push({
+      uid,
+      at: new Date(+yy, +mo - 1, +dd, +hh, +mi),
+      from: from.replace(/<[^>]*>/g, '').trim(),
+      subject: (lines[i + 1] || '').trim(),
+    });
+  });
+  return rows;
+}
+
+function say(now, state, text, title, body) {
+  const stamp = `${ymd(now)}-${hm(now).replace(':', '')}`;
+  const chat = { at: now.toISOString(), from: 'claude', text };
+  fs.writeFileSync(path.join(CHAT, `${stamp}-claude-mailcheck.json`), JSON.stringify(chat, null, 1) + '\n');
+  spawnSync('/usr/bin/node', ['notify.js', title, body], { cwd: ROOT, stdio: 'inherit', timeout: 60000 });
+  spawnSync('/usr/bin/node', ['push.js', `mail check ${state.n}`], { cwd: ROOT, stdio: 'inherit', timeout: 300000 });
+}
+
+function main() {
+  const force = process.argv.includes('--now');
+  const now = israelNow();
+  const billTime = force || BILL_HOURS.includes(now.getHours());
+  if (!force && !HOURS.includes(now.getHours())) {
+    if (billTime) billsOnly(now);
+    return;
+  }
+
+  const state = readState(ymd(now));
+
+  // One quiet retry a minute later before any error reaches Itzik (iron rule 17.10: errors only after checking again).
+  const search = () => parseMail(execFileSync('/usr/bin/python3', ['-I', path.join(ROOT, 'tools/mail-search.py'), '--days', '1', '--limit', '80'],
+    { encoding: 'utf8', timeout: 180000 }));
+  let rows;
+  try {
+    try { rows = search(); } catch { spawnSync('sleep', ['60']); rows = search(); }
+  } catch (e) {
+    state.n += 1;
+    fs.writeFileSync(STATE, JSON.stringify(state, null, 1));
+    const text = `בדיקת מייל ${state.n} (${hm(now)}): לא הצלחתי לפתוח את המייל עכשיו. אנסה שוב בבדיקה הבאה.`;
+    say(now, state, text, 'בדיקת מייל', 'לא נפתח המייל');
+    console.error(String(e.message || e).slice(0, 500));
+    process.exitCode = 1;
+    return;
+  }
+
+  // The first check of the day covers since 08:00. After that, the last two hours.
+  const first = state.n === 0;
+  const start = first
+    ? new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0)
+    : new Date(now.getTime() - 2 * 3600 * 1000);
+  const fresh = rows
+    .filter(r => r.at >= start && r.at <= now && !state.seen.includes(r.uid))
+    .sort((a, b) => (/רועי/.test(a.from) ? 0 : 1) - (/רועי/.test(b.from) ? 0 : 1) || b.at - a.at);
+
+  state.n += 1;
+  state.seen = state.seen.concat(fresh.map(r => r.uid));
+  state.checkedAt = now.toISOString();
+  fs.mkdirSync(path.dirname(STATE), { recursive: true });
+  fs.writeFileSync(STATE, JSON.stringify(state, null, 1));
+
+  // No new mail: nothing is sent, no chat line, no push, no pop-up (Itzik, 16.10.2026).
+  // 3.11.2026: receipts are found by their own pass. The two-hour window missed every mail
+  // between 16:00 and 08:00 (Meta receipts of 1.11 and 2.11 were never printed). This pass
+  // looks back three days and remembers each receipt uid for good, so none is missed or doubled.
+  const billNote = billTime ? billsPass() : '';
+  // 4.11.2026: mail asking to leave Shachar's list is added to unsub in data/shachar/state.json (lib/shachar-unsub.js).
+  try { require('./lib/shachar-unsub.js').scan(ROOT); } catch (e) { console.error('shachar unsub failed:', String(e.message || e).slice(0, 300)); }
+  const k = fresh.length;
+  if (k === 0) {
+    if (billNote) say(now, state, `בדיקת מייל ${state.n} (${hm(now)}):${billNote}`, 'בדיקת מייל', 'חשבוניות');
+    return;
+  }
+  const text = `בדיקת מייל ${state.n} (${hm(now)}): ${k} מיילים חדשים.\n` +
+    fresh.slice(0, 8).map(r => `${r.from}: ${r.subject}`).join('\n') +
+    (k > 8 ? `\nועוד ${k - 8}.` : '');
+  say(now, state, text + billNote, 'בדיקת מייל', `${k} חדשים`);
+}
+
+/*
+  27.10.2026, Itzik: invoices and receipts are collected automatically after each mail check,
+  "אם זה לקוח אנחנו שואלים אותו במוניטור". In his own monitor a PC task saves each one as a PDF
+  in his Drive month folder and prints it (iron rule: every invoice is recorded, he is told, it
+  is printed). A customer is asked in the same chat line instead; nothing is collected unasked.
+  A card statement (פירוט) is not an invoice. Returns the note for the chat line.
+*/
+const BILLS = path.join(ROOT, 'data/status/bills-seen.json');
+function billsPass() {
+  let seen = [];
+  try { seen = JSON.parse(fs.readFileSync(BILLS, 'utf8')); } catch {}
+  let rows;
+  try {
+    rows = parseMail(execFileSync('/usr/bin/python3', ['-I', path.join(ROOT, 'tools/mail-search.py'), '--days', '3', '--limit', '150'],
+      { encoding: 'utf8', timeout: 300000 }));
+  } catch (e) { console.error('bills search failed:', String(e.message || e).slice(0, 300)); return ''; }
+  const fresh = rows.filter(r => !seen.includes(r.uid));
+  const note = bills(fresh);
+  const found = fresh.filter(r => RECEIPT.test(r.subject) && !NOT_RECEIPT.test(r.subject + ' ' + r.from));
+  if (found.length) fs.writeFileSync(BILLS, JSON.stringify(seen.concat(found.map(r => r.uid)).slice(-2000)));
+  return note;
+}
+
+// A receipts-only run (13:00 and 18:00): a chat line and WhatsApp only when something came.
+function billsOnly(now) {
+  const note = billsPass();
+  if (!note) return;
+  const stamp = `${ymd(now)}-${hm(now).replace(':', '')}`;
+  fs.writeFileSync(path.join(CHAT, `${stamp}-claude-bills.json`), JSON.stringify({ at: now.toISOString(), from: 'claude', text: `חשבוניות (${hm(now)}):${note}` }, null, 1) + '\n');
+  spawnSync('/usr/bin/node', ['push.js', 'bills ' + hm(now)], { cwd: ROOT, stdio: 'inherit', timeout: 300000 });
+}
+
+// What came, to his WhatsApp (never swallowed: the reason goes to the log).
+function billsToWhatsApp(found) {
+  const inst = require('./lib/instance.js');
+  if (inst.name !== 'abaitzik') return;
+  const lines = found.slice(0, 10).map(r => `• ${r.at.toLocaleDateString('he-IL')} ${r.from}: ${r.subject}`.slice(0, 160));
+  const text = `🧾 הגיעו ${found.length} חשבוניות או קבלות:\n${lines.join('\n')}${found.length > 10 ? `\nועוד ${found.length - 10}.` : ''}\nנשמרות בדרייב בתיקיית החודש, ואחרי השמירה עוברות מהתיבה הראשית לתווית "חשבוניות 2026" (לא נמחקות). ההדפסה בסוף החודש.`;
+  require('./lib/wa-out.js').sendOwner(inst.dataPath, text, { kind: 'bills' })
+    .then(r => console.log('bills wa ' + r.via))
+    .catch(e => console.error('bills wa failed: ' + String(e.message || e).slice(0, 300)));
+}
+
+function bills(fresh) {
+  const found = fresh.filter(r => RECEIPT.test(r.subject) && !NOT_RECEIPT.test(r.subject + ' ' + r.from));
+  if (!found.length) return '';
+  const list = found.map(r => `${r.at.toLocaleDateString('he-IL')} ${r.from}: ${r.subject}`).join('\n');
+  if (require('./lib/instance.js').name !== 'abaitzik') {
+    return `\n\n🧾 נמצאו ${found.length} חשבוניות או קבלות:\n${list}\nלשמור אותן אצלך ולהדפיס? כתוב "אסוף חשבוניות".`;
+  }
+  const job = 'חשבוניות וקבלות חדשות מבדיקת המייל (כלל ברזל 27.10: לרשום ולהודיע; מ 12.11 ההדפסה פעם בחודש). לכל אחת:\n' + list + '\n\n'
+    + '1) בג׳ימייל בכרום (itcohen2, וגם itcohen2p1, וגם ' + (require('./lib/private-ids.js').ids().lolos || 'חשבון הג׳ימייל של לולוס') + ' שאליו מגיעות הקבלות של מטא; את מספר u בודקים לפי הכתובת, היום החשבון של לולוס הוא mail/u/5) למצוא את המייל לפי השולח, הנושא והתאריך. '
+    + '2) אם יש PDF מצורף, להוריד אותו; אם אין, להפיק PDF מהמייל עצמו (העתק קבלה: ספק, תאריך, סכום, מספר עסקה). '
+    + 'אם החשבונית רק מאחורי כניסה לאתר הספק, לא להקליד סיסמה: לכתוב לאיציק שצריך להיכנס. '
+    + '3) לשמור ב G:/My Drive/חשבוניות והוצאות 2026/<חודש> (לדוגמה "10 אוקטובר 2026") בשם "YYYY-MM-DD ספק סכום.pdf", בלי כפילות של קובץ שכבר שם. '
+    + 'מכל חשבונית נשמר ומודפס רק העמוד שיש בו מספר החשבונית והסכום לתשלום, בדרך כלל העמוד הראשון. בלי עמודי פירוט שיחות וחיובים, תנאים או פרסומות. סלקום וכלמוביל: רק העמוד הראשון (איציק 3.10 ו 15.11.2026: "רק דף אחד של החשבונית עם הסכום בלי הפירוט"). ' + 'אחרי השמירה להריץ במחשב: python C:/Users/User/invoice-tools/invoice-one-page.py "<תיקיית החודש>" (מקצץ כל PDF של יותר מעמוד לעמוד הסכום, ושומר את המקור ב "מקור מלא"). ' + 'כל קבלה של Google Play ושל PayPal נדחסת לדף אחד בלבד (קנה מידה לגודל עמוד), גם בקובץ וגם בהדפסה (איציק, 27.10). '
+    + '4) לא להדפיס עכשיו (איציק 12.11.2026: "רואה החשבון רוצה את כל החשבוניות בהדפסה. אי אפשר להדפיס כל פעם אחד אחד, בסוף החודש נדפיס את הכל"). רק להוסיף שורה ל G:/My Drive/חשבוניות והוצאות 2026/<חודש>/00 רשימה לרואה החשבון.txt: תאריך החשבונית | ספק | סכום | מספר | מאיזה חשבון מייל. בלי שורה כפולה. '
+    + '5) בג׳ימייל לתייג את המייל בתווית "חשבוניות 2026" ובתווית הספק שתחתיה: גוגל, Anthropic, סלקום, דומיינים ואתרים, קניות (ספק חדש מקבל תווית חדשה תחת "חשבוניות 2026"). אחרי התיוג להוציא מהתיבה הראשית (ארכיון, איציק 20.11.2026; הוא כבר קיבל על זה הודעה בוואטסאפ ובמוניטור) רק את המיילים של המשימה הזאת. לא לתייג ולא להוציא מהתיבה מכתב רפואי, ביטוח, פירוט אשראי או דף פירוט שנתי. לא למחוק מיילים. '
+    + '6) לענות שורה אחת: מה נשמר והסכום, ושזה נאסף להדפסה של סוף החודש. לא דפי פירוט אשראי, לא לולוס, לא מסמכים רפואיים.';
+  spawnSync('/usr/bin/node', ['pc-task.js', 'add', '--quiet', '--re', 'mail-check-bills', job], { cwd: ROOT, stdio: 'ignore', timeout: 60000 });
+  billsToWhatsApp(found);
+  return `\n\n🧾 ${found.length} חשבוניות או קבלות: המחשב שומר אותן בתיקיית החודש בדרייב, ואחר כך הן עוברות מהתיבה הראשית לתווית "חשבוניות 2026". ההדפסה בסוף החודש.`;
+}
+
+main();

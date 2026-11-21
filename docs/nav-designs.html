@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>סדר בתוך האריחים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#0f1218;--panel:#161a22;--row:#1b2029;--row2:#202632;--line:#2a313e;
+ --ink:#eef1f7;--dim:#a3adbd;--faint:#7d8798;
+ --accent:#46d3a6;--accent-ink:#06261d;--orange:#f39a3d;--orange2:#e8710a;
+ --red:#ff6b5e;--blue:#6aa1ff;--gold:#f0b429;
+ --r:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Heebo,system-ui,sans-serif}
+::selection{background:#46d3a655;color:#fff}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.top{max-width:1180px;margin:0 auto;padding:22px 16px 8px}
+.home{display:inline-block;margin-bottom:12px;color:#9df5d6;background:#123d33;border-radius:999px;padding:8px 14px;font-weight:700;text-decoration:none;font-size:15px}
+.top h1{font-size:24px;font-weight:800;margin:0 0 6px;letter-spacing:-.01em}
+.top p{margin:0;color:var(--dim);font-size:15px;line-height:1.6;max-width:62ch}
+.pick{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 4px}
+.pick button{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:9px 16px;font-size:15px;font-weight:700;cursor:pointer}
+.pick button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.stage{max-width:1180px;margin:0 auto;padding:10px 16px 40px;display:flex;gap:28px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.why{flex:1 1 300px;max-width:400px;padding-top:6px}
+.why h2{font-size:22px;margin:0 0 10px;font-weight:800}
+.why p{color:var(--dim);font-size:15.5px;line-height:1.7;margin:0 0 12px}
+.why ul{margin:0;padding:0 18px 0 0;color:var(--dim);font-size:15px;line-height:1.8}
+.why b{color:var(--ink)}
+.choose{margin-top:16px;display:inline-block;background:var(--accent);color:var(--accent-ink);font-weight:800;border:0;border-radius:12px;padding:12px 18px;font-size:16px;cursor:pointer}
+.choose.done{background:#2a313e;color:var(--ink)}
+
+/* the phone */
+.phone{width:390px;max-width:100%;height:780px;border-radius:38px;border:1px solid #2b3240;background:var(--bg);position:relative;overflow:hidden;box-shadow:0 30px 80px -30px #000c, 0 2px 0 #ffffff08 inset;flex:0 0 auto}
+@media (max-width:520px){.phone{width:100%;height:calc(100svh - 150px);min-height:560px;border-radius:24px}.stage{padding:8px 10px 30px;gap:16px}.why{order:2}}
+.scr{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;scroll-behavior:smooth;padding-bottom:86px;scrollbar-width:thin;scrollbar-color:#2f3746 transparent}
+.hdr{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:14px 14px 10px;background:linear-gradient(var(--bg) 78%,#0f121800)}
+.back{background:#123d33;color:#7ff0cc;border:0;border-radius:999px;padding:7px 13px;font-weight:700;font-size:14px}
+.hdr h3{margin:0;font-size:18px;font-weight:800}
+.ref{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;font-size:15px}
+.tab{position:absolute;bottom:0;left:0;right:0;height:72px;background:#12161dee;backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;font-size:11.5px;color:var(--dim);z-index:8}
+.tab span{display:flex;flex-direction:column;align-items:center;gap:3px}
+.tab i{font-style:normal;font-size:19px}
+.tab .on{color:var(--red)}
+
+/* content blocks shared by all four */
+.sum{margin:4px 14px 10px;border-radius:18px;padding:16px 16px 14px;background:linear-gradient(160deg,#f6a54b,#e8710a);color:#2b1300}
+.sum .big{font-size:26px;font-weight:800;letter-spacing:-.01em}
+.sum .sub{font-weight:700;font-size:15px;margin-top:2px}
+.sum .chg{margin-top:10px;font-size:14px;line-height:1.55;color:#3a1a00}
+.sum .chg div{display:flex;gap:6px}
+.sec{padding:6px 14px 2px;scroll-margin-top:64px}
+.sec h4{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;margin:16px 2px 8px}
+.sec h4 .n{font-size:12.5px;font-weight:700;color:var(--dim);background:var(--row2);border-radius:999px;padding:1px 8px}
+.row{display:flex;align-items:center;gap:10px;background:var(--row);border-radius:12px;padding:11px 12px;margin-bottom:6px}
+.row .t{flex:1;min-width:0}
+.row .t b{display:block;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .t small{display:block;color:var(--dim);font-size:12.5px;margin-top:1px}
+.row .a{font-weight:800;font-size:15.5px;font-variant-numeric:tabular-nums}
+.row .a.in{color:var(--accent)}.row .a.out{color:var(--red)}
+.more{display:block;width:100%;background:none;border:1px dashed var(--line);border-radius:12px;color:var(--dim);padding:9px;font-size:14px;margin:2px 0 4px}
+.share{display:flex;gap:8px}
+.share button{flex:1;border:0;border-radius:12px;padding:12px;font-weight:700;background:var(--row2)}
+.share .p{background:var(--accent);color:var(--accent-ink)}
+
+/* ===== A: sticky chip strip with scroll spy ===== */
+.A .strip{position:sticky;top:58px;z-index:4;display:flex;gap:6px;overflow-x:auto;padding:6px 14px 10px;scrollbar-width:none;background:linear-gradient(var(--bg) 75%,#0f121800)}
+.A .strip::-webkit-scrollbar{display:none}
+.A .strip button{flex:0 0 auto;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 11px;font-size:13.5px;font-weight:700;color:var(--dim);transition:background .25s,color .25s,border-color .25s}
+.A .strip button.on{background:#123d33;border-color:#1f6b57;color:#9df5d6}
+.A .strip button .c{font-weight:500;opacity:.8;margin-right:3px}
+
+/* ===== B: thin index rail on the edge ===== */
+.B .rail{position:absolute;right:3px;top:50%;transform:translateY(-50%);z-index:6;display:flex;flex-direction:column;gap:2px;padding:6px 3px;border-radius:999px;background:#161a22cc;backdrop-filter:blur(6px);touch-action:none}
+.B .rail button{width:30px;height:30px;border:0;background:none;border-radius:50%;font-size:15px;display:grid;place-items:center;opacity:.55;transition:opacity .2s,transform .2s,background .2s}
+.B .rail button.on{opacity:1;background:#123d33;transform:scale(1.12)}
+.B .bubble{position:absolute;right:46px;z-index:7;background:var(--ink);color:#11151c;font-weight:800;font-size:15px;padding:7px 12px;border-radius:12px;pointer-events:none;opacity:0;transform:translateX(6px);transition:opacity .15s,transform .15s;white-space:nowrap}
+.B .bubble.show{opacity:1;transform:none}
+.B .scr .sec,.B .scr .sum{margin-right:38px}
+.B .scr .sum{margin-left:14px}
+.B .scr .sec{padding-right:0}
+
+/* ===== C: the title is the switcher, sections are pages ===== */
+.C .hdr{gap:8px}
+.back{white-space:nowrap;flex:0 0 auto}
+.C .hdr h3{flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px 6px 10px;font-size:16px;cursor:pointer}
+.C .hdr h3 small{display:none}
+.C .hdr h3 .cur{overflow:hidden;text-overflow:ellipsis}
+.C .hdr h3 .car{font-size:11px;color:var(--dim);transition:transform .25s}
+.C .hdr h3[aria-expanded="true"] .car{transform:rotate(180deg)}
+.C .dots{display:flex;justify-content:center;gap:5px;padding:0 0 6px;position:sticky;top:58px;z-index:4;background:var(--bg)}
+.C .dots i{width:6px;height:6px;border-radius:3px;background:#3a4252;transition:width .3s,background .3s}
+.C .dots i.on{width:18px;background:var(--accent)}
+.C .pages{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;direction:rtl}
+.C .pages::-webkit-scrollbar{display:none}
+.C .page{flex:0 0 100%;scroll-snap-align:start;min-height:560px}
+.C .menu{position:absolute;top:56px;left:14px;right:14px;z-index:9;background:#1c2230;border:1px solid #333c4c;border-radius:16px;padding:6px;box-shadow:0 18px 40px -12px #000d;transform-origin:top center;transform:scale(.96) translateY(-6px);opacity:0;pointer-events:none;transition:opacity .18s,transform .22s cubic-bezier(.2,.9,.3,1)}
+.C .menu.open{opacity:1;transform:none;pointer-events:auto}
+.C .menu button{display:flex;width:100%;align-items:center;gap:10px;background:none;border:0;padding:11px 10px;border-radius:10px;font-size:15.5px;font-weight:700;text-align:right}
+.C .menu button.on{background:#123d33;color:#9df5d6}
+.C .menu button .n{margin-right:auto;color:var(--dim);font-weight:500;font-size:13px}
+.C .swipe{color:var(--faint);font-size:12.5px;text-align:center;margin:10px 0 0}
+
+/* ===== D: summary keys over drawers ===== */
+.D .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 14px 6px}
+.D .keys button{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:8px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;transition:background .2s,border-color .2s}
+.D .keys button i{font-style:normal;font-size:17px}
+.D .keys button b{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
+.D .keys button small{font-size:11px;color:var(--dim)}
+.D .keys button.on{background:#123d33;border-color:#1f6b57}
+.D details{margin:0 14px 8px;background:var(--panel);border-radius:var(--r);overflow:hidden}
+.D summary{list-style:none;display:flex;align-items:center;gap:8px;padding:13px 14px;font-weight:800;font-size:16px;cursor:pointer}
+.D summary::-webkit-details-marker{display:none}
+.D summary .n{font-size:12.5px;font-weight:700;color:var(--dim);background:var(--row2);border-radius:999px;padding:1px 8px}
+.D summary .hint{margin-right:auto;color:var(--dim);font-weight:500;font-size:13px}
+.D summary .car{font-size:11px;color:var(--dim);transition:transform .25s}
+.D details[open] summary .car{transform:rotate(180deg)}
+.D details .in{padding:0 10px 8px}
+.D details .row{background:var(--row)}
+</style>
+</head>
+<body>
+<header class="top">
+ <a class="home" href="./">→ חזרה למוניטור</a>
+ <h1>סדר בתוך האריחים</h1>
+ <p>אותו מוניטור ואותו מראה: המיקרופון, האייקונים והקיצורים למטה לא זזים. משתנה רק הדרך לעבור בין הנושאים בתוך מסך. כל הארבעה מוצגים על מסך הנהלת החשבונות, עם שמות ומספרים מומצאים. אפשר ללחוץ ולגלול בכל אחד. אחרי שבחרת, תכתוב לי את האות.</p>
+ <div class="pick" role="group" aria-label="בחירת כיוון">
+  <button data-k="A" aria-pressed="true">א. פס נושאים</button>
+  <button data-k="B" aria-pressed="false">ב. מפתח בצד</button>
+  <button data-k="C" aria-pressed="false">ג. הכותרת מחליפה</button>
+  <button data-k="D" aria-pressed="false">ד. מספרים ומגירות</button>
+ </div>
+</header>
+<main class="stage">
+ <div class="phone" id="phone"></div>
+ <section class="why" id="why"></section>
+</main>
+
+<script>
+var DATA={
+ changed:['נכנס צ׳ק של 4,200 מקפה הגליל','סלון שקד שילם 1,850 בהעברה','חשבונית חדשה ללחם הבית: 3,120'],
+ secs:[
+  {k:'debt',i:'💸',t:'מי חייב כסף',n:12,rows:[['מאפיית השדה בע״מ','3 חשבוניות, הישנה מ 12.8',18420],['קפה הגליל','2 חשבוניות, מ 3.9',9310],['לחם הבית','חשבונית אחת, מ 1.11',3120],['סלון שקד','חשבונית אחת, מ 20.10',2240],['פיצה בכיכר','2 חשבוניות, מ 15.9',1980],['מעדניית רון','חשבונית אחת, מ 28.10',860]],more:6},
+  {k:'chq',i:'🧾',t:'צ׳קים עתידיים',n:5,rows:[['קפה הגליל','להפקיד ב 12.11',4200],['מאפיית השדה','להפקיד ב 20.11',6000],['לחם הבית','להפקיד ב 1.12',3120]],more:2},
+  {k:'bank',i:'🏦',t:'עדכונים מהבנק',n:4,rows:[['העברה מסלון שקד','היום, 09:12',1850,'in'],['הפקדת צ׳ק, קפה הגליל','אתמול',4200,'in'],['הוראת קבע, ארנונה','2.11',-640,'out'],['עמלות','1.11',-38,'out']]},
+  {k:'side',i:'📒',t:'נרשם בנפרד',n:3,rows:[['הלוואה לספק קמח','מחזיר 500 בחודש',4500],['פיקדון על מקרר','חוזר בסוף החוזה',1200],['קופה קטנה','נספר ב 3.11',740]]},
+  {k:'share',i:'🔗',t:'הדף המשותף עם יואל',n:0,share:true}
+ ]
+};
+var WHY={
+ A:{h:'א. פס נושאים',p:'שורה דקה אחת מתחת לכותרת, עם כל הנושאים של המסך ומספר ליד כל אחד. הפס נשאר למעלה בזמן הגלילה, והנושא שאתה נמצא בו נדלק לבד.',l:['תופס שורה אחת, בערך 40 פיקסלים','לחיצה קופצת לנושא, וגלילה רגילה עדיין עובדת','מתאים לכל אריח, גם עם הרבה נושאים, כי הפס נגלל הצידה']},
+ B:{h:'ב. מפתח בצד',p:'כמו באנשי הקשר בטלפון: עמודה צרה של אייקונים בקצה המסך. נוגעים ומחליקים עליה, והשם של הנושא קופץ ליד האצבע.',l:['הכי מעט מקום: בערך 36 פיקסלים בצד, בלי שורה למעלה','רואים כל הזמן את כל הנושאים ואיפה אתה נמצא','מתאים במיוחד למסכים ארוכים כמו החייבים']},
+ C:{h:'ג. הכותרת מחליפה',p:'אין שום פס. שם המסך בראש הוא גם הבורר: לוחצים עליו ובוחרים נושא, או מחליקים ימינה ושמאלה בין הנושאים כמו בין דפים. כל נושא הוא דף נקי.',l:['אפס מקום נוסף על המסך','כל נושא נפתח לבד, בלי רשימה אחת ארוכה','הנקודות למעלה מראות כמה דפים יש ואיפה אתה']},
+ D:{h:'ד. מספרים ומגירות',p:'למעלה ארבעה מספרים קטנים שהם גם כפתורים. מתחת כל נושא הוא מגירה סגורה, ונפתחת רק אחת בכל פעם. רואים הכל במבט אחד, ופותחים רק מה שצריך.',l:['המסך נפתח קצר ונקי, בלי גלילה ארוכה','המספרים אומרים מה חשוב עוד לפני שפותחים','הכי קרוב לבקשה מספטמבר: סדר במקום ערימה']}
+};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function money(v){var a=Math.abs(v).toLocaleString('he-IL');return v<0?'−'+a:a;}
+function rows(s){
+ if(s.share)return '<p style="color:var(--dim);font-size:14px;margin:0 2px 8px;line-height:1.6">מה שיואל רואה: החייבים והצ׳קים, בלי הבנק.</p><div class="share"><button class="p">פתיחת הדף</button><button>העתקת קישור</button></div>';
+ return s.rows.map(function(r){return '<div class="row"><div class="t"><b>'+esc(r[0])+'</b><small>'+esc(r[1])+'</small></div><div class="a '+(r[3]||'')+'">'+money(r[2])+'</div></div>';}).join('')+(s.more?'<button class="more">ועוד '+s.more+'</button>':'');
+}
+function sum(){return '<div class="sum"><div class="big">סה״כ בחוץ 36,950</div><div class="sub">12 לקוחות עם חשבוניות פתוחות</div><div class="chg">'+DATA.changed.map(function(c){return '<div><span>•</span><span>'+esc(c)+'</span></div>';}).join('')+'</div></div>';}
+function sec(s,id){return '<section class="sec" id="'+id+'"><h4>'+s.i+' '+esc(s.t)+(s.n?' <span class="n">'+s.n+'</span>':'')+'</h4>'+rows(s)+'</section>';}
+var HDR='<div class="hdr"><button class="back">‹ חזרה</button><h3>הנהלת חשבונות</h3><span class="ref">↻</span></div>';
+var TAB='<nav class="tab"><span class="on"><i>💬</i>תשובות</span><span><i>📊</i>רשתות</span><span><i>🎯</i>לידים</span><span><i>📄</i>דוחות</span><span><i>🏠</i>בית</span></nav>';
+
+function buildA(ph){
+ ph.className='phone A';
+ ph.innerHTML='<div class="scr">'+HDR+'<div class="strip">'+DATA.secs.map(function(s,i){return '<button data-i="'+i+'">'+s.i+' '+esc(s.t)+(s.n?'<span class="c">'+s.n+'</span>':'')+'</button>';}).join('')+'</div>'+sum()+DATA.secs.map(function(s,i){return sec(s,'a'+i);}).join('')+'<div style="height:260px"></div></div>'+TAB;
+ var scr=ph.querySelector('.scr'),bs=ph.querySelectorAll('.strip button'),strip=ph.querySelector('.strip');
+ bs.forEach(function(b){b.onclick=function(){var t=ph.querySelector('#a'+b.dataset.i);scr.scrollTo({top:t.offsetTop-100,behavior:'smooth'});};});
+ function spy(){var cur=0;DATA.secs.forEach(function(s,i){var t=ph.querySelector('#a'+i);if(t.offsetTop-120<=scr.scrollTop)cur=i;});bs.forEach(function(b,i){var on=i===cur;if(on&&!b.classList.contains('on')){var l=b.offsetLeft-strip.clientWidth/2+b.offsetWidth/2;strip.scrollTo({left:l,behavior:'smooth'});}b.classList.toggle('on',on);});}
+ scr.addEventListener('scroll',spy,{passive:true});spy();
+}
+function buildB(ph){
+ ph.className='phone B';
+ ph.innerHTML='<div class="scr">'+HDR+sum()+DATA.secs.map(function(s,i){return sec(s,'b'+i);}).join('')+'<div style="height:260px"></div></div><div class="rail">'+DATA.secs.map(function(s,i){return '<button data-i="'+i+'" aria-label="'+esc(s.t)+'">'+s.i+'</button>';}).join('')+'</div><div class="bubble"></div>'+TAB;
+ var scr=ph.querySelector('.scr'),rail=ph.querySelector('.rail'),bs=rail.querySelectorAll('button'),bub=ph.querySelector('.bubble');
+ function go(i,show){var t=ph.querySelector('#b'+i);scr.scrollTo({top:t.offsetTop-70,behavior:show?'auto':'smooth'});var b=bs[i];bub.textContent=DATA.secs[i].i+' '+DATA.secs[i].t;bub.style.top=(rail.offsetTop-rail.offsetHeight/2+b.offsetTop+b.offsetHeight/2-18)+'px';bub.classList.add('show');clearTimeout(go.t);go.t=setTimeout(function(){bub.classList.remove('show');},show?900:700);}
+ function at(y){var r=rail.getBoundingClientRect();var i=Math.floor((y-r.top-6)/32);return Math.max(0,Math.min(bs.length-1,i));}
+ var drag=false;
+ rail.addEventListener('pointerdown',function(e){drag=true;rail.setPointerCapture(e.pointerId);go(at(e.clientY),true);});
+ rail.addEventListener('pointermove',function(e){if(drag)go(at(e.clientY),true);});
+ rail.addEventListener('pointerup',function(){drag=false;});
+ function spy(){var cur=0;DATA.secs.forEach(function(s,i){var t=ph.querySelector('#b'+i);if(t.offsetTop-120<=scr.scrollTop)cur=i;});bs.forEach(function(b,i){b.classList.toggle('on',i===cur);});}
+ scr.addEventListener('scroll',spy,{passive:true});spy();
+}
+function buildC(ph){
+ ph.className='phone C';
+ var S=DATA.secs;
+ ph.innerHTML='<div class="scr"><div class="hdr"><button class="back">‹ חזרה</button><h3 role="button" aria-expanded="false" tabindex="0"><span class="cur"></span><small>הנהלת חשבונות</small><span class="car">▼</span></h3><span class="ref">↻</span></div><div class="dots">'+S.map(function(){return '<i></i>';}).join('')+'</div><div class="pages">'+S.map(function(s,i){return '<div class="page">'+(i===0?sum():'')+sec(s,'c'+i)+(i===0?'<p class="swipe">מחליקים הצידה לנושא הבא</p>':'')+'</div>';}).join('')+'</div></div><div class="menu">'+S.map(function(s,i){return '<button data-i="'+i+'">'+s.i+' '+esc(s.t)+(s.n?'<span class="n">'+s.n+'</span>':'')+'</button>';}).join('')+'</div>'+TAB;
+ var pages=ph.querySelector('.pages'),h=ph.querySelector('.hdr h3'),menu=ph.querySelector('.menu'),dots=ph.querySelectorAll('.dots i'),mb=menu.querySelectorAll('button'),cur=ph.querySelector('.cur');
+ function idx(){return Math.round(Math.abs(pages.scrollLeft)/pages.clientWidth);}
+ function paint(){var i=idx();cur.textContent=S[i].i+' '+S[i].t;dots.forEach(function(d,j){d.classList.toggle('on',j===i);});mb.forEach(function(b,j){b.classList.toggle('on',j===i);});}
+ function toggle(o){menu.classList.toggle('open',o);h.setAttribute('aria-expanded',o?'true':'false');}
+ h.onclick=function(){toggle(!menu.classList.contains('open'));};
+ h.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();h.onclick();}};
+ mb.forEach(function(b){b.onclick=function(){var i=+b.dataset.i;pages.scrollTo({left:-i*pages.clientWidth,behavior:'smooth'});ph.querySelector('.scr').scrollTo({top:0});toggle(false);};});
+ pages.addEventListener('scroll',function(){clearTimeout(paint.t);paint.t=setTimeout(paint,60);},{passive:true});
+ paint();
+}
+function buildD(ph){
+ ph.className='phone D';
+ var S=DATA.secs;
+ var keys=S.filter(function(s){return !s.share;});
+ ph.innerHTML='<div class="scr">'+HDR+'<div class="keys">'+keys.map(function(s){var i=S.indexOf(s);var v=s.k==='debt'?'36.9K':s.n;return '<button data-i="'+i+'"><i>'+s.i+'</i><b>'+v+'</b><small>'+esc(s.t.split(' ').slice(0,2).join(' '))+'</small></button>';}).join('')+'</div>'+sum().replace('class="sum"','class="sum" style="margin-top:6px"')+S.map(function(s,i){var hint=s.k==='debt'?'הכי ישן: 12.8':s.k==='bank'?'נכנס היום':s.k==='chq'?'הבא ב 12.11':'';return '<details id="d'+i+'"'+(i===0?' open':'')+'><summary>'+s.i+' '+esc(s.t)+(s.n?' <span class="n">'+s.n+'</span>':'')+'<span class="hint">'+hint+'</span><span class="car">▼</span></summary><div class="in">'+rows(s)+'</div></details>';}).join('')+'<div style="height:40px"></div></div>'+TAB;
+ var ds=ph.querySelectorAll('details'),ks=ph.querySelectorAll('.keys button'),scr=ph.querySelector('.scr');
+ function mark(){ks.forEach(function(k){k.classList.toggle('on',ph.querySelector('#d'+k.dataset.i).open);});}
+ ds.forEach(function(d){d.addEventListener('toggle',function(){if(d.open)ds.forEach(function(o){if(o!==d)o.open=false;});mark();});});
+ ks.forEach(function(k){k.onclick=function(){var d=ph.querySelector('#d'+k.dataset.i);d.open=true;setTimeout(function(){scr.scrollTo({top:d.offsetTop-64,behavior:'smooth'});},30);};});
+ mark();
+}
+var B={A:buildA,B:buildB,C:buildC,D:buildD};
+function show(k){
+ document.querySelectorAll('.pick button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.k===k?'true':'false');});
+ B[k](document.getElementById('phone'));
+ var w=WHY[k];
+ document.getElementById('why').innerHTML='<h2>'+w.h+'</h2><p>'+w.p+'</p><ul>'+w.l.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>';
+}
+document.querySelectorAll('.pick button').forEach(function(b){b.onclick=function(){show(b.dataset.k);};});
+show('A');
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+[Unit]
+Description=weekly logs: repeats to automate, failures to guard, decisions (worklog.js, weekly-logs.js)
+After=network-online.target
+[Service]
+Type=oneshot
+User=monitor
+Group=monitor
+UMask=0027
+Environment=HOME=/home/monitor
+EnvironmentFile=/etc/monitor.env
+WorkingDirectory=/home/monitor/abaitzik-monitor
+ExecStart=/usr/bin/node weekly-logs.js
+TimeoutStartSec=45min
+StandardOutput=append:/var/log/monitor-weekly-logs.log
+StandardError=append:/var/log/monitor-weekly-logs.log

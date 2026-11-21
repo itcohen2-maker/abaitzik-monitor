@@ -1,0 +1,39 @@
+# 10.11.2026, Itzik approved: the site is deployed by this workflow, in a queue.
+# Before, "deploy from branch" cancelled the running deploy on every push, and the automatic pushes
+# (live, listener, tenants) come about once a minute, so for half an hour no deploy finished.
+# Here a running deploy is never cancelled; a newer push waits, and only the newest waiting one runs.
+name: pages
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url || steps.deploy2.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+          retention-days: 1
+      # 13.11.2026: GitHub sometimes answers "No artifacts named github-pages" for a moment and the run mails a failure. One retry after 30s.
+      - id: deploy
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+      - if: steps.deploy.outcome == 'failure'
+        run: sleep 30
+      - id: deploy2
+        if: steps.deploy.outcome == 'failure'
+        uses: actions/deploy-pages@v4

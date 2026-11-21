@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>שחר · סבב שני</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@100..900&family=Frank+Ruhl+Libre:wght@300..900&family=Suez+One&family=Karantina:wght@300;400;700&display=block" rel="stylesheet">
+<style>
+:root{--paper:#F3F1EC;--ink:#17171A;--mute:#77746D;--line:#DEDAD2}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'Heebo',sans-serif;-webkit-font-smoothing:antialiased}
+.intro{max-width:1400px;margin:0 auto;padding:72px 48px 40px}
+.intro h1{font-weight:800;font-size:64px;letter-spacing:-.01em;line-height:1}
+.intro p{font-weight:300;font-size:20px;color:var(--mute);margin-top:14px;max-width:760px;line-height:1.5}
+.boards{max-width:1400px;margin:0 auto;padding:0 48px 80px;display:flex;flex-direction:column;gap:48px}
+.board{background:#fff;border:1px solid var(--line);padding:40px;display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+.head{grid-column:1/-1;display:flex;align-items:baseline;gap:22px;padding-bottom:22px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.num{white-space:nowrap;font-weight:200;font-size:56px;line-height:.8;color:var(--mute);font-variant-numeric:tabular-nums;min-width:64px}
+.head h2{font-weight:700;font-size:30px;line-height:1.1}
+.head p{font-weight:300;font-size:18px;color:var(--mute);margin-top:6px}
+.pal{margin-inline-start:auto;display:flex;gap:6px;align-self:center}
+.pal i{width:22px;height:22px;border-radius:50%;border:1px solid rgba(0,0,0,.08);display:block}
+.tile{position:relative;display:flex;align-items:center;justify-content:center;aspect-ratio:1}
+.tile.m{grid-column:span 2}
+.tile.w{grid-column:span 3;aspect-ratio:auto;height:250px}
+.tile svg{display:block}
+.tile.m svg{width:58%;height:58%}
+.tile.w svg{width:78%;height:78%}
+.cap{position:absolute;bottom:10px;inset-inline-start:14px;font-size:12px;font-weight:400;letter-spacing:.02em;opacity:.5}
+.icons{grid-column:span 2;background:#F7F6F3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;aspect-ratio:1;position:relative}
+.icons .app{width:180px;height:180px;border-radius:40px;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.06),0 10px 30px rgba(0,0,0,.08)}
+.icons .app svg{width:180px;height:180px}
+.fav{display:flex;gap:18px;align-items:center}
+.fav span{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:8px}
+.fav svg{display:block}
+.tabbar{display:flex;align-items:center;gap:8px;background:#E3E1DC;border-radius:8px 8px 0 0;padding:7px 12px;font-size:12px;width:200px}
+.tabbar b{font-weight:500}
+.ov{max-width:1400px;margin:0 auto 48px;padding:40px 48px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;background:var(--paper)}
+.ov .cell{background:#fff;border:1px solid var(--line);padding:22px 20px 18px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.ov .cell .app{width:96px;height:96px;border-radius:22px;overflow:hidden}
+.ov .cell .wm{width:100%;height:84px;display:flex;align-items:center;justify-content:center}
+.ov .cell .wm svg{width:100%;height:100%}
+.ov .cell .lbl{align-self:stretch;display:flex;gap:10px;align-items:baseline;font-size:15px;font-weight:600}
+.ov .cell .lbl span{font-weight:200;color:var(--mute);font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<header class="intro">
+  <h1>שחר</h1>
+  <p>סבב שני. בעדיפות: שלוש גרסאות מלוטשות של צעד. אחריהן: הרגע שלפני עם שמש צהובה וקרניים, ושילוב אחד של שני הרעיונות.</p>
+</header>
+<section class="ov" id="overview"></section>
+<main class="boards" id="boards"></main>
+
+<script>
+let UID=0; const uid=p=>p+(++UID);
+const cv=document.createElement('canvas').getContext('2d');
+cv.direction='ltr'; cv.textAlign='left'; cv.textBaseline='alphabetic';
+/* ink metrics of a string: box relative to a left origin on the baseline */
+function gm(t,f,w,s){cv.font=`${w} ${s}px "${f}"`;const m=cv.measureText(t);
+  return {L:m.actualBoundingBoxLeft,R:m.actualBoundingBoxRight,A:m.actualBoundingBoxAscent,D:m.actualBoundingBoxDescent,w:m.actualBoundingBoxLeft+m.actualBoundingBoxRight}}
+const T=(t,x,y,f,w,s,fill,extra='')=>`<text x="${x.toFixed(2)}" y="${y.toFixed(2)}" direction="ltr" font-family="${f}" font-weight="${w}" font-size="${s}" fill="${fill}" ${extra}>${t}</text>`;
+/* glyph with its ink box centred on cx, sitting with ink bottom at by */
+function G(t,f,w,s,cx,by,fill,extra=''){const m=gm(t,f,w,s);const x=cx-m.w/2+m.L;const y=by-m.D;
+  return {s:T(t,x,y,f,w,s,fill,extra),box:{l:cx-m.w/2,r:cx+m.w/2,t:y-m.A,b:by},m}}
+/* lay items right to left. item: {t,f,w,s,fill,dy,extra} or {draw:(l,base)=>svg,w,top}; returns svg + boxes */
+function lay(items,gap,cx,base){
+  const ms=items.map(it=>it.draw?it:{...it,m:gm(it.t,it.f,it.w,it.s)});
+  const W=ms.reduce((a,it,i)=>a+(it.draw?it.w:it.m.w)+(i?(ms[i-1].gap??gap):0),0);
+  let r=cx+W/2,out='',boxes=[];
+  ms.forEach(it=>{const w=it.draw?it.w:it.m.w,l=r-w,dy=it.dy||0;
+    if(it.draw){out+=it.draw(l,base+dy);boxes.push({l,r,t:base+dy-it.top,b:base+dy});}
+    else{out+=T(it.t,l+it.m.L,base+dy,it.f,it.w,it.s,it.fill,it.extra||'');boxes.push({l,r,t:base+dy-it.m.A,b:base+dy+it.m.D});}
+    r=l-(it.gap??gap);});
+  return {s:out,boxes,W}}
+const clip=(id,y,w=600)=>`<clipPath id="${id}"><rect x="-50" y="-50" width="${w+100}" height="${y+50}"/></clipPath>`;
+
+const C=[];
+const RED='#D9472B', YL='#EFA514', YD='#FFC233';
+/* sun sliver above a line at lineY, with optional rays. mark units scaled by k */
+function sunR(cx,lineY,k,kind,ac){const id=uid('c'),r=30*k,h=13*k,g=2.5*k,cy=lineY-g-h+r;let s=`<defs>${clip(id,lineY-g,2000)}</defs><circle cx="${cx}" cy="${cy}" r="${r}" fill="${ac}" clip-path="url(#${id})"/>`;
+  const R=(a,r0,len,w0,w1)=>{const t=a*Math.PI/180,sx=Math.sin(t),cy_=-Math.cos(t),px=Math.cos(t),py=Math.sin(t);
+    const p=(rr,ww)=>[[cx+sx*rr+px*ww,cy+cy_*rr+py*ww],[cx+sx*rr-px*ww,cy+cy_*rr-py*ww]];const [a1,a2]=p(r0,w0),[b1,b2]=p(r0+len,w1);
+    return `<polygon points="${[a1,b1,b2,a2].map(q=>q.map(v=>v.toFixed(2)).join(',')).join(' ')}" fill="${ac}"/>`};
+  if(kind==='ticks')[-50,-25,0,25,50].forEach(a=>s+=R(a,r+6.5*k,10*k,2.3*k,2.3*k));
+  if(kind==='wedge')[-42,0,42].forEach(a=>s+=R(a,r+6*k,20*k,.5*k,4.6*k));
+  const ext=kind==='ticks'?16.5:kind==='wedge'?26:0;return {s,top:cy-r-ext*k,half:Math.max(24.7,(r+ext)*Math.sin(50*Math.PI/180))*k}}
+/* climbing word */
+function climb(fg,ac,s,st,gap,cx,base,opt={}){const o={f:'Heebo',w:800,s};
+  return lay([{t:'ש',...o,fill:fg},{t:'ח',...o,fill:fg,dy:-st},{t:'ר',...o,fill:opt.rFill||ac,dy:-2*st}],gap,cx,base)}
+function climbDawn(fg,ac,s,st,gap,cx,base){const L=climb(fg,ac,s,st,gap,cx,base,{rFill:fg});const b=L.boxes[2],id=uid('c'),w=b.r-b.l,H=b.b-b.t,g=H*.07,h=H*.17,half=w*.36,r=(half*half+h*h)/(2*h),sx=b.l+w*.42,sy=b.t-g-h+r;
+  return {s:`<defs>${clip(id,b.t-g,2000)}</defs><circle cx="${sx}" cy="${sy}" r="${r}" fill="${ac}" clip-path="url(#${id})"/>`+L.s,boxes:L.boxes}}
+const P4=(ac,acD)=>({fg:'#1E1E1E',bg:'#F1ECE2',ac,acD,dark:'#1E1E1E',darkFg:'#F1ECE2'});
+
+C.push({num:'04 א',name:'צעד, מלוטש באדום',why:'אותו רעיון, מהודק: מדרגה אחידה, מרווחים אופטיים, ה ר האדומה היא הפסגה.',pal:P4(RED),
+  mark(fg,ac){return climb(fg,ac,46,12,3,50,74).s},
+  word(fg,ac){return {vb:'0 0 600 200',s:climb(fg,ac,136,22,11,300,162).s}}});
+C.push({num:'04 ב',name:'צעד, בצהוב זריחה',why:'ה ר בצבע אור הבוקר. חם יותר, אופטימי יותר, ועדיין חד.',pal:P4(YL,YD),
+  mark(fg,ac){return climb(fg,ac,46,12,3,50,74).s},
+  word(fg,ac){return {vb:'0 0 600 200',s:climb(fg,ac,136,22,11,300,162).s}}});
+C.push({num:'04 ג',name:'צעד, שמש מעל הפסגה',why:'פס שמש דק עולה מעל הגג של ה ר, כמו זריחה מעל רכס. הזריחה היא הפרס על הטיפוס.',pal:P4(YL,YD),
+  mark(fg,ac){return climbDawn(fg,ac,46,12,3,50,76).s},
+  word(fg,ac){return {vb:'0 0 600 200',s:climbDawn(fg,ac,136,22,11,300,166).s}}});
+
+/* 03 yellow with rays */
+function m3(kind){return {
+  mark(fg,ac){const S=sunR(50,0,1,kind,ac);const off=50-(S.top+3.5)/2+4;const T=sunR(50,off,1,kind,ac);return T.s+`<rect x="8" y="${off}" width="84" height="3.5" fill="${fg}"/>`},
+  word(fg,ac){const k=1.25,ly=150;const L=lay([{draw:(l,b)=>'',w:sunR(0,0,k,kind,ac).half*2,top:0,gap:34},{t:'שחר',f:'Frank Ruhl Libre',w:500,s:118,fill:fg}],0,300,ly-14);
+    const sb=L.boxes[0],tb=L.boxes[1];const S=sunR((sb.l+sb.r)/2,ly,k,kind,ac);
+    return {vb:'0 0 600 200',s:L.s+S.s+`<rect x="${tb.l-18}" y="${ly}" width="${sb.r+18-(tb.l-18)}" height="3" fill="${fg}"/>`}},
+  icon(p){const S=sunR(50,0,.95,kind,p.acD);const ly=50-(S.top)/2+8;return `<rect width="100" height="100" fill="${p.fg}"/>`+sunR(50,ly,.95,kind,p.acD).s+`<rect x="0" y="${ly}" width="100" height="3.2" fill="${p.darkFg}"/>`}}}
+const P3={fg:'#0F1B2D',bg:'#ECEDE8',ac:YL,acD:YD,dark:'#0F1B2D',darkFg:'#ECEDE8'};
+C.push({num:'03 א',name:'הרגע שלפני, קרניים קצרות',why:'חמש קרניים קצרות וישרות סביב פס השמש הצהוב. מדויק כמו סרגל, לא ציור של שמש.',pal:P3,...m3('ticks')});
+C.push({num:'03 ב',name:'הרגע שלפני, אלומות',why:'שלוש אלומות שמתרחבות כלפי חוץ, כמו אור שנשפך מעל האופק.',pal:P3,...m3('wedge')});
+
+/* hybrid */
+function hyb(fg,ac,s,st,gap,cx,base,k,tw){const o={f:'Heebo',w:800,s};const sw=sunR(0,0,k,'ticks',ac).half*2;
+  const L=lay([{t:'ש',...o,fill:fg},{t:'ח',...o,fill:fg,dy:-st},{t:'ר',...o,fill:fg,dy:-2*st},{draw:()=>'',w:sw,top:0,dy:-3*st}],gap,cx,base);
+  let out=L.s;[0,3].forEach(i=>{const b=L.boxes[i],y=base-i*st;out+=`<rect x="${b.l-gap*.5}" y="${y+tw*.6}" width="${b.r-b.l+gap}" height="${tw}" fill="${fg}"/>`});
+  const sb=L.boxes[3];out+=sunR((sb.l+sb.r)/2,base-3*st+tw*.6,k,'ticks',ac).s;return out}
+C.push({num:'ה',name:'מדרגות אל השמש',why:'יוצאים מהקרקע, עולים אות אחרי אות, והמדרגה הבאה היא הזריחה. צעד אחד ביום, עד שהאור מגיע.',pal:P4(YL,YD),
+  mark(fg,ac){return hyb(fg,ac,32,11,5,50,80,.42,2.6)},
+  word(fg,ac){return {vb:'0 0 600 200',s:hyb(fg,ac,100,24,16,300,172,1.15,5)}}});
+
+/* ===== render ===== */
+const svg=(vb,inner,w,h)=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}"${w?` width="${w}" height="${h}"`:''}>${inner}</svg>`;
+function defaultIcon(c){const p=c.pal;return `<rect width="100" height="100" fill="${p.dark}"/><g transform="translate(19 19) scale(.62)">${c.mark(p.darkFg,p.acD||p.ac)}</g>`}
+function render(){
+ const root=document.getElementById('boards');
+ C.forEach((c,i)=>{
+  const p=c.pal, ic=()=>c.icon?c.icon(p):defaultIcon(c);
+  const wL=c.word(p.fg,p.ac), wD=c.word(p.darkFg,p.acD||p.ac);
+  const b=document.createElement('section');b.className='board';b.id='b'+(i+1);
+  b.innerHTML=`
+   <div class="head"><div class="num">${(c.num||String(i+1).padStart(2,'0'))}</div>
+     <div><h2>${c.name}</h2><p>${c.why}</p></div>
+     <div class="pal">${[...new Set([p.fg,p.bg,p.ac,p.dark])].map(x=>`<i style="background:${x}"></i>`).join('')}</div></div>
+   <div class="tile m" style="background:${p.bg}">${svg('0 0 100 100',c.mark(p.fg,p.ac))}<span class="cap" style="color:${p.fg}">סימן, רקע בהיר</span></div>
+   <div class="tile m" style="background:${p.dark}">${svg('0 0 100 100',c.mark(p.darkFg,p.acD||p.ac))}<span class="cap" style="color:${p.darkFg}">סימן, רקע כהה</span></div>
+   <div class="icons">
+     <div class="app">${svg('0 0 100 100',ic())}</div>
+     <div class="fav">
+       <span style="background:#fff;border:1px solid #e6e3dd">${svg('0 0 100 100',ic(),32,32)}</span>
+       <span style="background:${p.bg}">${svg('0 0 100 100',c.mark(p.fg,p.ac),32,32)}</span>
+       <span style="background:${p.dark}">${svg('0 0 100 100',c.mark(p.darkFg,p.acD||p.ac),32,32)}</span>
+       <span style="background:#fff;border:1px solid #e6e3dd">${svg('0 0 100 100',ic(),16,16)}</span>
+     </div>
+     <div class="tabbar">${svg('0 0 100 100',ic(),16,16)}<b>שחר</b><span style="opacity:.5">בוקר טוב</span></div>
+     <span class="cap">אייקון 180 · פאביקון 32 ו 16</span>
+   </div>
+   <div class="tile w" style="background:${p.bg}">${svg(wL.vb,wL.s)}<span class="cap" style="color:${p.fg}">לוגו מלא, בהיר</span></div>
+   <div class="tile w" style="background:${p.dark}">${svg(wD.vb,wD.s)}<span class="cap" style="color:${p.darkFg}">לוגו מלא, כהה</span></div>`;
+  root.appendChild(b);
+ });
+ const ov=document.getElementById('overview');
+ C.forEach((c,i)=>{const p=c.pal,w=c.word(p.fg,p.ac);const d=document.createElement('div');d.className='cell';
+  d.innerHTML=`<div class="app">${svg('0 0 100 100',c.icon?c.icon(p):defaultIcon(c))}</div><div class="wm" style="background:${p.bg}">${svg(w.vb,w.s)}</div><div class="lbl"><span>${(c.num||String(i+1).padStart(2,'0'))}</span>${c.name}</div>`;ov.appendChild(d);});
+ document.body.dataset.ready=1;
+}
+const need=['200 50px Heebo','500 50px Heebo','700 50px Heebo','800 50px Heebo','900 50px Heebo','500 50px "Frank Ruhl Libre"','700 50px "Frank Ruhl Libre"','50px "Suez One"'];
+Promise.all(need.map(f=>document.fonts.load(f,'שחרו'))).then(()=>document.fonts.ready).then(render);
+</script>
+</body>
+</html>

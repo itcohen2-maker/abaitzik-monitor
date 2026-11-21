@@ -1,0 +1,10 @@
+[Unit]
+Description=wire a customer's newly connected Kapso WhatsApp number to his monitor (setup/wa-kapso-provision.sh)
+After=network-online.target
+[Service]
+Type=oneshot
+User=root
+ExecStart=/bin/bash /home/monitor/abaitzik-monitor/setup/wa-kapso-provision.sh
+TimeoutStartSec=15min
+StandardOutput=append:/var/log/monitor-wa-kapso.log
+StandardError=append:/var/log/monitor-wa-kapso.log

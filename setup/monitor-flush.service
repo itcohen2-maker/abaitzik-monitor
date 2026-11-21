@@ -1,0 +1,10 @@
+[Unit]
+Description=Push the commits push.js held back for the GitHub Pages gap (19.11.2026: a detached flusher died with the unit that started it)
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=monitor
+WorkingDirectory=/home/monitor/abaitzik-monitor
+ExecStart=/usr/bin/node push.js --flush
+TimeoutStartSec=900

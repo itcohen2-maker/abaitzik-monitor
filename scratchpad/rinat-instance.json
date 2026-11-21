@@ -1,0 +1,33 @@
+{
+ "name": "rinat",
+ "owner": "רינת",
+ "publicUrl": "https://rinat.abaitzik.com/",
+ "basePath": "/",
+ "origin": "https://rinat.abaitzik.com",
+ "mailbox": "",
+ "dataDir": "data",
+ "taskPrefix": "rinat",
+ "pageTitle": "המוניטור של רינת",
+ "appTitle": "המוניטור",
+ "screens": [
+  "gAdminReq"
+ ],
+ "chromeProfile": "none",
+ "memoryDir": null,
+ "driveFolder": "",
+ "computer": null,
+ "phone": null,
+ "welcome": "ברוכה הבאה רינת, כאן נעבוד על העיצובים שלך",
+ "shipmentsDir": "",
+ "homeTile": "",
+ "gender": "f",
+ "guides": [
+  {
+   "key": "wetransfer-1",
+   "icon": "📦",
+   "title": "איך שולחים קובץ גדול",
+   "sub": "ויטרנספר, בלי מייל. לפתוח פעם אחת",
+   "text": "קובץ עד 15 מגה מצרפים ישר להודעה כאן, בלי ויטרנספר בכלל.\nקובץ גדול יותר עולה לוויטרנספר. לא שולחים לאף מייל: בוחרים \"קבלת קישור\" ולא \"שליחה במייל\".\nאחרי ההעלאה מופיע קישור. מעתיקים אותו ומדביקים בהודעה כאן במוניטור, יחד עם מה שצריך לעשות בקובץ.\nמשם מושכים את הקובץ, והתשובה והקבצים המוכנים חוזרים לכאן, באותה שיחה.\nבפעם הראשונה ויטרנספר עשוי לבקש את המייל שלך, רק כדי לשלוח לך קוד אימות."
+  }
+ ]
+}

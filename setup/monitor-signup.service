@@ -1,0 +1,6 @@
+[Unit]
+Description=open trial monitors for verified signups (setup/signup-provision.sh)
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /home/monitor/abaitzik-monitor/setup/signup-provision.sh
+TimeoutStartSec=1800

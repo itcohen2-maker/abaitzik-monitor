@@ -1,0 +1,7 @@
+[Unit]
+Description=setup form intake sweep every 15 minutes (catch up for anything missed)
+[Timer]
+OnCalendar=*:7,22,37,52
+Persistent=true
+[Install]
+WantedBy=timers.target

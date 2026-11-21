@@ -1,0 +1,7 @@
+[Unit]
+Description=weekly summary of the Claude work logs, every Friday 08:00 Israel
+[Timer]
+OnCalendar=Fri *-*-* 08:00:00 Asia/Jerusalem
+Persistent=true
+[Install]
+WantedBy=timers.target

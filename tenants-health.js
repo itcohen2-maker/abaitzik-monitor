@@ -1,0 +1,422 @@
+'use strict';
+/*
+  Is the other monitor alive. Nothing else.
+
+  Itzik, 25.9: "תכין כפתור אצלי עם המוניטור של איליי, אם הוא ירוק הוא תקין, אם
+  יש נתק יהיה אדום". He does not want to see Ilay's content, and the
+  separation makes sure he cannot: different key, different topics, different
+  data folder. What he wants is one bit, green or red, and this is what
+  produces it.
+
+  It runs on the server, under Itzik's instance, every minute. For every
+  tenant listed in data/tenants/tenants/<id>.json it checks three things that
+  can each fail silently: the listener service is running, the listener's
+  heartbeat file is fresh, and the worker timer is armed. It writes the result
+  back into the same file, which the build carries to the page as a colour.
+  When the colour changes it rebuilds and publishes, so red is on his phone
+  within a minute of the failure and not at the next hourly beat.
+
+  It reads only data/status/live.json from the tenant's folder: the heartbeat,
+  no messages, no chat. Everything else is asked of systemd.
+
+  Usage: node tenants-health.js [--dry]
+*/
+const fs = require('fs');
+const path = require('path');
+const { execFileSync } = require('child_process');
+const inst = require('./lib/instance.js');
+const cr = require('./lib/change-requests.js');
+
+const DIR = path.join(inst.dataPath, 'tenants', 'tenants');
+const DRY = process.argv.includes('--dry');
+// The listener beats once an hour when idle; a file older than this means the
+// beat stopped, whatever systemd says about the process.
+const STALE_MS = 75 * 60 * 1000;
+
+// 12.10: a record written in place is empty for a moment, and the other script
+// reading it then crashed on every run. homestyle.json stayed empty from 11.10
+// 07:13 and no customer got a code update for a day. Write aside, then rename.
+function writeRec(file, obj) {
+  const tmp = file + '.' + process.pid + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(obj, null, 1));
+  fs.renameSync(tmp, file);
+}
+function active(unit) {
+  try { return execFileSync('systemctl', ['is-active', unit], { encoding: 'utf8' }).trim() === 'active'; }
+  catch (e) { return false; }
+}
+
+function paused(t) {
+  try { return JSON.parse(fs.readFileSync(path.join(t.dir, 'instance.json'), 'utf8')).paused === true; }
+  catch (e) { return false; }
+}
+
+function check(t) {
+  // 8.10: on hold by Itzik's decision. Nothing runs, so nothing is broken, and
+  // the doctor must not try to bring it back.
+  if (paused(t)) return { state: 'ok', problems: [], beatAt: '', paused: true };
+  const problems = [];
+  if (t.listener && !active(t.listener)) problems.push('המאזין לא רץ');
+  if (t.timer && !active(t.timer)) problems.push('המענה האוטומטי לא מתוזמן');
+  // A tenant that stopped receiving fixes is broken in a way nobody sees.
+  if (t.syncError) problems.push('העדכונים לא מגיעים אליו');
+  // 29.9: a tenant that syncs itself reports in its own folder; no report for
+  // an hour means its sync timer is not running, which is how Ilay's stayed
+  // unsynced after the move to his own user.
+  if (t.selfSync) {
+    try {
+      const s = JSON.parse(fs.readFileSync(path.join(t.dir, 'data', 'status', 'sync.json'), 'utf8'));
+      if (s.syncError || !s.at || Date.now() - Date.parse(s.at) > 60 * 60 * 1000) problems.push('העדכונים לא מגיעים אליו');
+    } catch (e) { problems.push('העדכונים לא מגיעים אליו'); }
+  }
+  let beatAt = '';
+  try {
+    const live = JSON.parse(fs.readFileSync(path.join(t.dir, 'data', 'status', 'live.json'), 'utf8'));
+    beatAt = live.at || '';
+    if (!beatAt || Date.now() - Date.parse(beatAt) > STALE_MS) problems.push('הפעימה של המאזין ישנה');
+    // 30.9: `up` is seconds since the listener started, so a beat written right
+    // after a restart says 0 and stays that way until the next hourly beat. That
+    // read as "disconnected" for an hour. The connection is `since`, empty only
+    // while the listener has no stream.
+    if (!live.since && live.at && Date.now() - Date.parse(live.at) > 5 * 60 * 1000) problems.push('המאזין מדווח שהוא מנותק מהערוץ');
+  } catch (e) { problems.push('אין קובץ פעימה'); }
+  // 27.9: what the tenant's own watchdog found (answers stuck, a stalled worker)
+  // colours his tile too, so Itzik sees it without opening anything of Ilay's.
+  try {
+    const w = JSON.parse(fs.readFileSync(path.join(t.dir, 'data', 'status', 'watchdog.json'), 'utf8'));
+    if (w.at && Date.now() - Date.parse(w.at) < 10 * 60 * 1000) (w.problems || []).forEach((p) => problems.push(p));
+    else if (w.at) problems.push('השומר לא רץ');
+  } catch (e) {}
+  return { state: problems.length ? 'down' : 'ok', problems, beatAt };
+}
+
+/*
+  7.10: Yael's record was written by hand in another shape (no dir, no units),
+  so she showed red every two hours while her monitor ran fine. A record that
+  lacks them gets the names every tenant is built with (setup/new-tenant.sh).
+*/
+function complete(t) {
+  const u = t.user || t.id;
+  const d = { dir: '/home/' + u + '/' + t.id + '-monitor', listener: 'monitor-listen-' + t.id,
+    timer: 'monitor-worker-' + t.id + '.timer', user: u };
+  Object.keys(d).forEach((k) => { if (!t[k]) t[k] = d[k]; });
+  if (t.selfSync === undefined) t.selfSync = true;
+  return t;
+}
+
+/*
+  7.10, Itzik: "אם אתה מקבל התראה על מוניטורים אחרים שלא עובדים, אתה אמור
+  לטפל בהם". A customer down for ten minutes starts a Claude session in his
+  repo with the faults, as the watchdog's doctor does for his own. One at a
+  time, an hour apart, three a day.
+*/
+const FIX = path.join(inst.dataPath, 'status', 'tenant-doctor.json');
+const FIX_AFTER_MS = 10 * 60 * 1000;
+function alive(pid) { try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; } }
+function fixer(t, now) {
+  if (DRY || process.platform === 'win32' || t.state === 'ok' || !t.downSince) return;
+  if (now - Date.parse(t.downSince) < FIX_AFTER_MS) return;
+  let d = { day: '', runs: 0, pid: 0, log: [] };
+  try { d = JSON.parse(fs.readFileSync(FIX, 'utf8')); } catch (e) {}
+  const day = new Date(now).toISOString().slice(0, 10);
+  if (d.day !== day) { d.day = day; d.runs = 0; }
+  const last = Date.parse(((d.log || []).slice(-1)[0] || {}).at);
+  if ((d.pid && alive(d.pid)) || d.runs >= 3 || (!isNaN(last) && now - last < 60 * 60 * 1000)) return;
+  const text = [
+    'אתה מתקן אוטומטי. המוניטור של הלקוח ' + (t.title || t.id) + ' בנתק יותר מעשר דקות:',
+    t.problems.map((p) => '- ' + p).join('\n'),
+    'הרשומה שלו: data/tenants/tenants/' + t.id + '.json. התיקייה שלו: ' + t.dir + ' (יחידות: ' + t.listener + ', ' + t.timer + ').',
+    'למצוא את הסיבה ולתקן. תיקון בקוד נעשה כאן ולא בתיקיית הלקוח (הסנכרון דורס). לא לגעת בהודעות ובנתונים של הלקוח.',
+    'מה שדורש root (systemd, משתמשים, Caddy) שולחים למחשב: node pc-task.js add --re tenant-' + t.id + ' "<המשימה>".',
+    'אחרי תיקון בקוד: npm test, ואז node push.js "tenant-doctor: <מה תוקן>".',
+    'בסוף רשומה אחת לאיציק ב data/chat/chat/ (from "claude"), בעברית פשוטה, בלי מקפים: מה נשבר אצל מי ומה תוקן, שורה או שתיים.',
+  ].join('\n');
+  const { spawn } = require('child_process');
+  let out = 'ignore';
+  try { out = fs.openSync('/var/log/monitor-tenants.log', 'a'); } catch (e) {}
+  const c = spawn('claude', ['-p', '--dangerously-skip-permissions'], { cwd: __dirname, detached: true, stdio: ['pipe', out, out], shell: true });
+  c.stdin.end(text, 'utf8');
+  c.unref();
+  d.runs += 1; d.pid = c.pid;
+  d.log = (d.log || []).concat([{ at: new Date(now).toISOString(), tenant: t.id, problems: t.problems }]).slice(-30);
+  try { fs.writeFileSync(FIX, JSON.stringify(d, null, 1)); } catch (e) {}
+  console.log('fixer started for ' + t.id);
+}
+
+/*
+  8.10, Itzik: "תן לי התראה ברגע שרינת מתחילה לעבוד עם המוניטור שלה, אני רוצה
+  לדעת מתי היא התקינה". A record with watchFirstUse (an ISO time) rings his
+  phone once, on the first message that reached the tenant's listener after
+  that time. Only the arrival times and texts the listener already exposes in
+  data/status are read; a system test ("בדיקת מערכת") does not count.
+*/
+function firstUse(t) {
+  if (!t.watchFirstUse || t.firstUseAt) return '';
+  const after = Date.parse(t.watchFirstUse);
+  const read = (f) => { try { return JSON.parse(fs.readFileSync(path.join(t.dir, 'data', 'status', f), 'utf8')); } catch (e) { return null; } };
+  const pulls = read('pulls.json');
+  const seen = Array.isArray(pulls) ? pulls : ((read('live.json') || {}).recent || []);
+  const hit = seen.find((x) => x && Date.parse(x.at) > after && !/בדיקת מערכת/.test(x.text || ''));
+  return hit ? hit.at : '';
+}
+
+/*
+  14.10, Itzik approved Alon's request: he runs the theatre with Itzik, so a new
+  arena there is his own call, not a change to his monitor. A tenant record with
+  "selfArenas": true has every request for an arena (זירה) go straight to the PC
+  queue, where the theatre's code lives, and the customer hears it is in the
+  works. No phone ring, nothing waiting for approval. Returns true when handled.
+*/
+function selfArena(t, x) {
+  // 18.11: a change to an arena that says theatre, a scene or IPTV and not the word arena went to the server worker,
+  // which has no theatre code and answered "not found" (Alon, IPTV). Any theatre word now goes to the PC.
+  if (!t.selfArenas || !/זיר[הות]|תיאטרון|סצנ[הות]|IPTV|bubot/i.test(x.text || '')) return false;
+  try {
+    const root = 'tenant-' + t.id + '-' + x.id;
+    const at = new Date();
+    const stamp = at.toISOString().replace(/[-:]/g, '').slice(0, 13).replace('T', '-');
+    fs.writeFileSync(path.join(__dirname, 'data', 'chat', 'chat', stamp + '-claude-' + root + '.json'), JSON.stringify({
+      at: at.toISOString(), from: 'claude', id: root, status: 'done',
+      text: (t.title || t.id) + ' ביקש זירה חדשה בתיאטרון, והיא עברה לבנייה במחשב בלי אישור: ' + x.text,
+    }, null, 1), 'utf8');
+    execFileSync('node', ['pc-task.js', 'add', '--re', root,
+      'זירה חדשה או שינוי בזירה קיימת בתיאטרון רמת הנשיא (bubot-theatre, הקוד במחשב ב C:\\Users\\User\\bubot-theatre), לבקשת ' + (t.title || t.id)
+      + ' שמנהל את התיאטרון יחד עם איציק ולא צריך אישור לזירות. לבנות אותה כמו הזירות הקיימות, לפרוס לייצור ולבדוק אותה חיה. הבקשה במילים שלו: '
+      + x.text + '\nאחרי הפריסה לרשום ביומן החדשות של האתר (מה ש /api/news מחזיר) שורה אחת עם by "claude" ומה נבנה, כדי שהאריח של התיאטרון יהבהב אצל איציק ואצל ' + (t.title || t.id) + '.'
+      + '\nבסוף לענות בשורה אחת מה נבנה והקישור לזירה.'], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+    cr.decide(t.id, x.id, 'approved', 'זירה בתיאטרון לא צריכה אישור. הבקשה עברה ישר לבנייה, והזירה תופיע באתר של התיאטרון כשתהיה מוכנה.');
+    return true;
+  } catch (e) { console.log('self arena failed: ' + String(e.message).slice(0, 120)); return false; }
+}
+
+/*
+  14.10, Itzik: "אלון ורינת מנהלים אז אין צורך לבקש ממני אישורים ... האישורים הם
+  נתנו כבר מראש. הם יכולים לעשות מה שהם רוצים חוץ משינויים שיפגעו במערכת".
+  A tenant record with "preApproved": true has each new request handed straight
+  to Itzik's worker as an approved one, the same line his approve button sends,
+  marked as approved in advance. The worker builds it unless it would harm the
+  system, and tells the customer. Itzik gets one line of news, not a question.
+*/
+function preApprove(t, x) {
+  if (!t.preApproved) return false;
+  // 6.11: a help request ('עזרה מלקוח', the help button) is a person asking for Itzik, never a change to build.
+  if (/^עזרה מלקוח:/.test(String(x.text || ''))) return false;
+  // 4.11: a package request is paid first and approved by Itzik himself, never in advance.
+  if (require('./lib/plan.js').parseRequest(x.text)) return false;
+  try {
+    const id = 'pre-' + t.id + '-' + x.id;
+    const at = new Date();
+    const stamp = at.toISOString().replace(/[-:]/g, '').slice(0, 13).replace('T', '-');
+    const f = path.join(__dirname, 'data', 'chat', 'chat', stamp + '-itzik-' + id + '.json');
+    if (fs.existsSync(f)) return true;
+    fs.writeFileSync(f, JSON.stringify({
+      at: at.toISOString(), from: 'itzik', id, auto: true, preApproved: true, status: 'working',
+      text: 'אישור בקשת שינוי ' + t.id + '/' + x.id + ' (אושר מראש: ' + (t.title || t.id)
+        + ' מנהל ולא צריך אישור, רק לא שינוי שיפגע במערכת): ' + x.text,
+    }, null, 1), 'utf8');
+    execFileSync('node', ['notify.js', '📨 ' + (t.title || t.id) + ' ביקש, בביצוע', String(x.text).slice(0, 300)],
+      { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+    return true;
+  } catch (e) { console.log('pre approve failed: ' + String(e.message).slice(0, 120)); return false; }
+}
+
+/*
+  14.10.2026: the customers' quota gate (worker.js quotaHold) reads
+  /srv/monitor-changes/quota.json, which only this instance may write. It is
+  copied from the subscription status every run, written aside and renamed so
+  a reader never sees half a file. Never throws: a missing status is no quota.
+*/
+function writeQuota() {
+  if (DRY) return;
+  try {
+    const s = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'subscription.json'), 'utf8'));
+    const file = '/srv/monitor-changes/quota.json';
+    const tmp = file + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify({ at: s.at, five: s.five, week: s.week }, null, 1));
+    try { fs.chmodSync(tmp, 0o644); } catch (e) {}
+    fs.renameSync(tmp, file);
+  } catch (e) {}
+}
+
+/*
+  4.11.2026, Itzik approved the monthly action packages (lib/plan.js, lib/plan-io.js).
+  The plan file /srv/monitor-changes/<id>.plan.json is written here and nowhere else:
+  an approved "שדרוג חבילה" or "תוספת 200 פעולות" request changes it (the approval is
+  Itzik's, after the payment arrived), and a new month clears the add-on. Itzik also
+  hears, once per customer per month and without the customer knowing: 80% used, 100%
+  used, and the cost guard (list price dollars at 40% of the package price, when
+  worker.js moves that customer to the cheap model). Returns true when the file changed.
+*/
+const PLAN_TOLD = path.join(inst.dataPath, 'status', 'plan-notified.json');
+function planTick(t, reqs) {
+  const io = require('./lib/plan-io.js');
+  const P = require('./lib/plan.js');
+  if (!io.stateOf(t.id)) return false;
+  let changed = false;
+  try {
+    const next = io.applyApproved(t.id, reqs, Date.now());
+    if (next) { io.write(t.id, next); changed = true; console.log('plan updated: ' + t.id); }
+  } catch (e) { console.log('plan update failed: ' + String(e.message).slice(0, 120)); }
+  const st = t.dir ? io.statusOf(t.id, path.join(t.dir, 'data', 'status'), Date.now()) : null;
+  if (!st) return changed;
+  let told = {};
+  try { told = JSON.parse(fs.readFileSync(PLAN_TOLD, 'utf8')); } catch (e) {}
+  const mine = told[t.id] && told[t.id].month === st.month ? told[t.id] : { month: st.month };
+  const name = t.title || t.id;
+  const say = (flag, title, body) => {
+    if (mine[flag]) return;
+    try {
+      execFileSync('node', ['notify.js', title, body], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+      mine[flag] = new Date().toISOString();
+    } catch (e) { console.log('plan alert failed: ' + String(e.message).slice(0, 120)); }
+  };
+  const of = st.used + ' מתוך ' + st.total + ' פעולות החודש, חבילת ' + st.label;
+  if (st.level === 'warn') say('warn', '📦 ' + name + ' ב 80 אחוז מהחבילה', of + '. הוא קיבל הודעה ויכול לבקש שדרוג או תוספת.');
+  if (st.level === 'full') say('full', '📦 ' + name + ' סיים את החבילה', of + '. הסשנים שלו עצרו וההודעות מחכות, עד שדרוג, תוספת או החודש הבא.');
+  if (st.cheap) say('cost', '💲 ' + name + ': עבר למודל הזול',
+    'מחיר מחירון החודש ' + st.usd.toFixed(2) + ' דולר, מעל 40 אחוז ממחיר החבילה (' + st.costLimit.toFixed(0) + ' דולר). הלקוח לא רואה כלום.');
+  told[t.id] = mine;
+  try { fs.writeFileSync(PLAN_TOLD, JSON.stringify(told, null, 1)); } catch (e) {}
+  return changed;
+}
+
+function main() {
+  writeQuota();
+  if (!fs.existsSync(DIR)) { console.log('no tenants'); return; }
+  let changed = false;
+  for (const f of fs.readdirSync(DIR).filter(x => x.endsWith('.json'))) {
+    const file = path.join(DIR, f);
+    let t;
+    try { t = complete(JSON.parse(fs.readFileSync(file, 'utf8'))); } catch (e) { console.log(f + ' unreadable, skipped'); continue; }
+    const r = check(t);
+    const before = t.state;
+    /*
+      5.10: a customer's change requests, which only Itzik can approve. A new
+      one rings his phone; any change in them republishes his page.
+    */
+    const known = new Set((t.requests || []).map((x) => x.id));
+    const reqs = t.dir ? cr.of(t.dir, t.id) : [];
+    const fresh = reqs.filter((x) => x.status === 'pending' && !known.has(x.id));
+    if (JSON.stringify(reqs) !== JSON.stringify(t.requests || [])) changed = true;
+    t.requests = reqs;
+    if (!DRY && planTick(t, reqs)) changed = true;
+    /*
+      12.10 evening, Itzik on Rinat: "לא מעוניין שתשנה דברים מהותיים במוניטור".
+      The morning's auto approval for an admin customer is gone: her requests
+      wait for him like everyone's.
+    */
+    const own = DRY ? [] : fresh.filter((x) => selfArena(t, x));
+    own.forEach((x) => { x.status = 'approved'; });
+    fresh.splice(0, fresh.length, ...fresh.filter((x) => !own.includes(x)));
+    const pre = DRY ? [] : fresh.filter((x) => preApprove(t, x));
+    fresh.splice(0, fresh.length, ...fresh.filter((x) => !pre.includes(x)));
+    // 10.11.2026, Itzik: every customer request opens a blinking "📨 בקשה מהמנהלה" item (lib/handle.js, kind request) until he decides it.
+    if (!DRY) { try { if (require('./lib/handle.js').fromRequests(require('./lib/instance.js').dataPath, t.id, t.title || t.id, reqs, own.concat(pre), !!t.dir && fs.existsSync(path.join(t.dir, 'data', 'status', 'change-requests.json')))) changed = true; } catch (e) { console.log('handle: ' + e.message); } }
+    if (fresh.length && !DRY) {
+      try {
+        const help = fresh.some((x) => /^עזרה מלקוח:/.test(String(x.text || '')));
+        execFileSync('node', ['notify.js', (help ? '🆘 ' : '📨 ') + (t.title || t.id) + (help ? ' מבקש עזרה' : ' מבקש שינוי'), fresh.map((x) => x.text).join(' · ').slice(0, 300)],
+          { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+      } catch (e) { console.log('request alert failed: ' + String(e.message).slice(0, 120)); }
+    }
+    /*
+      18.11.2026: "💡 מה חסר לך כאן?" from a customer's leads board (lib/leads-missing.js). Each new line goes to Itzik on
+      WhatsApp (a push when WhatsApp fails) and, once it reached him, becomes an idea in his 💡 רעיונות. A line that did
+      not reach him waits for the next run. Capped there (3 a run, 10 a day per customer, no file over 64KB); what is held
+      waits silently with one log line. A public demo monitor is never read.
+    */
+    if (!DRY && t.dir) {
+      try {
+        let who = t.title || t.id, ij = null;
+        try { ij = JSON.parse(fs.readFileSync(path.join(t.dir, 'instance.json'), 'utf8')); if (ij && ij.owner) who = ij.owner; } catch (e) { /* the title */ }
+        if (!(ij && ij.publicDemo)) {
+          const LM = require('./lib/leads-missing.js');
+          const T = { id: t.id, dir: t.dir, name: who };
+          const got = LM.collect(inst.dataPath, T);
+          if (got.why === 'big') console.log('leads missing: ' + t.id + ' file over 64KB, not read');
+          if (got.held) console.log('leads missing: ' + t.id + ' ' + got.held + ' held by the caps');
+          // Review 18.11, round 2: every try counts toward his 10 a day (in collect), a line is tried at most 3 times, and
+          // he stays locked (collect) until every try came back, so an overlapping run never sends it again.
+          const tries = got.items.map((it) => require('./lib/wa-out.js').sendOwner(inst.dataPath, it.line)
+            .catch((e) => {
+              console.log('leads missing, WhatsApp failed: ' + String(e.message).slice(0, 120));
+              execFileSync('node', ['notify.js', '💡 בלוח הלידים חסר', it.line.slice(0, 300)], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+            })
+            .then(() => true, (e) => { console.log('leads missing, push failed too: ' + String(e.message).slice(0, 120)); return false; })
+            .then((ok) => {
+              const res = LM.finish(inst.dataPath, T, it, ok);
+              if (res === 'done') console.log('leads missing: handed over ' + t.id + ' ' + it.id);
+              else if (res === 'gaveup') console.log('leads missing: gave up on ' + t.id + ' ' + it.id + ' after ' + LM.MAX_TRIES + ' tries, kept in 💡 only');
+              else if (res === 'later') console.log('leads missing: gave up on ' + t.id + ' ' + it.id + ' but its idea was not written, tomorrow again');
+            }));
+          // round 3: an unlock or write failure is one log line, never an unhandled rejection that ends the run
+          if (tries.length) Promise.allSettled(tries).then(() => LM.unlock(inst.dataPath, T)).catch((e) => console.log('leads missing, unlock failed: ' + String(e && e.message).slice(0, 120)));
+        }
+      } catch (e) { console.log('leads missing: ' + String(e.message).slice(0, 120)); }
+    }
+    delete t.paused;
+    Object.assign(t, r, { checkedAt: new Date().toISOString() });
+    if (r.state === 'ok') delete t.downSince; else if (!t.downSince) t.downSince = new Date().toISOString();
+    if (!DRY) writeRec(file, t);
+    if (before !== t.state) changed = true;
+    /*
+      30.9: a customer going down is an alarm, not a colour. The phone rings
+      the moment it happens, again every two hours while it stays down, and
+      once more when it is back, so a red tile never waits for him to look.
+    */
+    if (!DRY) {
+      const down = t.state !== 'ok';
+      /*
+        12.11.2026, Itzik: "יש לי במייל כל כך הרבה הודעות מ IT Solution שזה מציק לי". Most were a restart or a new
+        monitor still building: "בנתק" and a minute later "חזר לתקין". Now a customer is reported down only after
+        10 minutes down, again every two hours, and "חזר לתקין" goes only when "בנתק" went.
+      */
+      const downFor = down && t.downSince ? Date.now() - Date.parse(t.downSince) : 0;
+      const first = down && !t.alertedAt && downFor >= 10 * 60 * 1000;
+      const again = down && t.alertedAt && Date.now() - Date.parse(t.alertedAt) > 2 * 60 * 60 * 1000;
+      const back = !down && !!t.alertedAt;
+      if (first || again || back) {
+        const title = down ? '🔴 ' + (t.title || t.id) + ' בנתק' : '🟢 ' + (t.title || t.id) + ' חזר לתקין';
+        const msg = down ? (r.problems.join(' · ') || 'לא עונה') : 'הכל תקין שוב';
+        try {
+          execFileSync('node', ['notify.js', title, msg], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+          if (down) t.alertedAt = new Date().toISOString(); else delete t.alertedAt;
+          writeRec(file, t);
+          console.log('alerted: ' + title);
+        } catch (e) { console.log('alert failed: ' + String(e.message).slice(0, 120)); }
+      }
+    }
+    const used = firstUse(t);
+    if (used && !DRY) {
+      try {
+        execFileSync('node', ['notify.js', '🎉 ' + (t.title || t.id) + ': התחילה לעבוד',
+          'ההודעה הראשונה הגיעה ' + new Date(used).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })],
+          { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+        t.firstUseAt = used;
+        writeRec(file, t);
+        changed = true;
+        console.log('first use: ' + t.id);
+      } catch (e) { console.log('first use alert failed: ' + String(e.message).slice(0, 120)); }
+    }
+    fixer(t, Date.now());
+    console.log((t.state === 'ok' ? 'ok   ' : 'DOWN ') + t.id + (r.problems.length ? ': ' + r.problems.join(', ') : ''));
+  }
+  if (changed && !DRY) {
+    // A colour change is worth a publish on its own; a same colour is not.
+    /*
+      Through push.js, never around it.
+
+      The first version built and pushed on its own. A worker session that was
+      pushing at the same second hit a conflict on the generated docs files
+      and had to untangle it, which it reported on 25.9. push.js is the one
+      queue every writer to this repository goes through; this is a writer.
+    */
+    try {
+      execFileSync('node', ['push.js', 'tenants: health changed'], { cwd: __dirname, stdio: 'ignore', timeout: 240000 });
+      console.log('published');
+    } catch (e) { console.log('publish failed: ' + String(e.message).slice(0, 120)); }
+  }
+}
+
+if (require.main === module) main();
+module.exports = { check, complete, firstUse, selfArena, preApprove };

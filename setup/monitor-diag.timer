@@ -1,0 +1,9 @@
+# 12.11.2026. A new form is mailed within about a minute and a half. Persistent is off: a missed minute is not owed.
+[Unit]
+Description=the free AI diagnosis, every minute
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=60
+Unit=monitor-diag.service
+[Install]
+WantedBy=timers.target

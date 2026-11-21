@@ -1,0 +1,8 @@
+[Unit]
+Description=pull a returned setup form into the customer monitor (10.11, lib/setup-intake.js)
+[Service]
+Type=oneshot
+WorkingDirectory=/home/monitor/abaitzik-monitor
+ExecStart=/usr/bin/node setup-intake.js --sweep
+StandardOutput=append:/var/log/monitor-intake.log
+StandardError=append:/var/log/monitor-intake.log

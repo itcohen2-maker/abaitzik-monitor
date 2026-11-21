@@ -1,0 +1,29 @@
+# Yoel collection board (28.10.2026). Install:
+#   cp setup/monitor-gviya.service /etc/systemd/system/ && systemctl daemon-reload
+#   systemctl enable --now monitor-gviya.service
+# Caddy route, in the ilay.abaitzik.com block:
+#   handle /gviya/* { reverse_proxy 127.0.0.1:8795 }
+[Unit]
+Description=abaitzik monitor, Yoel collection board
+After=network-online.target
+
+[Service]
+User=monitor
+Group=monitor
+Environment=HOME=/home/monitor
+EnvironmentFile=-/etc/monitor.env
+Type=simple
+WorkingDirectory=/home/monitor/abaitzik-monitor
+ExecStart=/usr/bin/node gviya-server.js
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/monitor/abaitzik-monitor/data
+PrivateTmp=true
+StandardOutput=append:/var/log/monitor-gviya.log
+StandardError=append:/var/log/monitor-gviya.log
+
+[Install]
+WantedBy=multi-user.target

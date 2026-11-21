@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>שם לאתר הנרות</title>
+<meta name="theme-color" content="#0F1A3A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@200;300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1A3A; --card:rgba(255,255,255,.045); --ink:#F2F5FA;
+    --dim:rgba(242,245,250,.6); --line:rgba(255,255,255,.1);
+    --glow:#F5A623; --good:#7bd88f; --bad:#e08585;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:linear-gradient(180deg,#0F1A3A 0%,#0B1330 55%,#070B1A 100%);
+    background-attachment:fixed;
+    color:var(--ink);font-family:Heebo,system-ui,-apple-system,sans-serif;
+    font-weight:300;line-height:1.7;
+    padding:0 16px calc(env(safe-area-inset-bottom,0px) + 40px);
+  }
+  main,header{max-width:720px;margin:0 auto}
+  header{padding:calc(env(safe-area-inset-top,0px) + 30px) 0 4px}
+  .kicker{font-size:11.5px;letter-spacing:.14em;color:var(--glow);font-weight:700}
+  h1{font-size:clamp(26px,7vw,36px);font-weight:400;margin:10px 0 8px;line-height:1.25}
+  .lede{color:var(--dim);font-size:16px;margin:0}
+  .rule{width:52px;height:4px;background:var(--glow);border-radius:3px;margin:22px 0 4px}
+
+  h2{font-size:17px;font-weight:500;margin:38px 0 4px}
+  h2 .n{color:var(--glow);font-weight:700;margin-inline-end:7px}
+  p{margin:9px 0}
+  .small{font-size:13.5px;color:var(--dim)}
+
+  .pick{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:17px 17px 15px;margin:14px 0;
+  }
+  .pick.top{border-color:rgba(245,166,35,.45);background:rgba(245,166,35,.07)}
+  .name{
+    font-size:clamp(19px,5.2vw,23px);font-weight:500;direction:ltr;text-align:start;
+    display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:0 0 3px;
+  }
+  .name b{font-weight:700}
+  .tag{
+    font-size:10.5px;font-weight:500;padding:2px 9px;border-radius:20px;
+    background:rgba(123,216,143,.16);color:var(--good);letter-spacing:.02em;
+  }
+  .tag.star{background:rgba(245,166,35,.18);color:var(--glow)}
+  .say{font-size:13px;color:var(--dim);direction:ltr;text-align:start;margin:0 0 9px;font-style:italic}
+  .rows{list-style:none;margin:10px 0 0;padding:0;font-size:14px}
+  .rows li{display:flex;gap:9px;padding:5px 0;line-height:1.6}
+  .rows .k{flex:0 0 18px;text-align:center;font-weight:700}
+  .rows .plus .k{color:var(--good)}
+  .rows .minus .k{color:var(--bad)}
+
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th{text-align:start;font-weight:500;font-size:12.5px;color:var(--dim);
+     padding:10px 8px;border-bottom:1px solid var(--line)}
+  td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.055);vertical-align:top}
+  td.d{direction:ltr;text-align:start}
+  tr:last-child td{border-bottom:0}
+
+  .taken{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 0;direction:ltr}
+  .taken span{
+    font-size:12.5px;color:var(--dim);background:rgba(255,255,255,.05);
+    border:1px solid var(--line);border-radius:8px;padding:4px 9px;
+    text-decoration:line-through;text-decoration-color:rgba(224,133,133,.7);
+  }
+
+  .box{
+    border-inline-start:3px solid var(--glow);padding:2px 14px;margin:18px 0;
+    color:var(--dim);font-size:14.5px;line-height:1.75;
+  }
+  .box b{color:var(--ink);font-weight:500}
+  footer{max-width:720px;margin:44px auto 0;padding-top:18px;
+    border-top:1px solid var(--line);font-size:13px;color:var(--dim)}
+  footer a{color:var(--glow)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">אתר הנרות</div>
+  <h1>שם לאתר</h1>
+  <p class="lede">כל האפשרויות הפנויות, מה כל אחת אומרת, ומה היא עולה. בלי למהר.</p>
+  <div class="rule"></div>
+</header>
+
+<main>
+
+  <p class="small">
+    בדקתי את כולם מול המרשם הבינלאומי. הירוקים פנויים היום. המחיר בכולם זהה,
+    בערך 40 שקל לשנה ב-Cloudflare, כי הם מוכרים במחיר עלות בלי רווח.
+    החיבור לאתר עצמו חינם, ולוקח לי דקה.
+  </p>
+
+  <h2><span class="n">01</span>שתי הדרכים לבחור</h2>
+  <p>
+    לפני השמות עצמם, ההחלטה האמיתית היא באיזו שפה האתר מדבר על עצמו,
+    ושתי הדרכים לגיטימיות.
+  </p>
+  <div class="box">
+    <b>שם באנגלית</b> נקרא על ידי יהודי בכל העולם, כולל מי שלא קורא עברית באותיות לטיניות.
+    הקהל הפוטנציאלי גדול פי כמה, ורוב המשתמשים בעולם אינם בישראל.
+    <br><br>
+    <b>שם בעברית מתועתקת</b> מרגיש שלנו, מובן מיד לדובר עברית, ומתאים אם הקהל שאתה
+    מכוון אליו הוא בעיקר ישראלי ודובר עברית בחו״ל.
+  </div>
+
+  <h2><span class="n">02</span>המומלצים</h2>
+
+  <div class="pick top">
+    <p class="name"><b>candletimes.com</b> <span class="tag star">ההמלצה שלי</span></p>
+    <p class="say">קֶנדְל טַיימְס</p>
+    <p>אומר מה האתר עושה בלי להסביר, בשתי מילים שכל דובר אנגלית בעולם מבין.</p>
+    <ul class="rows">
+      <li class="plus"><span class="k">+</span><span>קצר, קל לזכור, קל להכתיב בטלפון</span></li>
+      <li class="plus"><span class="k">+</span><span>עובד לכל הקהל בעולם ולא רק לישראלים</span></li>
+      <li class="plus"><span class="k">+</span><span>נשמע כמו מותג ולא כמו תיאור טכני</span></li>
+      <li class="minus"><span class="k">−</span><span>לא מסגיר שזה יהודי, צריך להיכנס כדי להבין</span></li>
+    </ul>
+  </div>
+
+  <div class="pick top">
+    <p class="name"><b>hadlakat.com</b> <span class="tag star">השני בתור</span></p>
+    <p class="say">הַדְלָקַת</p>
+    <p>מילה עברית אחת, קצרה, שאף אחד אחר לא לקח. נשמעת כמו שם של מותג ולא כמו הסבר.</p>
+    <ul class="rows">
+      <li class="plus"><span class="k">+</span><span>הכי קצר מכל הרשימה, שמונה אותיות</span></li>
+      <li class="plus"><span class="k">+</span><span>מובחן. אין עוד אתר שנשמע ככה</span></li>
+      <li class="plus"><span class="k">+</span><span>מרגיש ישראלי ואישי</span></li>
+      <li class="minus"><span class="k">−</span><span>מי שלא דובר עברית לא יבין ולא ידע להגות</span></li>
+      <li class="minus"><span class="k">−</span><span>מילה קטועה. באוזן עברית היא מחכה להמשך</span></li>
+    </ul>
+  </div>
+
+  <h2><span class="n">03</span>כל השאר, הפנויים</h2>
+
+  <div class="pick">
+    <p class="name"><b>hadlakatnerot.com</b> <span class="tag">פנוי</span></p>
+    <p class="say">הַדְלָקַת נֵרוֹת</p>
+    <p>התאמה מדויקת לביטוי שאנשים מקלידים בגוגל בעברית. זה יתרון אמיתי בדירוג.</p>
+    <ul class="rows">
+      <li class="plus"><span class="k">+</span><span>הביטוי המדויק שמחפשים, עוזר בגוגל</span></li>
+      <li class="plus"><span class="k">+</span><span>ברור לחלוטין לדובר עברית</span></li>
+      <li class="minus"><span class="k">−</span><span>ארוך, 17 אותיות. קשה להכתיב בטלפון</span></li>
+    </ul>
+  </div>
+
+  <div class="pick">
+    <p class="name"><b>shabbatner.com</b> <span class="tag">פנוי</span></p>
+    <p class="say">שַׁבָּת נֵר</p>
+    <p>מגשר בין השפות. ״שבת״ מוכרת גם לדוברי אנגלית, ״נר״ מוסיפה את הצליל העברי.</p>
+    <ul class="rows">
+      <li class="plus"><span class="k">+</span><span>מובן משני צידי האוקיינוס</span></li>
+      <li class="plus"><span class="k">+</span><span>אורך סביר ונוח לזכירה</span></li>
+      <li class="minus"><span class="k">−</span><span>סדר המילים הפוך מהעברית, ״שבת נר״ ולא ״נר שבת״</span></li>
+    </ul>
+  </div>
+
+  <div class="pick">
+    <p class="name"><b>lightshabbat.com</b> <span class="tag">פנוי</span></p>
+    <p class="say">לַייט שַׁבָּת</p>
+    <p>פועל ולא שם עצם. קורא לפעולה במקום לתאר אותה.</p>
+    <ul class="rows">
+      <li class="plus"><span class="k">+</span><span>אנרגטי, אומר לך מה לעשות</span></li>
+      <li class="plus"><span class="k">+</span><span>אנגלית פשוטה שכולם מבינים</span></li>
+      <li class="minus"><span class="k">−</span><span>״light״ באנגלית זה גם קליל, ויש בזה בלבול קל</span></li>
+    </ul>
+  </div>
+
+  <div class="pick">
+    <p class="name"><b>nerzman.com</b> <span class="tag">פנוי</span></p>
+    <p class="say">נֵר זְמַן</p>
+    <p>נר וזמן, שתי המילים שהאתר עוסק בהן, בארבע הברות.</p>
+    <ul class="rows">
+      <li class="plus"><span class="k">+</span><span>קצר ונעים לאוזן</span></li>
+      <li class="minus"><span class="k">−</span><span>לא אומר כלום למי שלא יודע עברית</span></li>
+      <li class="minus"><span class="k">−</span><span>גם בעברית זה צירוף שצריך לעצור עליו רגע</span></li>
+    </ul>
+  </div>
+
+  <div class="pick">
+    <p class="name"><b>zmanhadlaka.com</b> <span class="tag">פנוי</span></p>
+    <p class="say">זְמַן הַדְלָקָה</p>
+    <p>תיאורי לגמרי, בעברית. אומר בדיוק מה יש שם.</p>
+    <ul class="rows">
+      <li class="plus"><span class="k">+</span><span>אין ספק מה האתר עושה</span></li>
+      <li class="minus"><span class="k">−</span><span>תיאור ולא מותג. קשה לבנות עליו זהות</span></li>
+    </ul>
+  </div>
+
+  <div class="pick">
+    <p class="name"><b>shabbatcandletimes.com</b> <span class="tag">פנוי</span></p>
+    <p class="say">שַׁבָּת קֶנדְל טַיימְס</p>
+    <p>הביטוי המדויק שמחפשים באנגלית, מילה במילה.</p>
+    <ul class="rows">
+      <li class="plus"><span class="k">+</span><span>התאמה מלאה לחיפוש באנגלית</span></li>
+      <li class="minus"><span class="k">−</span><span>ארוך מאוד, 21 אותיות</span></li>
+    </ul>
+  </div>
+
+  <div class="pick">
+    <p class="name"><b>nerlishabbat.com</b> <span class="tag">פנוי</span></p>
+    <p class="say">נֵר לְשַׁבָּת</p>
+    <p>הצירוף העברי הטבעי, בסדר המילים הנכון.</p>
+    <ul class="rows">
+      <li class="plus"><span class="k">+</span><span>נשמע נכון בעברית, בניגוד ל-shabbatner</span></li>
+      <li class="minus"><span class="k">−</span><span>ה-li באמצע מבלבל בהכתבה</span></li>
+    </ul>
+  </div>
+
+  <div class="pick">
+    <p class="name"><b>nerkodesh.com</b> <span class="tag">פנוי</span></p>
+    <p class="say">נֵר קוֹדֶשׁ</p>
+    <p>יפה לאוזן, אבל שולח למקום אחר.</p>
+    <ul class="rows">
+      <li class="plus"><span class="k">+</span><span>צליל יפה ומכובד</span></li>
+      <li class="minus"><span class="k">−</span><span>מזכיר נר נשמה ובית כנסת, לא הדלקת שבת</span></li>
+    </ul>
+  </div>
+
+  <div class="pick">
+    <p class="name"><b>benerhashabbat.com</b> · <b>mycandletime.com</b> <span class="tag">פנויים</span></p>
+    <p>שניהם פנויים אבל חלשים משמעותית: הראשון ארוך ומסורבל, והשני נשמע
+      כמו אפליקציה גנרית מחנות האפליקציות.</p>
+  </div>
+
+  <h2><span class="n">04</span>מה כבר תפוס</h2>
+  <p class="small">שלא תחפש אותם לחינם. כל אלה נבדקו ורשומים למישהו אחר:</p>
+  <div class="taken">
+    <span>nershabbat.com</span><span>candlelight.com</span><span>candletime.com</span>
+    <span>shabbatcandle.com</span><span>nertime.com</span><span>nertimes.com</span>
+    <span>shabboscandles.com</span><span>shabboslight.com</span><span>erevshabbat.com</span>
+    <span>kabalatshabbat.com</span><span>shabbatzman.com</span><span>nerlight.com</span>
+    <span>shabbatclock.com</span><span>candleclock.com</span><span>benerot.com</span>
+    <span>zmanner.com</span><span>candlelightingtimes.com</span><span>licht.com</span>
+    <span>thecandletime.com</span><span>nerapp.com</span>
+  </div>
+
+  <h2><span class="n">05</span>השוואה מהירה</h2>
+  <table>
+    <thead><tr><th>שם</th><th>אורך</th><th>מדבר אל</th><th>סוג</th></tr></thead>
+    <tbody>
+      <tr><td class="d">candletimes</td><td>11</td><td>כל העולם</td><td>מותג</td></tr>
+      <tr><td class="d">hadlakat</td><td>8</td><td>עברית</td><td>מותג</td></tr>
+      <tr><td class="d">shabbatner</td><td>10</td><td>שניהם</td><td>מותג</td></tr>
+      <tr><td class="d">nerzman</td><td>7</td><td>עברית</td><td>מותג</td></tr>
+      <tr><td class="d">lightshabbat</td><td>12</td><td>אנגלית</td><td>קריאה לפעולה</td></tr>
+      <tr><td class="d">nerlishabbat</td><td>12</td><td>עברית</td><td>תיאור</td></tr>
+      <tr><td class="d">zmanhadlaka</td><td>11</td><td>עברית</td><td>תיאור</td></tr>
+      <tr><td class="d">hadlakatnerot</td><td>13</td><td>עברית</td><td>תיאור, טוב לגוגל</td></tr>
+      <tr><td class="d">shabbatcandletimes</td><td>18</td><td>אנגלית</td><td>תיאור, טוב לגוגל</td></tr>
+      <tr><td class="d">nerkodesh</td><td>9</td><td>עברית</td><td>מותג, מטעה</td></tr>
+    </tbody>
+  </table>
+
+  <h2><span class="n">06</span>שאלה אחת שתחתוך את ההתלבטות</h2>
+  <div class="box">
+    <b>למי אתה בונה את זה?</b><br><br>
+    אם התשובה היא ״לכל יהודי בעולם״, וזה מה שאמרת בהתחלה, אז
+    <b>candletimes.com</b>, כי הוא היחיד שנקרא בלי מאמץ גם בברוקלין וגם במלבורן.
+    <br><br>
+    אם התשובה היא ״לישראלים, ולמי שמדבר עברית בחו״ל״, אז
+    <b>hadlakat.com</b>, כי הוא קצר, מובחן, ומרגיש שלך.
+    <br><br>
+    אין תשובה שגויה. שתיהן עולות 40 שקל, ושתיהן עובדות.
+  </div>
+
+  <h2><span class="n">07</span>מה קורה אחרי שתבחר</h2>
+  <p class="small">
+    אתה רושם את הדומיין (אני לא יכול, זה דורש פרטי תשלום), ואומר לי.
+    משם זה עליי: חיבור לוורסל, הרצה מחדש של 58 העמודים עם הכתובת החדשה,
+    הפניה אוטומטית מהכתובת הישנה כדי שלא נאבד כלום, ועדכון מפת האתר בגוגל.
+    בערך חצי שעה, ואתה לא צריך לעשות כלום.
+  </p>
+
+</main>
+
+<footer>
+  נבדק מול המרשם ב-21 בספטמבר 2026. זמינות משתנה, אז שווה לוודא שוב ברגע הרכישה.
+  <br><a href="https://ner-sigma.vercel.app">האתר עצמו</a>
+</footer>
+
+</body>
+</html>

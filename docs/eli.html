@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>מוניטור חדש לאילי, מוקאפ</title>
+<!--
+  Itzik, 24.9: a picture of what a new monitor for Eli looks like, which
+  buttons and round icons come by default and which do not, and how a new
+  user gets to his own monitor: an American style questionnaire, simple.
+
+  One page, two halves that talk to each other. The questionnaire on top,
+  one question at a time with a progress bar, and under it the phone as it
+  would look with the answers so far. Nothing is sent anywhere.
+-->
+<style>
+:root{--bg:#f4f1ea;--ink:#1d1d1f;--mut:#6b6b70;--acc:#1f6f5c;--line:#ddd6c8;--card:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:17px;line-height:1.45}
+main{max-width:980px;margin:0 auto;padding:18px 14px 60px}
+h1{font-size:24px;margin:4px 0 4px}
+.sub{color:var(--mut);margin:0 0 18px}
+.wrap{display:grid;grid-template-columns:1fr 330px;gap:22px;align-items:start}
+@media(max-width:760px){.wrap{grid-template-columns:1fr}}
+.quiz{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
+.bar{height:8px;background:#ece6da;border-radius:6px;overflow:hidden;margin-bottom:6px}
+.bar i{display:block;height:100%;background:var(--acc);width:0;transition:width .25s}
+.step{color:var(--mut);font-size:14px;margin-bottom:12px}
+.q{font-size:21px;font-weight:700;margin:0 0 4px}
+.hint{color:var(--mut);font-size:14px;margin:0 0 14px}
+.opts{display:grid;gap:10px}
+.opt{display:flex;gap:12px;align-items:center;width:100%;text-align:right;font:inherit;background:#faf8f3;border:2px solid var(--line);border-radius:14px;padding:13px 14px;cursor:pointer}
+.opt b{display:inline-grid;place-items:center;min-width:30px;height:30px;border-radius:50%;background:#fff;border:2px solid var(--line);font-size:15px}
+.opt[aria-pressed=true]{border-color:var(--acc);background:#e9f3ef}
+.opt[aria-pressed=true] b{background:var(--acc);border-color:var(--acc);color:#fff}
+.nav{display:flex;gap:10px;margin-top:16px}
+.nav button{font:inherit;border-radius:12px;padding:11px 18px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.nav .go{background:var(--acc);color:#fff;border-color:var(--acc);flex:1}
+.nav button:disabled{opacity:.4;cursor:default}
+.done{display:none}
+.done h2{margin:0 0 8px;font-size:20px}
+.phone{position:sticky;top:12px;background:#111;border-radius:38px;padding:12px}
+.scr{background:var(--bg);border-radius:28px;min-height:600px;padding:16px 12px;overflow:hidden}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.top b{font-size:17px}
+.top small{color:var(--mut);font-size:12px}
+.talk{background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px;margin-bottom:12px;font-size:14px;color:var(--mut);display:flex;gap:8px;align-items:center}
+.talk span{flex:1}
+.talk i{font-style:normal;background:var(--acc);color:#fff;border-radius:10px;padding:6px 10px;font-size:13px}
+.icons{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 6px;margin:6px 0 14px}
+.ic{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;text-align:center}
+.ic .c{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px}
+.big .ic .c{width:66px;height:66px;font-size:18px}
+.big .ic{font-size:14px}
+.big .icons{grid-template-columns:repeat(3,1fr)}
+.tiles{display:grid;gap:8px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:14px}
+.tile small{display:block;color:var(--mut);font-size:12px}
+.botnav{display:flex;justify-content:space-around;border-top:1px solid var(--line);margin-top:14px;padding-top:10px;font-size:12px;color:var(--mut)}
+.botnav b{color:var(--acc)}
+.legend{margin-top:26px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px}
+.legend h2{font-size:19px;margin:0 0 10px}
+.legend table{width:100%;border-collapse:collapse;font-size:15px}
+.legend td,.legend th{border-bottom:1px solid var(--line);padding:8px 6px;text-align:right;vertical-align:top}
+.legend th{color:var(--mut);font-weight:600}
+.y{color:var(--acc);font-weight:700}
+.n{color:#9a3b2f;font-weight:700}
+</style>
+</head>
+<body>
+<main>
+<h1>מוניטור חדש לאילי</h1>
+<p class="sub">מוקאפ. למעלה השאלון שאילי עובר בכניסה הראשונה, שאלה אחת בכל מסך. ליד, הטלפון שלו משתנה לפי מה שהוא עונה.</p>
+
+<div class="wrap">
+ <section class="quiz" aria-live="polite">
+  <div class="bar"><i id="bar"></i></div>
+  <div class="step" id="step"></div>
+  <div id="qbox">
+   <p class="q" id="q"></p>
+   <p class="hint" id="hint"></p>
+   <div class="opts" id="opts"></div>
+   <div class="nav">
+    <button type="button" id="back">חזרה</button>
+    <button type="button" class="go" id="next">הבא</button>
+   </div>
+  </div>
+  <div class="done" id="done">
+   <h2>המוניטור של אילי מוכן</h2>
+   <p>זה מה שהוא יראה בפתיחה. כל דבר אפשר להוסיף או להוריד אחר כך מההגדרות, בלי לעבור את השאלון שוב.</p>
+   <div class="nav"><button type="button" id="again">לעבור שוב על השאלון</button></div>
+  </div>
+ </section>
+
+ <div class="phone" aria-label="המסך של אילי">
+  <div class="scr" id="scr">
+   <div class="top"><b>המוניטור של אילי</b><small>עודכן עכשיו</small></div>
+   <div class="talk"><span id="talkTxt">כתוב לי כאן</span><i id="talkBtn">שליחה</i></div>
+   <div class="icons" id="icons"></div>
+   <div class="tiles" id="tiles"></div>
+   <div class="botnav" id="botnav"></div>
+  </div>
+ </div>
+</div>
+
+<section class="legend">
+ <h2>מה בא כברירת מחדל ומה לא</h2>
+ <table>
+  <tr><th>כפתור</th><th>ברירת מחדל</th><th>למה</th></tr>
+  <tr><td>שורת כתיבה והקלטה</td><td class="y">תמיד</td><td>זה הקו אליי. בלי זה אין מוניטור.</td></tr>
+  <tr><td>תשובות</td><td class="y">תמיד</td><td>המקום שבו הוא רואה מה עניתי לו.</td></tr>
+  <tr><td>תזכורות ותורים</td><td class="y">כן</td><td>הדבר הראשון שכל אחד צריך. אפשר לכבות.</td></tr>
+  <tr><td>דרייב</td><td class="y">כן</td><td>קבצים שאני מכין לו נוחתים שם.</td></tr>
+  <tr><td>עיגולי רשתות</td><td class="n">לא</td><td>רק הרשתות שסימן בשאלון. רשת שלא סימן לא מופיעה בכלל.</td></tr>
+  <tr><td>דוח רשת</td><td class="n">לא</td><td>נדלק רק אם סימן לפחות רשת אחת.</td></tr>
+  <tr><td>כדורים</td><td class="n">לא</td><td>רק אם ביקש תזכורת לכדורים. זה מידע רפואי.</td></tr>
+  <tr><td>לידים ומי פנה</td><td class="n">לא</td><td>רק למי שמוכר או מקבל פניות מהקהל.</td></tr>
+  <tr><td>ניתוח, שתייה, אבץ</td><td class="n">לא</td><td>אלה שלך. אצל אילי הם לא קיימים.</td></tr>
+ </table>
+</section>
+</main>
+
+<script>
+var Q=[
+ {k:'goal',q:'מה הכי חשוב לך שהמוניטור יעשה?',h:'אפשר לבחור יותר מאחד.',multi:true,o:[
+  ['ask','לענות לי על שאלות ולעשות בשבילי דברים'],['nets','לעקוב אחרי הרשתות שלי'],
+  ['remind','לזכור בשבילי תורים ומשימות'],['leads','לרכז מי פנה אליי ומה רוצה']]},
+ {k:'nets',q:'באילו רשתות אתה פעיל?',h:'רק מה שתסמן יקבל עיגול במסך.',multi:true,o:[
+  ['youtube','יוטיוב'],['tiktok','טיקטוק'],['facebook','פייסבוק'],['instagram','אינסטגרם'],['none','אף אחת']]},
+ {k:'talk',q:'איך נוח לך לדבר איתי?',h:'',o:[['write','לכתוב'],['voice','להקליט'],['both','גם וגם']]},
+ {k:'pills',q:'לתזכר אותך לקחת כדורים?',h:'',o:[['yes','כן, יש לי כדורים קבועים'],['no','לא צריך']]},
+ {k:'size',q:'איזה גודל כפתורים נוח לך?',h:'',o:[['normal','רגיל'],['big','גדול, שיהיה קל ללחוץ']]},
+ {k:'notif',q:'כמה התראות לטלפון ביום?',h:'',o:[['each','על כל תשובה שלי'],['urgent','רק כשמשהו דחוף'],['evening','סיכום אחד בערב']]}
+];
+var A={goal:['ask','remind'],nets:[],talk:'both',pills:'no',size:'normal',notif:'urgent'};
+var i=0;
+var NET={youtube:['יוטיוב','#e62117','▶'],tiktok:['טיקטוק','#111','♪'],facebook:['פייסבוק','#1877f2','f'],instagram:['אינסטגרם','#c13584','◎']};
+function $(x){return document.getElementById(x);}
+function sel(k,v){var a=A[k];return Array.isArray(a)?a.indexOf(v)>-1:a===v;}
+function draw(){
+ var s=Q[i];
+ $('bar').style.width=Math.round(i/Q.length*100)+'%';
+ $('step').textContent='שאלה '+(i+1)+' מתוך '+Q.length;
+ $('q').textContent=s.q;$('hint').textContent=s.h;
+ $('opts').innerHTML=s.o.map(function(o,n){
+  return '<button type="button" class="opt" data-v="'+o[0]+'" aria-pressed="'+sel(s.k,o[0])+'"><b>'+'אבגדה'[n]+'</b>'+o[1]+'</button>';}).join('');
+ $('back').disabled=i===0;
+ $('next').textContent=i===Q.length-1?'סיום':'הבא';
+ phone();
+}
+$('opts').addEventListener('click',function(e){
+ var b=e.target.closest('.opt');if(!b)return;
+ var s=Q[i],v=b.getAttribute('data-v');
+ if(s.multi){
+  var a=A[s.k].slice();
+  if(v==='none')a=a.indexOf('none')>-1?[]:['none'];
+  else{a=a.filter(function(x){return x!=='none';});var p=a.indexOf(v);if(p>-1)a.splice(p,1);else a.push(v);}
+  A[s.k]=a;
+ }else A[s.k]=v;
+ draw();
+});
+$('next').onclick=function(){if(i<Q.length-1){i++;draw();}else finish();};
+$('back').onclick=function(){if(i>0){i--;draw();}};
+$('again').onclick=function(){i=0;$('qbox').style.display='';$('done').style.display='none';draw();};
+function finish(){$('bar').style.width='100%';$('step').textContent='';$('qbox').style.display='none';$('done').style.display='block';phone();}
+function ic(t,c,g){return '<div class="ic"><span class="c" style="background:'+c+'">'+g+'</span>'+t+'</div>';}
+function phone(){
+ $('scr').className='scr'+(A.size==='big'?' big':'');
+ $('talkTxt').textContent=A.talk==='voice'?'לחיצה אחת ומקליטים':A.talk==='write'?'כתוב לי כאן':'כתוב לי כאן או הקלט';
+ $('talkBtn').textContent=A.talk==='write'?'שליחה':'🎤';
+ var nets=(A.nets||[]).filter(function(n){return NET[n];});
+ var h=nets.map(function(n){return ic(NET[n][0],NET[n][1],NET[n][2]);}).join('');
+ h+=ic('תשובות','#1f6f5c','✓');
+ if(A.goal.indexOf('remind')>-1)h+=ic('תורים','#8a5a14','⏰');
+ if(A.pills==='yes')h+=ic('כדורים','#6b4aa0','💊');
+ h+=ic('דרייב','#0f9d58','▲');
+ if(A.goal.indexOf('leads')>-1)h+=ic('מי פנה','#b3541e','☎');
+ $('icons').innerHTML=h;
+ var t='';
+ t+='<div class="tile">התשובה האחרונה שלי<small>מופיעה כאן ברגע שעניתי</small></div>';
+ if(A.goal.indexOf('remind')>-1)t+='<div class="tile">התור הבא<small>תאריך, שעה ומקום</small></div>';
+ if(nets.length)t+='<div class="tile">דוח רשת יומי<small>'+nets.map(function(n){return NET[n][0];}).join(', ')+'</small></div>';
+ if(A.pills==='yes')t+='<div class="tile">המנה הבאה<small>ספירה לאחור מהמנה האחרונה</small></div>';
+ t+='<div class="tile">התראות<small>'+({each:'על כל תשובה',urgent:'רק דחוף',evening:'סיכום אחד בערב'})[A.notif]+'</small></div>';
+ $('tiles').innerHTML=t;
+ var bn=['<b>בית</b>','תשובות'];
+ if(nets.length)bn.push('רשתות');
+ if(A.goal.indexOf('leads')>-1)bn.push('לידים');
+ bn.push('הגדרות');
+ $('botnav').innerHTML=bn.map(function(x){return '<span>'+x+'</span>';}).join('');
+}
+draw();
+</script>
+</body>
+</html>

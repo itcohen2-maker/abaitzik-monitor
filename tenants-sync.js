@@ -1,0 +1,177 @@
+'use strict';
+/*
+  Every fix reaches every monitor.
+
+  Itzik, 25.9: "התיקונים תמיד צריכים להיות גם במוניטור של איליי אם יש כשל".
+  A fix that lands in his copy and not in Ilay's is a bug Ilay still has, and
+  Itzik would only find out when his son hits it. So this is not something to
+  remember to do; it runs every five minutes on the server.
+
+  For each tenant in data/tenants/tenants it fetches this repository's main,
+  and if it moved since the last sync, copies every tracked file into the
+  tenant's checkout except the three things that are the tenant's own:
+  docs/ (his built page, which must never receive Itzik's files), instance.json
+  (who he is) and nothing under data/, which is untracked anyway. Then it
+  rebuilds the tenant's page and makes it readable to the web server.
+
+  It records the synced commit per tenant, so a quiet five minutes costs one
+  git fetch and nothing else.
+
+  Usage: node tenants-sync.js [--force]
+*/
+const fs = require('fs');
+const path = require('path');
+const { execFileSync } = require('child_process');
+const inst = require('./lib/instance.js');
+
+const DIR = path.join(inst.dataPath, 'tenants', 'tenants');
+const FORCE = process.argv.includes('--force');
+
+// 12.10: a record written in place is empty for a moment, and the other script
+// reading it then crashed on every run. homestyle.json stayed empty from 11.10
+// 07:13 and no customer got a code update for a day. Write aside, then rename.
+function writeRec(file, obj) {
+  const tmp = file + '.' + process.pid + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(obj, null, 1));
+  fs.renameSync(tmp, file);
+}
+function git(cwd, args) { return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim(); }
+
+/*
+  14.11.2026: once a day the customer's own history is folded into one commit on
+  top of the newest main, and what is left over is dropped. Every sync commits
+  the customer's whole built page (docs/index.html, about 1.5MB), 288 times a
+  day, so this history alone grew to 6G in a day. Nothing reads it (push.js
+  in a customer has no upstream). The files on disk do not change.
+*/
+function tidy(cwd) {
+  const stamp = path.join(cwd, '.git', 'tidy-day');
+  const day = new Date().toISOString().slice(0, 10);
+  let last = '';
+  try { last = fs.readFileSync(stamp, 'utf8').trim(); } catch (e) {}
+  if (last === day) return;
+  try { fs.writeFileSync(stamp, day); } catch (e) { return; }
+  try {
+    git(cwd, ['reset', '-q', '--soft', 'refs/remotes/code/main']);
+    try { git(cwd, ['commit', '-q', '-m', 'tidy ' + day]); } catch (e) { /* nothing to commit */ }
+    /*
+      15.11.2026: the fold above kept main's whole history reachable. code/main was fetched with
+      --depth=1, but its parents were already on disk, so git never marked it shallow, and the
+      folded commit sat on top of all of it: alon, ilay and pablo were back to 6G, and the disk
+      filled at night (ilay's transcription failed, "No space left"). Now the folded commit has no
+      parent, and code/main is written into .git/shallow, so gc can drop everything older.
+    */
+    const cm = git(cwd, ['rev-parse', 'refs/remotes/code/main']);
+    const root = git(cwd, ['commit-tree', git(cwd, ['rev-parse', 'HEAD^{tree}']), '-m', 'tidy ' + day]);
+    git(cwd, ['reset', '-q', '--soft', root]);
+    const sh = path.join(cwd, '.git', 'shallow');
+    let L = []; try { L = fs.readFileSync(sh, 'utf8').split(String.fromCharCode(10)).filter(Boolean); } catch (e) {}
+    if (L.indexOf(cm) < 0) { L.push(cm); fs.writeFileSync(sh, L.join(String.fromCharCode(10)) + String.fromCharCode(10)); }
+    git(cwd, ['reflog', 'expire', '--expire=now', '--all']);
+    // a repack writes the new pack before it deletes the old ones: on a nearly full disk it filled it (ilay, 14.11)
+    try { const st = fs.statfsSync(cwd); if (st.bavail * st.bsize < 3e9) { console.log('tidy ' + cwd + ': disk low, gc skipped'); return; } } catch (e) {}
+    execFileSync('git', ['gc', '-q', '--prune=now'], { cwd, stdio: 'ignore', timeout: 900000 });
+  } catch (e) { console.log('tidy ' + cwd + ': ' + String(e.message).slice(0, 120)); }
+}
+
+function sync(t) {
+  const cwd = t.dir;
+  try { git(cwd, ['remote', 'get-url', 'code']); }
+  catch (e) { git(cwd, ['remote', 'add', 'code', git(__dirname, ['remote', 'get-url', 'origin'])]); }
+  /*
+    14.11.2026: only the newest version of main, never its history. A plain fetch
+    pulled every commit of the main monitor since the last trim (about 2,900 a day,
+    each with Itzik's whole built page), and every customer's .git grew back to 6G
+    a day after it was cut to depth 1 (13.11), until the disk was full again.
+  */
+  /*
+    14.11.2026, Itzik: "הלקוחות יקבלו רק מה שהבודק עשה". A customer runs the branch stable, not main.
+    The button checker (monitor-guard/run.sh) moves stable to the version of main it checked, and only when
+    his monitor had 0 faults. The local name stays code/main, so the rest of this file is unchanged.
+    Urgent fix without waiting for the checker: git push origin main:stable (as user monitor).
+  */
+  try { git(cwd, ['fetch', '-q', '--depth=1', 'code', '+stable:refs/remotes/code/main']); }
+  catch (e) { git(cwd, ['fetch', '-q', '--depth=1', 'code', '+main:refs/remotes/code/main']); }
+  tidy(cwd);
+  const head = git(cwd, ['rev-parse', 'code/main']);
+  /*
+    5.10: a customer does not change his monitor (lib/change-requests.js). Code
+    edited or deleted in his checkout is put back on the next tick, not on the
+    next release.
+  */
+  let drift = false;
+  try {
+    execFileSync('git', ['diff', '--quiet', '--diff-filter=MDT', 'code/main', '--', '.',
+      ':(exclude)docs', ':(exclude)instance.json', ':(exclude)CLAUDE.md'], { cwd });
+  } catch (e) { drift = true; }
+  if (!FORCE && !drift && t.syncedTo === head) return { changed: false, head };
+  // Everything tracked upstream, minus what is the tenant's own.
+  git(cwd, ['checkout', 'code/main', '--', '.', ':(exclude)docs', ':(exclude)instance.json', ':(exclude)CLAUDE.md']);
+  execFileSync('node', ['build.js'], { cwd, stdio: 'ignore', timeout: 180000 });
+  try { execFileSync('chmod', ['-R', 'o+rX', path.join(cwd, 'docs')]); } catch (e) {}
+  // The tenant's own history records what it runs; nothing is pushed.
+  try {
+    git(cwd, ['add', '-A', '.']);
+    git(cwd, ['commit', '-q', '-m', 'sync code ' + head.slice(0, 8)]);
+  } catch (e) { /* nothing to commit */ }
+  return { changed: true, head };
+}
+
+function main() {
+  if (!fs.existsSync(DIR)) return;
+  for (const f of fs.readdirSync(DIR).filter((x) => x.endsWith('.json'))) {
+    const file = path.join(DIR, f);
+    let t;
+    try { t = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) { console.log(f + ' unreadable, skipped'); continue; }
+    if (!t.dir || t.selfSync) continue;
+    try {
+      const r = sync(t);
+      if (r.changed) {
+        t.syncedTo = r.head; t.syncedAt = new Date().toISOString(); delete t.syncError;
+        console.log(new Date().toISOString().slice(11, 19) + '  ' + t.id + ' synced to ' + r.head.slice(0, 8));
+      }
+    } catch (e) {
+      t.syncError = String(e.message).slice(0, 200);
+      console.log(new Date().toISOString().slice(11, 19) + '  ' + t.id + ' SYNC FAILED: ' + t.syncError);
+    }
+    // Re-read before writing: the health check writes this file every minute.
+    let now;
+    try { now = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) { now = Object.assign({}, t); }
+    for (const k of ['syncedTo', 'syncedAt', 'syncError']) {
+      if (k in t) now[k] = t[k]; else delete now[k];
+    }
+    writeRec(file, now);
+  }
+}
+
+/*
+  28.9, Itzik: "הפרדה מוחלטת". A tenant that runs as its own Linux user cannot
+  be written into by this repository's user, and must not be. It syncs itself:
+  its own timer runs `node tenants-sync.js --self` in its own checkout, fetching
+  the public repository over https (it holds no GitHub key), and writes the
+  result to its own data/status/sync.json. Its record here carries
+  "selfSync": true so the loop above leaves it alone.
+*/
+const PUBLIC = 'https://github.com/itcohen2-maker/abaitzik-monitor.git';
+function selfSync() {
+  const out = path.join(inst.dataPath, 'status', 'sync.json');
+  const prev = (() => { try { return JSON.parse(fs.readFileSync(out, 'utf8')); } catch (e) { return {}; } })();
+  try { git(__dirname, ['remote', 'set-url', 'code', PUBLIC]); }
+  catch (e) { git(__dirname, ['remote', 'add', 'code', PUBLIC]); }
+  const t = { dir: __dirname, syncedTo: prev.syncedTo };
+  const r = { at: new Date().toISOString(), syncedTo: prev.syncedTo, syncedAt: prev.syncedAt };
+  try {
+    const s = sync(t);
+    if (s.changed) {
+      r.syncedTo = s.head; r.syncedAt = r.at;
+      console.log(r.at.slice(11, 19) + '  self synced to ' + s.head.slice(0, 8));
+    }
+  } catch (e) {
+    r.syncError = String(e.message).slice(0, 200);
+    console.log(r.at.slice(11, 19) + '  SELF SYNC FAILED: ' + r.syncError);
+  }
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  fs.writeFileSync(out, JSON.stringify(r, null, 1));
+}
+
+if (require.main === module) (process.argv.includes('--self') ? selfSync : main)();

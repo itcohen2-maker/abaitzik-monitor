@@ -1,0 +1,15 @@
+# 24.10.2026. The money numbers (money.js), run by money.timer three times a day.
+# Not installed by anything in this repo. To install on the server, as root:
+#   cp setup/money.service setup/money.timer /etc/systemd/system/ && systemctl daemon-reload && systemctl enable --now money.timer
+# Morning keys, only if the 'morning' feature is on, go in the env file below (mode 600, owner monitor):
+#   MORNING_ID=...  MORNING_SECRET=...  MORNING_SANDBOX=0
+[Unit]
+Description=abaitzik monitor, money numbers and anomalies (money.js)
+[Service]
+Type=oneshot
+User=monitor
+WorkingDirectory=/home/monitor/abaitzik-monitor
+EnvironmentFile=-/home/monitor/abaitzik-monitor/data/money/morning.env
+ExecStart=/usr/bin/node money.js
+StandardOutput=append:/var/log/monitor-money.log
+StandardError=append:/var/log/monitor-money.log

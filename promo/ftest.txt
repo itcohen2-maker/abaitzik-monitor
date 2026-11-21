@@ -1,0 +1,1 @@
+scale=900:-1,pad=1080:1100:(ow-iw)/2:300:color=0x0b0e14,drawtext=fontfile=fontb.ttf:text='המסך הראשי':fontcolor=white:fontsize=76:x=(w-text_w)/2:y=120

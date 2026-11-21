@@ -1,0 +1,7 @@
+[Unit]
+Description=pain scanner every Sunday and Wednesday, 09:00 Israel
+[Timer]
+OnCalendar=Sun,Wed *-*-* 09:00:00 Asia/Jerusalem
+Persistent=true
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,13 @@
+# 4.11.2026. The manager's round (manager.js), run by monitor-manager.timer.
+# Install as root:
+#   cp setup/monitor-manager.service setup/monitor-manager.timer /etc/systemd/system/ && systemctl daemon-reload && systemctl enable --now monitor-manager.timer
+[Unit]
+Description=abaitzik monitor, the manager's round (manager.js)
+[Service]
+Type=oneshot
+User=monitor
+Environment=HOME=/home/monitor
+WorkingDirectory=/home/monitor/abaitzik-monitor
+ExecStart=/usr/bin/node manager.js
+StandardOutput=append:/var/log/monitor-manager.log
+StandardError=append:/var/log/monitor-manager.log

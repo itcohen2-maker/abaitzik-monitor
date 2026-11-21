@@ -1,0 +1,2142 @@
+'use strict';
+/*
+  The listener. This is the thing that was missing.
+
+  Until 13.9 nothing on this machine touched the backup channel. The page sent
+  to ntfy, ntfy held the message, and it reached the machine only when a Claude
+  session happened to type `node inbox.js`. On 13.9 six of Itzik's voice memos
+  sat there, the oldest for ninety seven minutes, and he was right to call it
+  what it was.
+
+  So this holds the connection open instead of asking now and then. ntfy's
+  stream endpoint pushes a message the moment it is published, which makes the
+  arrival immediate rather than "within a minute". Attachments are downloaded
+  the same way inbox.js downloads them, into the same folder, against the same
+  seen mark, so the two cannot fight over what has already been read.
+
+  Two things are written for the screen:
+    data/status/live.json   the heartbeat, so anything local can tell it is up
+    data/status/pulls.json  the last hundred arrivals, with their times
+
+  And the same heartbeat goes out on a second ntfy topic, at minimum priority
+  so it never buzzes his phone. That is what the indicator on the page reads:
+  his phone cannot see a file on this machine, but it can see that topic.
+
+  Usage: node listen.js
+*/
+const fs = require('fs');
+const path = require('path');
+const ch = require('./lib/notify-channels.js');
+const wp = require('./lib/webpush.js');
+const codexBridge = require('./codex-bridge.js');
+const codexRoute = require('./lib/codex-route.js');
+const group = require('./lib/group.js');
+const drains = require('./lib/drains.js');
+const notesSync = require('./lib/notes-sync.js');
+const { execFile } = require('child_process');
+
+// Which monitor this is. Without instance.json every one of these is Itzik's
+// current value, so the listener subscribes to exactly what it did yesterday.
+const inst = require('./lib/instance.js');
+/*
+  Only on the machine this instance names. See serverHost in lib/instance.js:
+  a second the listener on another machine answers every message twice and fights
+  the first one over every push.
+*/
+/*
+  8.10: a paused customer (instance.json paused) hears nothing. Exiting would
+  make systemd restart the listener every ten seconds, so it idles instead and
+  leaves once the flag is gone, to come back as a normal listener.
+*/
+if (require.main === module && inst.paused) {
+  console.log('paused: this monitor is on hold, not listening.');
+  setInterval(() => { if (!require('./lib/instance.js').load().paused) process.exit(0); }, 60 * 1000);
+  return;
+}
+if (require.main === module && inst.serverHost && require('os').hostname() !== inst.serverHost) {
+  console.log('the listener runs on ' + inst.serverHost + ', not here (' + require('os').hostname() + '). Leaving.');
+  process.exit(0);
+}
+const TOPIC = inst.ntfy.in;
+const LIVE = inst.ntfy.live;
+const SEEN = path.join(inst.dataPath, 'ntfy-seen.json');
+const DROP = path.join(inst.dataPath, 'inbox');
+const STATUS = path.join(inst.dataPath, 'status');
+const LIVEFILE = path.join(STATUS, 'live.json');
+// 21.10: the worker writes this file while a customer's monitor waits for the manager's
+// approval of a quota hold (worker.js quotaHold). The page shows a line for it.
+const QHOLD = path.join(STATUS, 'quota-hold.json');
+function holdOn() { return fs.existsSync(QHOLD); }
+// 24.10: today's share of the day cap, for the quota bar on a customer's page (null on Itzik's).
+function quotaView() {
+  // live.json is public on Pages, so only the percent goes out, never dollars.
+  try {
+    // 11.11.2026: a customer with a monthly package sees no day bar; the package tile is the only count.
+    if (require('./lib/plan-io.js').stateOf(inst.name)) return null;
+    const v = require('./lib/quota-day.js').view({ name: inst.name, statusDir: STATUS,
+      ownAccount: fs.existsSync('/srv/monitor-changes/' + inst.name + '.own'), tier: require('./lib/tier.js').current(), env: process.env });
+    return v ? { pct: v.pct } : null;
+  } catch (e) { return null; }
+}
+// 4.11: the monthly package in actions, for the tile on a customer's page. Never dollars.
+function planView() {
+  try { return require('./lib/plan.js').view(require('./lib/plan-io.js').statusOf(inst.name, STATUS, Date.now())); } catch (e) { return null; }
+}
+const PULLS = path.join(STATUS, 'pulls.json');
+// The chat folder can be pointed somewhere else so the merge can be exercised
+// against real files without writing into his actual conversation.
+const CHAT = process.env.ABAITZIK_CHAT_DIR
+  || path.join(inst.dataPath, 'chat', 'chat');
+const DRAINS = process.env.ABAITZIK_DRAINS_DIR
+  || path.join(inst.dataPath, 'drains', 'drains');
+
+/*
+  How often the pulse goes out.
+
+  The first version beat every sixty seconds and that was a mistake with a
+  cost: a hundred and thirty two messages in two hours exhausted ntfy's free
+  daily quota for this machine, which is the same quota the push notifications
+  use. The indicator meant to prove the monitor was alive is what knocked its
+  own channel over, and from Itzik's phone that looked exactly like the monitor
+  falling.
+
+  So the idle pulse is every fifteen minutes, about ninety six a day, which
+  leaves the rest of the daily allowance for messages that actually matter. The
+  feedback he cares about does not depend on it: every catch beats immediately,
+  so seconds after he sends anything the indicator says so by name.
+*/
+/*
+  The idle pulse is hourly now, not every fifteen minutes.
+
+  Even at fifteen minutes it was ninety six messages a day against an
+  allowance of about two hundred and fifty, so almost half of Itzik's
+  notification budget was being spent on saying "still here". At an hour it is
+  twenty four, it draws on its own small ration that cannot touch the
+  notifications, and the page has a second source that costs nothing anyway.
+
+  None of this slows down the part he actually watches: a catch still pulses
+  immediately, so the answer to "did what I just sent arrive" is still seconds.
+*/
+const BEAT_MS = 3600000;
+// The fallback pulse. Only on a change of shape, never on a clock, because
+// every one of these is a commit.
+const DOCS_LIVE = path.join(__dirname, 'docs', 'live.json');
+const FALLBACK_MIN_GAP = 300000;
+let lastFallbackAt = 0;
+let lastShape = '';
+const BEAT_BACKOFF_MS = 3600000;
+let beatBlockedUntil = 0;
+const STARTED = Date.now();
+let received = 0;
+let lastMsgAt = 0;
+let connectedAt = 0;
+
+function readJson(p, fallback) {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return fallback; }
+}
+function writeJson(p, v) {
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  fs.writeFileSync(p, JSON.stringify(v, null, 1), 'utf8');
+}
+function say(line) {
+  console.log(new Date().toLocaleTimeString('he-IL') + '  ' + line);
+}
+
+// The seen mark is shared with inbox.js on purpose: whichever of the two reads
+// a message first, the other must not hand it over a second time.
+function mark() { return readJson(SEEN, { time: 0, ids: [] }); }
+function remember(m) {
+  const s = mark();
+  const ids = m.time === s.time ? s.ids.concat([m.id]) : [m.id];
+  writeJson(SEEN, { time: Math.max(s.time || 0, m.time), ids: ids });
+}
+
+// Every arrival is written down with its time, because "it arrived" and "it
+// arrived at 15:29" are not the same claim, and he asked for the second one.
+function logPull(kind, text) {
+  const list = readJson(PULLS, []);
+  list.push({ at: new Date().toISOString(), kind: kind, text: String(text || '').slice(0, 120) });
+  writeJson(PULLS, list.slice(-100));
+}
+
+function beatBody() {
+  // The five most recent arrivals travel with the pulse. His phone cannot read
+  // pulls.json on this machine, and "when did it last actually pick something
+  // up" is the question the indicator has to answer.
+  const recent = readJson(PULLS, []).slice(-5)
+    .map(function (r) { return { at: r.at, kind: r.kind }; });
+  // The pulse also carries what is left of today's sending budget. The whole
+  // point of the rebuild is that we see the cliff before we walk off it, and
+  // the only screen Itzik reads is the one on his phone.
+  let money = {};
+  let queued = 0;
+  try { money = ch.budget(); queued = ch.queueLength(); } catch (e) { /* never block the pulse */ }
+  return {
+    at: new Date().toISOString(),
+    up: Math.round((Date.now() - STARTED) / 1000),
+    since: connectedAt ? new Date(connectedAt).toISOString() : '',
+    last: lastMsgAt ? new Date(lastMsgAt).toISOString() : '',
+    n: received,
+    recent: recent,
+    budget: money,
+    queued: queued,
+    pc: pcState(),
+    hold: holdOn(),
+    quota: quotaView(),
+    plan: planView()
+  };
+}
+
+/*
+  2.10, Itzik: "אני רוצה מוקאפ בתחתית שאומר אם המחשב דלוק או כבוי". The PC
+  writes data/status/pc-seen.json through pc-task.js every minute it is on.
+  Seen in the last three minutes is on. The page learns of a change from the
+  published file, so a flip publishes at once and nothing else does.
+*/
+const PC_SEEN = path.join(STATUS, "pc-seen.json");
+// 14.10: the customer loop is sequential, so while a task runs (up to 30
+// minutes) it sends no ping. Rinat's Illustrator job made the page say "not
+// connected" for a machine that was busy. A task claimed inside that window
+// counts as on.
+const PC_TASKS = path.join(inst.dataPath, "pc", "pc");
+const PC_TASK_MAX_MS = 31 * 60 * 1000;
+function pcBusy() {
+  let files = [];
+  try { files = fs.readdirSync(PC_TASKS); } catch (e) { return false; }
+  for (const f of files) {
+    if (!f.endsWith(".json")) continue;
+    const t = readJson(path.join(PC_TASKS, f), null);
+    if (!t || t.status !== "claimed" || !t.claimedAt) continue;
+    const age = Date.now() - Date.parse(t.claimedAt);
+    if (age >= 0 && age < PC_TASK_MAX_MS) return true;
+  }
+  return false;
+}
+function pcState() {
+  const s = readJson(PC_SEEN, null);
+  const at = s && Date.parse(s.at);
+  const seen = Boolean(at && Date.now() - at < 180000);
+  return { on: seen || pcBusy(), seen: s ? s.at : "" };
+}
+let pcLastOn = null;
+let holdLast = null;
+function pcWatch() {
+  const on = pcState().on;
+  if (pcLastOn !== null && on !== pcLastOn) {
+    say(on ? "המחשב חזר לפעול." : "המחשב הפסיק לדווח, כנראה כבוי.");
+    lastFallbackAt = 0;
+    publishFallback(beatBody(), true);
+  }
+  pcLastOn = on;
+  // 21.10: the hold banner appears and goes at once, not at the next hourly pulse.
+  const onHold = holdOn();
+  if (holdLast !== null && onHold !== holdLast) {
+    lastFallbackAt = 0;
+    publishFallback(beatBody(), true);
+  }
+  holdLast = onHold;
+}
+
+// Minimum priority and no tags: this is a pulse, not a notification. If it ever
+// starts buzzing his phone the indicator is worse than no indicator at all.
+async function beat() {
+  const body = beatBody();
+  // Two writes that cost nothing and always happen: the local file, and the
+  // one next to the page when the state has changed shape.
+  writeJson(LIVEFILE, body);
+  // Every beat, not only when the state changes shape. The change-only rule
+  // meant that through a quiet night the published file stayed hours old, and
+  // a page that could not reach ntfy had nothing fresh to read from either
+  // source. Hourly beats make this about two dozen small commits a day, which
+  // is a fair price for a page that does not lie about being alive.
+  publishFallback(body, true);
+  // And the fast pulse, which is the only part with a price on it. Its ration
+  // is separate from the notifications, so running out here can never mean
+  // Itzik stops being reachable.
+  const sent = await ch.pulse(JSON.stringify(body));
+  if (!sent && !beatBlockedUntil) {
+    beatBlockedUntil = Date.now();
+    say('הפעימה המהירה לא יוצאת. הדף יקרא את הקובץ במקום, וההתראות לא נפגעות.');
+  }
+  if (sent) beatBlockedUntil = 0;
+}
+
+/*
+  The pulse that does not ride the blocked channel.
+
+  The indicator reads ntfy, which is fine until ntfy is the thing that is down:
+  then no pulse goes out at all, the pill shows red, and it cannot say the one
+  thing that is actually true, which is "I hear you, I just cannot answer". On
+  13.9 that is exactly what happened and Itzik read it as the monitor dying.
+
+  So the same state is also written next to the page itself, on GitHub Pages,
+  which the page can always read from its own origin with nobody's quota in the
+  way. This is a commit, so it is written only when the shape of the state
+  changes, never on a timer, and no more than once every five minutes.
+
+  It touches one path and nothing else. A commit limited to a pathspec cannot
+  sweep up whatever else is in the working tree, which matters because a
+  session may well be editing this repository at the same moment.
+*/
+function git(args, cb) {
+  execFile('git', args, { cwd: __dirname, timeout: 30000 }, function (err, out, errout) {
+    cb(err, String(out || '') + String(errout || ''));
+  });
+}
+/*
+  Catching up with the remote without ever leaving the tree in a state that
+  the next tick cannot use.
+
+  Twice on 25.9 a plain `pull --rebase` hit a conflict on docs/live.json, the
+  one file every instance rewrites, and stopped mid rebase: detached HEAD,
+  "UU docs/live.json", and from then on every push and every later pull
+  failed with words that looked exactly like a GitHub permissions problem.
+  The listener kept saying the publish failed and would try again, and it
+  never could, because the repository was no longer on a branch.
+
+  So: abort any rebase left behind first, take our side of any conflict since
+  what this machine just wrote is the newer state, and if even that fails,
+  abort again and go back to main, so that whatever happened, the next attempt
+  starts from a clean tree. The error is passed on for the caller to report.
+*/
+function resync(cb) {
+  git(['rebase', '--abort'], function () {
+    git(['pull', '--rebase', '--autostash', '-X', 'theirs'], function (err, out) {
+      if (!err) return cb(null, out);
+      git(['rebase', '--abort'], function () {
+        git(['checkout', '-q', 'main'], function () { cb(err, out); });
+      });
+    });
+  });
+}
+function shapeOf(body) {
+  const b = body.budget || {};
+  return [connectedAt ? 'up' : 'down',
+    Object.keys(b).map(function (k) {
+      return k + (b[k].blockedUntil ? ':blocked' : ':' + (b[k].left > 0 ? 'ok' : 'empty'));
+    }).join(','),
+    body.queued ? 'queued' : '', body.pc && body.pc.on ? 'pc:on' : 'pc:off', body.hold ? 'hold' : ''].join('|');
+}
+function publishFallback(body, force) {
+  const shape = shapeOf(body);
+  if (!force && shape === lastShape) return;
+  // 8.10: a recovery goes out at once. On 7.10 at 22:12 ntfy dropped for 16
+  // seconds, the down went out, and this gap held the up back for 13 minutes,
+  // so his page said disconnected long after it was listening again.
+  const recovered = /^up/.test(shape) && /^down/.test(lastShape || '');
+  if (!recovered && Date.now() - lastFallbackAt < FALLBACK_MIN_GAP) return;
+  lastShape = shape;
+  lastFallbackAt = Date.now();
+  try {
+    fs.mkdirSync(path.dirname(DOCS_LIVE), { recursive: true });
+    fs.writeFileSync(DOCS_LIVE, JSON.stringify(body, null, 1), 'utf8');
+  } catch (e) { return; }
+  // The first version went straight to commit with a pathspec. On the very
+  // first run the file was untracked, so the commit matched nothing, git said
+  // so in words the code did not recognise, the push succeeded with nothing in
+  // it, and the listener reported the state as published when it was not. An
+  // add first, and a check that a commit actually happened.
+  git(['add', '--', 'docs/live.json'], function () {
+    git(['commit', '-m', 'live: ' + shape, '--', 'docs/live.json'], function (err, out) {
+      if (/nothing to commit|no changes added|did not match/i.test(out)) return;
+      if (err) { say('!! מצב המאזין לא נשמר: ' + out.trim().slice(0, 120)); return; }
+      // 15.10: a customer's page is served from docs here (Caddy); GitHub is only Itzik's
+      // backup and a customer instance has no key for it. Rinat's log said "פרסום נכשל"
+      // every hour for a day over nothing. The file on disk is the publication.
+      if (inst.name !== 'abaitzik') return;
+      push(0);
+    });
+  });
+  function push(attempt) {
+    git(['push'], function (err) {
+      if (!err) { say('מצב המאזין פורסם לדף: ' + shape); return; }
+      if (attempt) { say('!! פרסום מצב המאזין לדף נכשל, ינוסה בשינוי הבא.'); return; }
+      // Someone else pushed first. Rebase onto them and try once more, then
+      // leave it: the next change carries the same information anyway.
+      resync(function () { push(1); });
+    });
+  }
+}
+
+/*
+  A file over 2MB arrives as name.part1ofK through name.partKofK (ntfy.sh's
+  anonymous limit since October 2026; the page slices, see sendFiles). Each
+  slice is saved like any file. When the last one is on disk they are joined
+  into the real name, the slices are removed, and the message carries the real
+  name from here on, so the chat sees one file. Until then a slice is not a
+  message at all.
+*/
+const PART_RE = /^(.+)\.part(\d+)of(\d+)$/;
+/*
+  12.10: two cheque photos sent together from the iPhone were both called
+  image.jpg, and the second one wrote over the first on disk. A file never
+  replaces another one: the newcomer becomes image-2.jpg and the message
+  carries that name.
+*/
+function freeName(name) {
+  if (!fs.existsSync(path.join(DROP, name))) return name;
+  const ext = path.extname(name), stem = name.slice(0, name.length - ext.length);
+  for (let i = 2; ; i++) {
+    const n = stem + '-' + i + ext;
+    if (!fs.existsSync(path.join(DROP, n))) return n;
+  }
+}
+function joinSlices(m) {
+  const hit = PART_RE.exec(String(m.attachment.name || ''));
+  if (!hit) return 'whole';
+  const k = Number(hit[3]);
+  const names = [];
+  for (let j = 1; j <= k; j++) names.push(path.join(DROP, hit[1] + '.part' + j + 'of' + k));
+  if (!names.every(function (f) { return fs.existsSync(f); })) return 'waiting';
+  const base = freeName(hit[1]);
+  try {
+    fs.writeFileSync(path.join(DROP, base), Buffer.concat(names.map(function (f) { return fs.readFileSync(f); })));
+    names.forEach(function (f) { try { fs.unlinkSync(f); } catch (e) {} });
+  } catch (e) { say('!! חיבור החלקים נכשל: ' + base + ' ' + e.message); return 'waiting'; }
+  say('קובץ חובר מ-' + k + ' חלקים: ' + base);
+  logPull('file', base);
+  m.attachment = Object.assign({}, m.attachment, { name: base });
+  return 'joined';
+}
+
+async function saveAttachment(m) {
+  // What ntfy carried: the real name, or, for a sealed file, a random one (and the .partNofM tail).
+  const sent = String(m.attachment.name || 'file');
+  const res = await fetch(m.attachment.url);
+  const bin = Buffer.from(await res.arrayBuffer());
+  const expected = Number(m.attachment.size) || 0;
+  // The last slice of a sliced file can be a few bytes, so a slice is judged
+  // only against the size ntfy says it has.
+  const slice = PART_RE.test(sent);
+  const real = res.ok && (bin.length > 1024 || (slice && expected > 0 && bin.length === expected))
+    && (!expected || bin.length >= expected * 0.9);
+  // 10.11.2026: a sealed file ("ENC1" or "ENC2", see sealBlob in build.js) is opened here. The size checks
+  // above judged what ntfy holds; what is written is the real file, under the real name when it was sealed
+  // inside (ENC2, plus the slice tail from the sent name). One that does not verify is a loss.
+  const opened = real ? gateSeal.openFile(bin) : null;
+  if (real && opened) {
+    let name = sent;
+    if (opened.name) {
+      const hit = PART_RE.exec(sent);
+      name = hit ? opened.name + '.part' + hit[2] + 'of' + hit[3] : opened.name;
+    }
+    if (!PART_RE.test(name)) name = freeName(name);
+    m.attachment = Object.assign({}, m.attachment, { name: name });
+    fs.mkdirSync(DROP, { recursive: true });
+    fs.writeFileSync(path.join(DROP, name), opened.data);
+    say('קובץ נשמר: ' + name + ' (' + opened.data.length + ')');
+    logPull('file', name);
+    return true;
+  }
+  // Three hours is all ntfy keeps an attachment. Listening removes the reason
+  // this ever happened, but a loss still has to be loud rather than silent.
+  say('!! ההקלטה אבדה: ' + m.attachment.name + ' (' + res.status + ', ' + bin.length + ')');
+  logPull('lost', m.attachment.name);
+  return false;
+}
+
+/*
+  Itzik, 16.9: "give me an answer the moment you start working on it, and it
+  stays open in red until the answer arrives, then green". Until now his
+  message only entered the chat when I answered it, so for the whole wait the
+  page showed nothing. Now the listener writes the message into the chat the
+  moment it lands, with status working and the time it was received. The page
+  renders that as a red line under his words. When I answer, the record turns
+  done and the line turns green. No claim is made that was not true: the
+  listener really did receive it at that time.
+*/
+function isSystemText(text) {
+  const t = String(text || '');
+  return /^You received a file/.test(t) || /^קובץ\n/.test(t) || /^קודקס:/.test(t);
+}
+/*
+  The parts of one send, held open until the last one lands.
+
+  A send that carries a photo, a video, a recording and a line of writing
+  arrives here as four separate ntfy messages, seconds apart. The token the
+  page stamped on each title is what says they are one thing, and this is the
+  file that was opened for that token, so every later part is folded into it
+  instead of starting a new conversation.
+*/
+const groupFiles = new Map();
+
+/*
+  The name is stamped to the second, and two things can land inside one second.
+  Until now the second one overwrote the first, and a message he sent was gone
+  from the page without anything anywhere saying it had been dropped.
+*/
+function chatName(at) {
+  const pad = (n) => String(n).padStart(2, '0');
+  const base = at.getFullYear() + pad(at.getMonth() + 1) + pad(at.getDate()) + '-'
+    + pad(at.getHours()) + pad(at.getMinutes()) + pad(at.getSeconds()) + '-itzik-auto';
+  let name = base + '.json';
+  for (let i = 2; fs.existsSync(path.join(CHAT, name)); i++) name = base + '-' + i + '.json';
+  return name;
+}
+
+/*
+  Security, 30.9. The incoming ntfy topic was public (it sat in the public
+  repo), and anything that arrived on it was recorded as Itzik and handed to
+  a Claude session with full permissions. Every send from his page carries
+  his personal code on its last line, so that code is now the proof: a
+  message, or a group of parts, is his only once a part with the right code
+  has arrived. Until then it is recorded as 'unverified', which the worker
+  never picks up. The code lives in data/owner-code.txt (600, gitignored).
+*/
+let ownerCode = null, ownerCodeAt = 0;
+function ownerCodeOk(text) {
+  if (Date.now() - ownerCodeAt > 60000) {
+    // A tenant whose owner never set a code (no file) keeps the old open
+    // behaviour, so a new client is not locked out on day one; the file is
+    // what turns the check on. Itzik's copy has it.
+    try { ownerCode = process.env.ABAITZIK_OWNER_CODE
+      || fs.readFileSync(path.join(__dirname, 'data', 'owner-code.txt'), 'utf8').trim(); }
+    catch (e) { ownerCode = e.code === 'ENOENT' ? 'none' : null; }
+    ownerCodeAt = Date.now();
+  }
+  if (ownerCode === 'none') return true;
+  if (!ownerCode || !/^[0-9]{3,8}$/.test(ownerCode)) return false;
+  // Plain text, no pattern: every piece after the word, whitespace off,
+  // must start with the code and not run on into more digits.
+  const parts = String(text || '').split('קוד').slice(1);
+  return parts.some(function (part) {
+    const rest = part.trimStart();
+    return rest.startsWith(ownerCode) && !/[0-9]/.test(rest.charAt(ownerCode.length));
+  });
+}
+
+function heldWhy(text) {
+  if (/^\s*ליד מהאתר/.test(String(text || ''))) return 'lead';
+  // 1.11, Itzik: the Shachar waitlist is its own list, not a lead. A push, nothing in העסק שלי.
+  if (/^\s*רשימת המתנה לשחר/.test(String(text || ''))) return 'waitlist';
+  // 3.11: the Shachar login screen could not sign someone in and kept the email (motivation-bot app/api/login-wait).
+  if (/^\s*ממתין לכניסה לשחר/.test(String(text || ''))) return 'login-wait';
+  // 1.11: a 👎 or a hurt note from a Shachar tester (motivation-bot app/api/feedback).
+  if (/^\s*משוב משחר/.test(String(text || ''))) return 'shachar-feedback';
+  return /קוד\s*[0-9]{3,8}/.test(String(text || '')) ? 'wrong-code' : 'no-code';
+}
+
+/*
+  20.10: Itzik, about the ITsolution campaign: "כן גם במייל וגם בטלפון". A lead
+  from the site form (api/contact.js, "ליד מהאתר") goes to his phone and to his
+  mail the moment it lands, so he can call back within the hour. The push goes
+  from here. The mail cannot: FormSubmit answers this server with a Cloudflare
+  403 and ntfy refuses anonymous email (40053), so the site's form mails him
+  from the visitor's browser instead. Inside quiet hours the push waits.
+*/
+// 1.11, Itzik: "a lead is the very first priority: it pops, it blinks, and it comes by mail too,
+// an IT Solution lead or Shachar". Phone at top priority through quiet hours, a mail, and a rebuild
+// so 💼 העסק שלי blinks (its data-upd carries the time of the newest lead, see build.js).
+function leadAlert(title, body, tags) {
+  ch.notify(title, body, { urgent: true, priority: 5, tags: tags }).then((r) => say(title + ': התראה ' + (r.channel || 'בתור')))
+    .catch((e) => say('!! ' + title + ': ההתראה נכשלה ' + e.message));
+  ch.mail(title, body).then(() => say(title + ': מייל יצא')).catch((e) => say('!! ' + title + ': המייל נכשל ' + e.message));
+  setTimeout(() => execFile(process.execPath, ['push.js', 'ליד חדש: העסק שלי מהבהב'], { cwd: __dirname, timeout: 240000 }, function () {}), 4000);
+}
+
+function siteLeadLabel(text) {
+  if (inst.name !== 'abaitzik') return '';
+  try { return require('./affiliates.js').siteLabel(text); } catch (e) { return ''; }
+}
+function alertLead(text) {
+  // 12.11.2026: a lead through a referrer's link says so in the title and in the source line ("ליד דרך שי בודק, למוניטור").
+  const lab = siteLeadLabel(text);
+  let body = String(text || '').replace(/^\s*ליד מהאתר[^\n]*\n/, '');
+  if (lab) body = body.replace(/^מקור:.*$/m, 'מקור: ' + lab);
+  leadAlert(lab ? '💼 ' + lab : '💼 ליד חדש מהאתר', body + '\nבמוניטור: במסך הראשי האריח 🔔 יש ליד שהגיע, או 💼 העסק שלי ← לידים', 'rotating_light,moneybag');
+}
+
+function alertShacharFeedback(text) {
+  const body = String(text || '').replace(/^\s*משוב משחר[^\n]*\n?/, '');
+  try { require('./lib/shachar.js').handleRefresh(shachar.deps()).catch(() => {}); } catch (e) { say('!! משוב שחר: רענון נכשל ' + e.message); }
+  ch.notify('🌅 משוב משחר צריך את תשומת לבך', body + '\nבמוניטור: 💼 העסק שלי ← עסקים ← "שחר: משוב מהנסיינים"', { urgent: true, priority: 5, tags: 'warning' })
+    .then((r) => say('משוב שחר: התראה ' + (r.channel || 'בתור'))).catch((e) => say('!! משוב שחר: ההתראה נכשלה ' + e.message));
+}
+
+function alertLoginWait(text) {
+  const body = String(text || '').replace(/^\s*ממתין לכניסה לשחר[^\n]*\n?/, '');
+  try { require('./lib/shachar.js').handleRefresh(shachar.deps()).catch(() => {}); } catch (e) { say('!! ממתין לכניסה: רענון נכשל ' + e.message); }
+  ch.notify('🌅 מישהו לא הצליח להיכנס לשחר', body + '\nהמייל נשמר. ברגע שהכניסה תעבוד הוא יקבל קישור לבד.', { urgent: true, priority: 5, tags: 'warning' })
+    .then((r) => say('ממתין לכניסה: התראה ' + (r.channel || 'בתור'))).catch((e) => say('!! ממתין לכניסה: ההתראה נכשלה ' + e.message));
+}
+
+function alertWaitlist(text) {
+  const body = String(text || '').replace(/^\s*רשימת המתנה לשחר[^\n]*\n?/, '');
+  const em = (body.match(/\S+@\S+/) || [''])[0];
+  try { require('./lib/shachar.js').handleRefresh(shachar.deps()).catch(() => {}); } catch (e) { say('!! רשימת המתנה: רענון נכשל ' + e.message); }
+  // 4.11, Itzik: "אין לנו יותר רשימת המתנה ... אני לא יודע מה לעשות עם הליד הזה". Entry is automatic since 3.11,
+  // so a signup is news, not a lead: a quiet notice, no mail, no "יש ליד שהגיע" blink. Shachar's tab still counts it.
+  ch.notify('🌅 הצטרפו לשחר' + (em ? ': ' + em : ''), 'הכניסה נפתחה והמכתב נשלח אוטומטית. אין מה לעשות.\nבמוניטור: 💼 העסק שלי ← 🌅 שחר', { priority: 2, tags: 'sunrise' })
+    .then((r) => say('הצטרפות לשחר: התראה שקטה ' + (r.channel || 'בתור'))).catch((e) => say('!! הצטרפות לשחר: ' + e.message));
+}
+
+// 21.10: the same lead also lands in העסק שלי, so he sees it in the monitor
+// and can mark it handled. See leadFromSite in lib/biz.js.
+function saveSiteLead(text, at, own) {
+  const id = 'biz-' + at.replace(/\D/g, '').slice(0, 14) + '-site';
+  const r = require('./lib/biz.js').leadFromSite(text, at, id);
+  if (!r) return;
+  const lab = siteLeadLabel(text);
+  if (lab) { r.source = 'aff'; r.note = lab + '\n' + r.note; r.next = 'לחזור אליו, על המוניטור'; }
+  const dir = path.join(inst.dataPath, 'biz', 'biz');
+  try { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, id + '.json'), JSON.stringify(r, null, 1), 'utf8'); say('ליד נכנס לעסק שלי: ' + r.name); }
+  catch (e) { say('!! ליד לא נכנס לעסק שלי: ' + e.message); return; }
+  // 12.11.2026: a site lead that came through a referrer's link (?ref=shai) goes on his table too (affiliates.js).
+  if (inst.name === 'abaitzik' && !own) { try { const who = require('./affiliates.js').linkSiteLead(text, r); if (who) say('ליד מהאתר נכנס גם לטבלה של ' + who); } catch (e) { say('!! טבלת שותף: ' + e.message); } }
+}
+
+/*
+  24.10.2026, stage 6: the page's "התראות לטלפון" box sends its subscription as
+  "מנוי התראות: {...}". It is saved to data/push (lib/webpush.js) and goes nowhere
+  else. Whoever holds a subscription receives every notification, so the owner code
+  is required, the same check every send passes.
+*/
+function recordPushSub(m, got) {
+  if (!ownerCodeOk(m.message)) { say('מנוי התראות נדחה: אין קוד תקף בהודעה'); return; }
+  if (got.error) { say('!! מנוי התראות לא תקין: ' + got.error); return; }
+  const n = wp.saveSub(got.sub);
+  say('נשמר מנוי התראות לטלפון, סה"כ ' + n);
+}
+
+// 4.11: the key of the chat record written at this time, the same key the page
+// uses (its id, else time and the first 40 letters). Empty when nothing has it.
+function reKeyFor(at) {
+  let names = [];
+  try { names = fs.readdirSync(CHAT).filter((n) => n.endsWith('.json')).sort().reverse(); } catch (e) { return ''; }
+  for (const n of names) {
+    let r = null;
+    try { r = JSON.parse(fs.readFileSync(path.join(CHAT, n), 'utf8')); } catch (e) { continue; }
+    if (r && r.at === at) return r.id ? String(r.id) : (r.at || '') + '|' + String(r.text || '').slice(0, 40);
+  }
+  return '';
+}
+
+/*
+  19.11.2026, Itzik, on the test monitor: a campaign went up, the files were taken, and nothing told the customer
+  that it is now being worked on and where the answer will come. A campaign request gets that note at once, as a
+  separate bubble from the monitor. It carries no re on purpose: a claude record with re counts as the answer
+  everywhere (worker, watchdog, brief), and the request must stay open until the draft is written. kind 'ack' and
+  ackOf let wa-bridge.js send the same note to the customer's WhatsApp when it is connected (data/conn/wa.json).
+*/
+const ackedCampaigns = new Map();
+function campaignAck(rec, at) {
+  // 19.11.2026, the end to end test: with files every part of one request carries the same caption, and with an
+  // uploadUrl they all come through pollUploads, not recordIncoming. One note per request, by its caption.
+  const key = String(rec.text || '').split(String.fromCharCode(10))[0].slice(0, 400);
+  const now = Date.now();
+  for (const [k, t] of ackedCampaigns) if (now - t > 30 * 60e3) ackedCampaigns.delete(k);
+  if (ackedCampaigns.has(key)) return;
+  ackedCampaigns.set(key, now);
+  let wa = false;
+  try { const w = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'conn', 'wa.json'), 'utf8')); wa = !!(w && w.phone); } catch (e) {}
+  const text = 'קיבלתי את בקשת הקמפיין, והיא נכנסה לעבודה עכשיו. '
+    + (wa ? 'כשהטיוטה תהיה מוכנה תקבל הודעה כאן בוואטסאפ, והטיוטה המלאה תחכה לך בלשונית 📄 דוחות במוניטור.'
+          : 'כשהטיוטה תהיה מוכנה תקבל כאן הודעה, והטיוטה המלאה תחכה לך בלשונית 📄 דוחות.')
+    + ' טיוטה רגילה מוכנה בדרך כלל תוך כמה דקות. סרטון או קרוסלה יכולים לקחת עד כמה שעות.';
+  const a = new Date(at.getTime() + 1000);
+  const name = chatName(a).replace('-itzik-auto', '-claude-ack');
+  try {
+    fs.writeFileSync(path.join(CHAT, name), JSON.stringify({ at: a.toISOString(), from: 'claude', kind: 'ack', ackOf: rec.id, text: text }, null, 1), 'utf8');
+    say('אישור קבלה לקמפיין נכתב' + (wa ? ', ייצא גם לוואטסאפ' : ''));
+  } catch (e) { say('!! אישור קבלה לקמפיין לא נכתב: ' + e.message); }
+}
+
+/*
+  19.11.2026, the end to end check of a new monitor: "➕ ליד חדש" in 💼 העסק שלי sends "ליד חדש" with a name and a phone.
+  The session answered "רשמתי את הליד" and wrote nothing, so the lead never reached 🔔 לידים (a customer has no
+  data/biz at all until something writes there). The listener writes the record itself, the same shape lib/biz.js
+  reads; the session still answers, and finds the card already there.
+*/
+function saveManualLead(rec) {
+  try {
+    const raw = String(rec.text || '');
+    const lines = raw.split(String.fromCharCode(10)).map(function (l) { return l.trim(); }).filter(Boolean);
+    if (!lines.length || !/^ליד חדש/.test(lines[0])) return;
+    const body = lines.slice(lines[0] === 'ליד חדש' ? 1 : 0).join(' ').replace(/^ליד חדש[:,\s]*/, '').trim();
+    if (!body) return;
+    const ph = body.match(/(?:\+?972[-\s]?|0)5\d[-\s]?\d{3}[-\s]?\d{4}|0[2-9][-\s]?\d{7}/);
+    const phone = ph ? ph[0].replace(/[^\d+]/g, '') : '';
+    const name = (ph ? body.slice(0, ph.index) : body.split(/[,،]/)[0]).replace(/[,،:\s]+$/, '').trim().slice(0, 60) || 'ליד';
+    const mail = (body.match(/[\w.+-]+@[\w-]+\.[\w.]+/) || [''])[0];
+    const dir = path.join(inst.dataPath, 'biz', 'biz');
+    fs.mkdirSync(dir, { recursive: true });
+    const at = new Date(rec.at || Date.now());
+    const stamp = at.toISOString().replace(/\D/g, '').slice(0, 14);
+    const id = 'biz-' + stamp + '-man';
+    if (fs.existsSync(path.join(dir, id + '.json'))) return;
+    const lead = { id: id, kind: 'lead', name: name, phone: phone, email: mail, status: 'חדש', amount: 0, note: body.slice(0, 1000),
+      last: '', next: 'לחזור אליו', nextAt: at.toLocaleDateString('sv-SE', { timeZone: 'Asia/Jerusalem' }), at: at.toISOString(),
+      updatedAt: at.toISOString(), source: 'manual', srcKey: rec.id || '' };
+    fs.writeFileSync(path.join(dir, id + '.json'), JSON.stringify(lead, null, 1), 'utf8');
+    say('ליד נרשם ב 🔔 לידים: ' + name);
+  } catch (e) { say('!! ליד לא נרשם: ' + e.message); }
+}
+
+/*
+  19.11.2026, the end to end check: a task from ✅ משימות ("משימה להיום, ... (2026-11-19): ...") was left to the session,
+  which twice answered "רשמתי" and wrote nothing (claim-check caught it). The listener writes the task file itself,
+  the same shape the page reads (data/tasks/tasks/<id>.json), and answers at once, so no session is spent on it.
+*/
+function saveManualTask(rec) {
+  try {
+    const raw = String(rec.text || '');
+    const m = raw.match(/משימה (?:להיום|ליום)[^\n]*?\((\d{4}-\d{2}-\d{2})\):\s*([^\n]+)/);
+    if (!m) return false;
+    const day = m[1], text = m[2].trim().slice(0, 300);
+    if (!text) return false;
+    const dir = path.join(inst.dataPath, 'tasks', 'tasks');
+    fs.mkdirSync(dir, { recursive: true });
+    const at = new Date(rec.at || Date.now());
+    const stamp = at.toISOString().replace(/\D/g, '').slice(0, 12);
+    const id = 't' + stamp.slice(0, 8) + '-' + stamp.slice(8, 12) + '-' + (rec.id || '').replace(/[^a-z0-9]/gi, '').slice(-6);
+    if (!fs.existsSync(path.join(dir, id + '.json'))) fs.writeFileSync(path.join(dir, id + '.json'), JSON.stringify({ id: id, day: day, text: text, n: 1 }), 'utf8');
+    const lbl = new Date(day + 'T12:00:00').toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'numeric', timeZone: 'Asia/Jerusalem' });
+    const name = chatName(new Date(at.getTime() + 1000)).replace('-itzik-auto', '-claude-task');
+    fs.writeFileSync(path.join(CHAT, name), JSON.stringify({ at: new Date(at.getTime() + 1000).toISOString(), from: 'claude', re: rec.id,
+      text: 'רשמתי את המשימה ל' + lbl + ': ' + text + '. היא מופיעה ב ✅ משימות.' }, null, 1), 'utf8');
+    say('משימה נרשמה: ' + text.slice(0, 50));
+    return true;
+  } catch (e) { say('!! משימה לא נרשמה: ' + e.message); return false; }
+}
+
+function recordIncoming(m) {
+  const gid = group.groupOf(m.title);
+  const held = gid ? groupFiles.get(gid) : null;
+  const attach = m.attachment ? String(m.attachment.name || '') : '';
+  let caption = '';
+  // The caption line of a file send starts with the word קובץ, which is what
+  // isSystemText turns away. Inside a group that line is the message: it is the
+  // sentence he typed or spoke over the files, so it is the one thing here that
+  // must not be dropped.
+  if (!m.attachment && m.message && (gid || !isSystemText(m.message))) {
+    // A caption arrives as the same body every text send uses: a kind line,
+    // the words, a blank line and his code. Only the words belong in the chat.
+    // A plain send carries the code on its last line just like a caption does.
+    // It used to be stored whole, which put the code back on his screen at
+    // every refresh, so the tail comes off here too.
+    caption = gid ? group.captionFrom(m.message) : group.stripCode(m.message);
+  }
+  // 4.11, Itzik: a reply sent from a bubble ends with [re:<its time>]. The reply
+  // keeps that bubble's key, so it sits under the bubble and not under the
+  // first message of the thread. The tag itself never goes into the chat.
+  let reTo = '';
+  const reTag = caption.match(/\n?\[re:([^\]\s]+)\]\s*$/);
+  if (reTag) { reTo = reKeyFor(reTag[1]); caption = caption.slice(0, reTag.index).trim(); }
+  if (!attach && !caption.trim()) return false;
+  const codeOk = !m.attachment && ownerCodeOk(m.message);
+
+  if (held) {
+    // A part of a send that is already on the page. Widen it, do not repeat it.
+    if (attach) held.files.push(attach);
+    if (caption.trim()) held.caption = caption.trim();
+    let rec;
+    try { rec = JSON.parse(fs.readFileSync(path.join(CHAT, held.name), 'utf8')); }
+    catch (e) { groupFiles.delete(gid); return false; }
+    // Never rewrite a message that was already answered. If a session closed it
+    // between the first part and the last, the late part opens its own line.
+    if (rec.status === 'done') { groupFiles.delete(gid); return false; }
+    rec.text = group.groupText(held.caption, held.files);
+    if (codeOk && rec.from === 'unverified') { rec.from = 'itzik'; rec.status = 'working'; say('הקוד אומת, ההודעה עוברת לעבודה'); }
+    else if (rec.from === 'unverified' && !m.attachment && heldWhy(m.message) === 'wrong-code') rec.heldWhy = 'wrong-code';
+    rec.files = held.files.slice();
+    if (reTo && !rec.re) rec.re = reTo;
+    try { fs.writeFileSync(path.join(CHAT, held.name), JSON.stringify(rec, null, 1), 'utf8'); }
+    catch (e) { say('!! לא עודכן בצ׳אט: ' + e.message); return false; }
+    say('צורף לאותה הודעה: ' + rec.text.slice(0, 60));
+    if (rec.from === 'itzik' && /^קמפיין:/.test(String(rec.text || '').trim())) campaignAck(rec, new Date());
+    if (attach && group.isAudio(attach)) {
+      transcribeLater(path.join(DROP, attach), held.name);
+    }
+    return true;
+  }
+
+  const files = attach ? [attach] : [];
+  const text = attach ? group.groupText(caption, files) : caption;
+  if (!text) return false;
+  const at = new Date();
+  const name = chatName(at);
+  const rec = { at: at.toISOString(), from: codeOk ? 'itzik' : 'unverified', text: text, status: codeOk ? 'working' : 'held',
+    ackAt: at.toISOString(), id: 'ntfy-' + m.id, auto: true };
+  /*
+    12.10: a whole afternoon was held because his phone signed with an old code,
+    1800, and the alarm said only "arrived without the code". Why it was held is
+    kept on the record now, never the code itself: wrong-code when the word and
+    digits were there and did not match, no-code when nothing came. The 🩺 screen
+    shows it.
+  */
+  if (!codeOk) rec.heldWhy = heldWhy(m.message);
+  if (files.length) rec.files = files.slice();
+  if (reTo) rec.re = reTo;
+  try {
+    fs.mkdirSync(CHAT, { recursive: true });
+    fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+    // 15.11: the same voice note sent again with the code closes its held copy (lib/held-supersede.js).
+    if (codeOk) { try { require('./lib/held-supersede.js').supersede(CHAT, name, rec); } catch (e) { say('!! הודעה ישנה לא נסגרה: ' + e.message); } }
+    say((codeOk ? 'נרשם בצ׳אט עם אישור קבלה: ' : 'נרשם בלי קוד, ממתין לאימות: ') + require('./lib/fireflies-key.js').mask(text).slice(0, 60));
+    if (rec.heldWhy === 'lead') {
+      // 12.11.2026, Itzik: a lead from his own phone or mail is a test: it is created and shown greyed, but it makes no
+      // 📋 לטיפול item, no alert and no urgent push (lib/own-leads.js).
+      const own = require('./lib/own-leads.js').isOwnText(inst.dataPath, text);
+      try { if (!own && !require('./lib/biz.js').isTestLead(text)) { const nm = /(?:שם|name)\s*[:：]\s*([^\n]{1,60})/i.exec(text); require('./lib/handle.js').add(inst.dataPath, { key: 'lead:' + rec.at, kind: 'lead', who: nm ? nm[1] : 'ליד מהאתר', title: (siteLeadLabel(text) || 'ליד חדש מהאתר') + ', לחזור אליו', link: 'biz', at: rec.at, bizId: 'biz-' + rec.at.replace(/\D/g, '').slice(0, 14) + '-site' }); } } catch (e) { say('!! לטיפול: ' + e.message); }
+      if (!own) alertLead(text);
+      saveSiteLead(text, rec.at, own);
+      if (own) { say('ליד מהאתר מהכתובת או הטלפון שלך: סומן בדיקה, בלי התראה'); try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ } }
+    }
+    if (rec.heldWhy === 'waitlist') alertWaitlist(text);
+    if (rec.heldWhy === 'login-wait') alertLoginWait(text);
+    if (rec.heldWhy === 'shachar-feedback') alertShacharFeedback(text);
+    if (codeOk && /^קמפיין:/.test(text.trim())) campaignAck(rec, at);
+    if (codeOk && /^ליד חדש/.test(text.trim())) saveManualLead(rec);
+    if (codeOk && /^משימה\s+משימה (?:להיום|ליום)/.test(text.trim()) && saveManualTask(rec)) { rec.status = 'done'; try { fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8'); } catch (e) {} }
+    recordDrain(text, at);
+    /*
+      13.10: the quiet hours line from the settings screen is applied here, with
+      no model, and answered in one line.
+    */
+    const qv = codeOk && require('./lib/quiet.js').parse(text);
+    if (qv) {
+      try {
+        const qc = require('./lib/quiet.js').set(qv);
+        rec.status = 'done';
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-quiet.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id,
+            text: require('./lib/quiet.js').said(qc), status: 'done' }, null, 1), 'utf8');
+        say('שעות שקטות: ' + JSON.stringify(qv));
+        try { publishChat(); } catch (e) { /* the next build carries it */ }
+        return true;
+      } catch (e) { say('!! שעות שקטות לא נשמרו: ' + e.message); }
+    }
+    // 14.11: the alert kind switches from Settings, the same way, with no model (lib/alert-kinds.js).
+    const kv = codeOk && require('./lib/alert-kinds.js').parse(text);
+    if (kv) {
+      try {
+        const kc = require('./lib/alert-kinds.js').set(kv);
+        rec.status = 'done';
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-kinds.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id,
+            text: require('./lib/alert-kinds.js').said(kc), status: 'done' }, null, 1), 'utf8');
+        say('סוגי התראות: ' + JSON.stringify(kv));
+        try { publishChat(); } catch (e) { /* the next build carries it */ }
+        return true;
+      } catch (e) { say('!! סוגי התראות לא נשמרו: ' + e.message); }
+    }
+    /*
+      16.10: a tap on a decision card of the Pegasus screen ("פגסוס: <ask> ← <pick>")
+      is applied here with no model: the card gets his answer, the work goes to
+      the PC queue (pc-pull.js, Haiku, the game repo on his PC), and he gets one
+      line. "תמיד תחשבו איך אנחנו חוסכים": no session on the server for a tap.
+    */
+    const pa = codeOk && inst.name === 'abaitzik' && require('./lib/pegasus-work.js').parseAnswer(text);
+    if (pa) {
+      try {
+        const pw = require('./lib/pegasus-work.js');
+        const dir = path.join(inst.dataPath, 'pegasus', 'pegasus');
+        const card = pw.answer(dir, pa.ask, pa.pick, at.toISOString());
+        let said;
+        if (card) {
+          const job = ['משימת פגסוס מהמוניטור. עובדים בתיקיית המשחק C:\\Users\\User\\OneDrive\\Documents\\pegasus (קרא קודם AGENTS.md ו-CLAUDE.md שם, ועבוד לפי הנוהל: ענף, בדיקה חיה בדפדפן, פריסה רק לפי AGENTS.md).',
+            pw.task(card),
+            'בצע בדיוק את מה שאיציק בחר, חבילה אחת שלמה. אם הבחירה דורשת SQL במסד הייצור, הכן את הקובץ ואת השורה להרצה והחזר אותה לאיציק במקום להריץ בעצמך. בסוף: שורה אחת מה נעשה ואיפה רואים.'].join('\n');
+          const r = require('child_process').spawnSync(process.execPath, ['pc-task.js', 'add', '--re', rec.id, job], { cwd: __dirname, encoding: 'utf8', timeout: 60000 });
+          if (r.status !== 0) throw new Error('pc-task add: ' + String(r.stderr || r.stdout).trim().slice(0, 200));
+          pw.take(dir, card.file, at.toISOString());
+          try {
+            const cf = path.join(dir, card.file);
+            const cd = JSON.parse(fs.readFileSync(cf, 'utf8'));
+            cd.now = 'בחרת: ' + pa.pick + '. המשימה במחשב, תקבל תשובה בשרשור הזה כשתסתיים.';
+            fs.writeFileSync(cf, JSON.stringify(cd, null, 1), 'utf8');
+          } catch (e) {}
+          said = 'קיבלתי: ' + pa.pick + '. המשימה נשלחה למחשב ותרוץ כשהוא דולק. תקבל כאן תשובה כשתסתיים.';
+        } else {
+          said = 'קיבלתי: ' + pa.pick + ', אבל לא מצאתי כרטיס פתוח עם השאלה הזאת. אולי כבר נענתה.';
+        }
+        rec.status = 'done';
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-pegasus-pick.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: said, status: 'done' }, null, 1), 'utf8');
+        say('החלטת פגסוס: ' + pa.pick + (card ? ' (' + card.file + ')' : ' (בלי כרטיס)'));
+        try { publishChat(); } catch (e) { /* the next build carries it */ }
+        return true;
+      } catch (e) { say('!! החלטת פגסוס לא נרשמה: ' + e.message); }
+    }
+    /*
+      6.10: a customer's request to the admin is filed by this code, not by a model.
+      Until now the answering session was told to run `change-request.js add`, and in a
+      test on Home Style's monitor one session said it had filed the request and had not.
+      The 5.10 rule (a customer asks, only Itzik decides) cannot rest on a model's
+      memory, so a message that opens with "בקשה ממנהל:" is filed here, answered here,
+      and closed before any session sees it. Itzik's own monitor never takes this path.
+      The page sends the kind first ("משימה"), and it arrives glued to the text.
+    */
+    // 12.10 evening: an admin customer (Rinat) files interface changes like anyone else.
+    if (codeOk && inst.name !== 'abaitzik' && /^\s*(?:משימה)?\s*בקשה ממנהל\s*[:：]/.test(text)) {
+      try {
+        const cr = require('./lib/change-requests.js');
+        const crId = cr.add(text.replace(/^\s*(?:משימה)?\s*בקשה ממנהל\s*[:：]\s*/, ''), rec.id);
+        rec.status = 'done';
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-admin-ack.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id,
+            text: inst.adminFull ? 'הבקשה עברה לבנייה. כשהיא מוכנה, תקבל כאן תשובה.' : 'בקשתך התקבלה, תודה. נחזור אליך בהקדם.', status: 'done' }, null, 1), 'utf8');
+        say('בקשה ממנהל נרשמה: ' + crId);
+      } catch (e) { say('!! בקשה ממנהל לא נרשמה: ' + e.message); }
+    }
+    /*
+      10.11.2026, Itzik: "🧑‍💼 מנהלת IT Solution" (build.js myMgrSheet). The sheet sends the routine as JSON, a pause, a resume or a
+      delete by id. It is saved here, with no model, by lib/routines.js, and answered here, so a customer's
+      routine never depends on a session remembering to write a file. The page is rebuilt so the list shows it.
+    */
+    /*
+      10.11.2026, Itzik: "📋 לטיפול" (lib/handle.js). The button "✓ טופל" on the home sheet sends "✓ טופל: <id>".
+      Marked here with no model, so it works with no session running; the page is rebuilt so the tile drops the item.
+    */
+    /*
+      11.11.2026, Itzik: the leads table in IT Solution. Its buttons send "ליד [<id>]: סטטוס|הערה|מחיקה ...".
+      Applied here with no model (lib/leads.js); delete moves the record to data/biz/_deleted. Silent when it worked.
+    */
+    /*
+      18.11.2026: "💡 מה חסר לך כאן?" at the bottom of a customer's leads board sends "לוח לידים: חסר <text>". Kept here
+      with no model in his data/status/leads-missing.json (lib/leads-missing.js); Itzik's tenants-health.js hands it to
+      Itzik as an idea and on WhatsApp. He is answered at once. A customer's monitor only (Itzik's board has no box).
+    */
+    const lmA = codeOk && inst.name !== 'abaitzik' && !inst.publicDemo && require('./lib/leads-missing.js').parse(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (lmA) {
+      // Review 18.11: the page already thanked him, so this is silent when it worked; only a failure answers.
+      let lmOk = true;
+      try { require('./lib/leads-missing.js').record(inst.dataPath, lmA.t); say('לוח לידים, חסר: ' + lmA.t.slice(0, 80)); }
+      catch (e) { lmOk = false; say('!! לוח לידים, חסר: ' + e.message); }
+      rec.status = 'done';
+      try {
+        if (lmOk) fs.unlinkSync(path.join(CHAT, name));
+        else {
+          fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+          fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-lead-ack.json')),
+            JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: 'לא הצלחתי לשמור את מה שכתבת בלוח הלידים. נסה שוב בעוד כמה דקות.', status: 'done' }, null, 1), 'utf8');
+        }
+      } catch (e) { /* the next build carries it */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    // 18.11.2026: the board is every customer's now, so a customer's board actions are applied too (as build.js gives
+    // every monitor its leads records: inst.biz or not Itzik's). Before, a customer with no biz flag had them fall through.
+    const ldA = codeOk && (inst.biz || inst.name !== 'abaitzik') && require('./lib/leads.js').parse(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (ldA) {
+      let res;
+      try { res = require('./lib/leads.js').apply(inst.dataPath, text.replace(/\n\s*קוד[^\n]*$/, '')); say('ליד: ' + ldA.id + ' ' + ldA.act + ' | ' + res.reply); }
+      catch (e) { res = { ok: false, reply: 'לא הצלחתי לעדכן את הליד (' + e.message + ')' }; say('!! ליד: ' + e.message); }
+      rec.status = 'done';
+      try {
+        if (res.ok) fs.unlinkSync(path.join(CHAT, name));
+        else {
+          fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+          fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-lead-ack.json')),
+            JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: res.reply, status: 'done' }, null, 1), 'utf8');
+        }
+      } catch (e) { /* the next build carries it */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    // 12.11.2026, Itzik: "זה משהו שראינו כבר". "✓ ראיתי במייל: <uids>" from the control board's mail block. Saved
+    // here with no model in data/status/mail-board-seen.json (lib/board-feed.js mailItzik drops those), silently.
+    const msM = codeOk && /^\s*(?:משימה)?\s*✓\s*ראיתי במייל\s*[:：]\s*([\d,\s]+)/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (msM) {
+      try {
+        const f = path.join(inst.dataPath, 'status', 'mail-board-seen.json');
+        let L = []; try { L = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { /* first one */ }
+        msM[1].split(/[,\s]+/).filter(Boolean).forEach((u) => { if (!L.includes(u)) L.push(u); });
+        fs.writeFileSync(f + '.tmp', JSON.stringify(L.slice(-2000))); fs.renameSync(f + '.tmp', f);
+        say('מייל נראה: ' + msM[1]);
+        fs.unlinkSync(path.join(CHAT, name));
+      } catch (e) { say('!! מייל נראה: ' + e.message); }
+      try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    // 16.11.2026: "🎙️ מפתח פיירפליס: <key>" from 🔌 חיבורים (lib/fireflies-key.js). Saved here with no model into data/keys.json;
+    // the message file is deleted whatever happens, so the key never stays in the chat.
+    const ffIn = require('./lib/fireflies-key.js').parseMsg(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (ffIn) {
+      let res = { ok: false, reply: 'המפתח לא נשמר: ההודעה הגיעה בלי הקוד האישי. אפשר לשלוח שוב מ 🔌 חיבורים.' };
+      if (codeOk) { try { res = require('./lib/fireflies-key.js').setKey(inst.dataPath, ffIn); } catch (e) { res = { ok: false, reply: 'לא הצלחתי לשמור את המפתח. אפשר לנסות שוב מ 🔌 חיבורים.' }; } }
+      say('פיירפליס: ' + (res.ok ? (res.removed ? 'הוסר' : 'נשמר') : 'לא נשמר'));
+      try { fs.unlinkSync(path.join(CHAT, name)); } catch (e) { /* already gone */ }
+      try {
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-ff-ack.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', text: res.reply, status: 'done' }, null, 1), 'utf8');
+      } catch (e) { /* the next build carries it */ }
+      try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    // 12.11.2026: "▶️ ערוץ יוטיוב: <link>" from 🔌 חיבורים (lib/yt-comments.js). Saved here with no model; yt-comments.js reads the comments.
+    const ytIn = codeOk && require('./lib/yt-comments.js').parseMsg(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (ytIn) {
+      let res; try { res = require('./lib/yt-comments.js').setChannel(inst.dataPath, ytIn); } catch (e) { res = { ok: false, reply: 'לא הצלחתי לשמור את הערוץ (' + e.message + ')' }; }
+      say('יוטיוב: ' + (res.ok ? (res.removed ? 'הוסר' : 'נשמר') : res.reply));
+      try {
+        if (res.ok) fs.unlinkSync(path.join(CHAT, name));
+        else {
+          rec.status = 'done';
+          fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+          fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-yt-ack.json')),
+            JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: res.reply, status: 'done' }, null, 1), 'utf8');
+        }
+      } catch (e) { /* the next build carries it */ }
+      try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    const hdM = codeOk && /^\s*(?:משימה)?\s*✓\s*טופל\s*[:：]\s*(\S+)/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (hdM) {
+      let ans = '';
+      try { ans = require('./lib/handle.js').done(inst.dataPath, hdM[1]) ? 'סימנתי שטופל.' : 'הפריט כבר סומן כטופל.'; say('לטיפול: ' + hdM[1] + ' | ' + ans); }
+      catch (e) { ans = 'לא הצלחתי לסמן (' + e.message + ')'; say('!! לטיפול: ' + e.message); }
+      // 10.11.2026, Itzik: "I suddenly have answers like these, stop it". A done mark is silent: no line from him and no
+      // "סימנתי שטופל" in the answers. Only a failure stays, so he knows the item was not marked.
+      rec.status = 'done';
+      const okMark = ans === 'סימנתי שטופל.' || ans === 'הפריט כבר סומן כטופל.';
+      try {
+        if (okMark) fs.unlinkSync(path.join(CHAT, name));
+        else {
+          fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+          fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-handle-ack.json')),
+            JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: ans, status: 'done' }, null, 1), 'utf8');
+        }
+      } catch (e) { /* the page drops the item on the next build anyway */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    /*
+      12.11.2026, Itzik: "תיתן לי אפשרות חוץ מטופל גם למחוק אותו, הליד שנכנס זה אני הייתי." The page sends
+      "🗑 מחיקת ליד: <bizId>" after its own confirm. Applied here with no model and silently, like "✓ טופל": the lead's biz
+      record, its 📋 לטיפול items and its chat message MOVE to data/_deleted/<YYYYMMDD>/ (lib/lead-delete.js), never erased.
+    */
+    /*
+      15.11.2026, Itzik's idea "רוצה את זה": "תזכורת שוב: <1h|tom> <at>|<due>" from the reminder's ⏰ buttons. No model.
+      Silent when it worked, a line only on failure.
+    */
+    const rsN = codeOk && require('./lib/remind-snooze.js').parse(text);
+    if (rsN) {
+      let res;
+      try { res = require('./lib/remind-snooze.js').apply(inst.dataPath, rsN); say('תזכורת שוב: ' + res.reply); }
+      catch (e) { res = { ok: false, reply: 'לא הצלחתי לדחות את התזכורת (' + e.message + ')', err: true }; say('!! תזכורת שוב: ' + e.message); }
+      rec.status = 'done';
+      try {
+        if (res.ok) fs.unlinkSync(path.join(CHAT, name));
+        else {
+          fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+          fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-snooze-ack.json')),
+            JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: res.reply, status: 'done' }, null, 1), 'utf8');
+        }
+      } catch (e) { /* the next build carries it */ }
+      try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    const ldD = codeOk && (inst.biz || inst.name !== 'abaitzik') && require('./lib/lead-delete.js').parse(text); // 18.11: a customer's board deletes too
+    if (ldD) {
+      let res;
+      try { res = require('./lib/lead-delete.js').apply(inst.dataPath, ldD.id); say('מחיקת ליד: ' + ldD.id + ' | ' + (res.ok ? res.moved.map((x) => x.kind).join(',') : res.reply)); }
+      catch (e) { res = { ok: false, reply: 'לא הצלחתי למחוק את הליד (' + e.message + ')', err: true }; say('!! מחיקת ליד: ' + e.message); }
+      rec.status = 'done';
+      // silent when it worked, and also when the lead is already gone (the phone hid it already); only a failure answers
+      try {
+        if (!res.err) fs.unlinkSync(path.join(CHAT, name));
+        else {
+          fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+          fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-lead-del-ack.json')),
+            JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: res.reply, status: 'done' }, null, 1), 'utf8');
+        }
+      } catch (e) { /* the next build carries it */ }
+      try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    /*
+      13.11.2026, Itzik: "מסיים להעלות את הסטורי ... כפתור, להשמיד את הלשונית". The 🗑 next to an item in 🎬 the videos
+      tile sends "🗑 הסרת ריל: <file>". Applied with no model and silently: the file MOVES to data/_deleted/<day>/reels
+      (lib/reel-remove.js), and the tile drops an item whose file is not in the monitor.
+    */
+    const rlD = codeOk && require('./lib/reel-remove.js').parse(text);
+    if (rlD) {
+      try { const r = require('./lib/reel-remove.js').apply(inst.dataPath, rlD.file); say('הסרת ריל: ' + rlD.file + ' | ' + (r.ok ? (r.gone ? 'כבר הוסר' : 'הועבר') : r.reply)); }
+      catch (e) { say('!! הסרת ריל: ' + e.message); }
+      try { fs.unlinkSync(path.join(CHAT, name)); } catch (e) { /* already gone */ }
+      try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    /*
+      12.11.2026, Itzik: "📤 הודעות לשליחה" (lib/sendlist.js). The page sends "📤 נשלח: <listId> <idx>" when he taps a row.
+      Written here with no model and silently into the list file as items[idx].sentAt, so the mark survives other devices.
+      The page is rebuilt (20 seconds, batched) so every device shows it.
+    */
+    const sdM = codeOk && require('./lib/sendlist.js').parseMark(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (sdM) {
+      try { const ok = require('./lib/sendlist.js').markSent(inst.dataPath, sdM.listId, sdM.idx); say('הודעות לשליחה: ' + sdM.listId + ' ' + sdM.idx + (ok ? ' סומן' : ' כבר סומן או לא קיים')); }
+      catch (e) { say('!! הודעות לשליחה: ' + e.message); }
+      try { fs.unlinkSync(path.join(CHAT, name)); } catch (e) { /* already gone */ }
+      try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    /*
+      12.11.2026, Itzik: "🏡 מצב אישי" (build.js personalSheet, lib/personal.js). The choice of tiles is saved here with no
+      model and silently. A free request is saved and stays a normal message, rewritten as "מצב אישי: <text> [id]", so the
+      monitor's manager (the worker session) applies it and answers.
+    */
+    const psM = codeOk && /^\s*(?:משימה)?\s*מצב אישי\s+(בחירה|בקשה|איפוס)\s*[:：]\s*([\s\S]*?)\s*$/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (psM) {
+      const P = require('./lib/personal.js');
+      try {
+        if (psM[1] === 'איפוס') {
+          P.reset(inst.dataPath);
+          say('מצב אישי: איפוס');
+          fs.unlinkSync(path.join(CHAT, name));
+          try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+          return true;
+        }
+        if (psM[1] === 'בחירה') {
+          const got = P.setPicked(inst.dataPath, psM[2]);
+          say('מצב אישי: בחירה ' + got.join(','));
+          fs.unlinkSync(path.join(CHAT, name));
+          try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+          return true;
+        }
+        const r = P.addRequest(inst.dataPath, psM[2]);
+        if (r) {
+          rec.text = 'מצב אישי: ' + r.text + ' [' + r.id + ']';
+          rec.personal = r.id;
+          fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+          say('מצב אישי: בקשה ' + r.id + ' עברה למנהל');
+          try { publishChat(); } catch (e) { /* the next build carries it */ }
+          return true;
+        }
+      } catch (e) { say('!! מצב אישי: ' + e.message); }
+    }
+    const rtM = codeOk && /^\s*(?:משימה)?\s*שגרה\s+(חדשה|עצירה|חידוש|מחיקה|עכשיו|סוכן מחיקה|סוכן)\s*[:：]\s*([\s\S]*?)\s*$/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (rtM) {
+      let ans = '';
+      try {
+        const R = require('./lib/routines.js');
+        // 14.11.2026: agents (a name, a role) and "run now"
+        if (rtM[1] === 'סוכן') {
+          let o = null; try { o = JSON.parse(rtM[2]); } catch (e) { /* answered below */ }
+          const r = R.agentSave(inst.dataPath, o);
+          ans = r.ok ? 'הסוכן נשמר: ' + r.agent.name + (r.agent.role ? ', ' + r.agent.role : '') + '.' : 'הסוכן לא נשמר: ' + r.why;
+        } else if (rtM[1] === 'סוכן מחיקה') {
+          ans = R.agentRemove(inst.dataPath, String(rtM[2]).trim().split(/\s+/)[0]) ? 'הסוכן והפקודות שלו נמחקו.' : 'לא מצאתי את הסוכן.';
+        } else if (rtM[1] === 'עכשיו') {
+          ans = R.runNow(inst.dataPath, String(rtM[2]).trim().split(/\s+/)[0]) ? 'זה ירוץ בדקה הקרובה.' : 'לא מצאתי את הפקודה.';
+        } else if (rtM[1] === 'חדשה') {
+          let o = null; try { o = JSON.parse(rtM[2]); } catch (e) { /* answered below */ }
+          const r = R.add(inst.dataPath, o);
+          ans = r.ok ? 'השגרה נשמרה: ' + r.rec.text + ' (' + R.labelOf(r.rec.sched) + ').' : 'השגרה לא נשמרה: ' + r.why;
+        } else {
+          const id = String(rtM[2]).trim().split(/\s+/)[0];
+          const ok = rtM[1] === 'מחיקה' ? R.remove(inst.dataPath, id) : R.setState(inst.dataPath, id, rtM[1] === 'עצירה' ? 'paused' : 'active');
+          ans = ok ? (rtM[1] === 'מחיקה' ? 'השגרה נמחקה.' : rtM[1] === 'עצירה' ? 'השגרה נעצרה.' : 'השגרה חזרה לפעול.') : 'לא מצאתי את השגרה, או שכבר יש ' + R.MAX_ACTIVE + ' פעילות.';
+        }
+        say('שגרה: ' + rtM[1] + ' | ' + ans);
+      } catch (e) { ans = 'השגרה לא נשמרה (' + e.message + ')'; say('!! שגרה: ' + e.message); }
+      rec.status = 'done';
+      try {
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-routine-ack.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: ans, status: 'done' }, null, 1), 'utf8');
+      } catch (e) { /* the page shows the list on the next build anyway */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    /*
+      6.10, Home Style: "✔ טיפלתי" on a shipment card. The page sends the row id
+      and the alert code; it is written to the shared table here, with no model,
+      and the page is rebuilt so the count drops for everyone on this monitor.
+      A read only monitor (Roni's) has no write access to the table and says so.
+    */
+    const shipM = codeOk && inst.shipmentsDir && /^\s*ship-done\s*([^\n]+?)\s*\n\s*([A-Z_]{2,20})\s*$/.exec(text);
+    if (shipM) {
+      try {
+        const a = require('./tools/ship-done.js').shipDone(inst.shipmentsDir, shipM[1], shipM[2], inst.name);
+        rec.text = '✔ טיפלתי: הזמנה ' + a.po + ', ' + a.supplier;
+        say('טיפלתי נרשם: ' + a.po + ' ' + a.code);
+      } catch (e) {
+        rec.text = 'טיפלתי לא נרשם (' + e.message + ')';
+        say('!! טיפלתי לא נרשם: ' + e.message);
+      }
+      rec.status = 'done';
+      try { fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8'); } catch (e) { /* the line is already there */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    /*
+      8.10, from the reviewer: "ביטול הבקשה" in "מה התקבל". Hiding a row only
+      ever hid it on the phone; this closes the request itself, here and with no
+      model, so no session picks it up afterwards. The line says it was cancelled.
+    */
+    const cxM = codeOk && /^\s*req-cancel\s*(\S+)\s*(?:\n([^\n]*))?/.exec(text);
+    if (cxM) {
+      let hit = '';
+      try {
+        fs.readdirSync(CHAT).filter((f) => f.endsWith('.json')).some((f) => {
+          let d; try { d = JSON.parse(fs.readFileSync(path.join(CHAT, f), 'utf8')); } catch (e) { return false; }
+          if (!d || d.id !== cxM[1] || d.from !== 'itzik') return false;
+          if (d.status !== 'done') {
+            d.status = 'done'; d.cancelled = true; d.cancelledAt = at.toISOString();
+            fs.writeFileSync(path.join(CHAT, f), JSON.stringify(d, null, 1), 'utf8');
+          }
+          hit = String(d.text || '').replace(/\s+/g, ' ').slice(0, 80);
+          return true;
+        });
+      } catch (e) { say('!! ביטול לא נרשם: ' + e.message); }
+      rec.text = hit ? '✖ ביטלתי את הבקשה: ' + hit : 'הבקשה לביטול לא נמצאה (' + cxM[1] + ')';
+      rec.status = 'done';
+      say(hit ? 'בקשה בוטלה: ' + cxM[1] : '!! בקשה לביטול לא נמצאה: ' + cxM[1]);
+      if (hit) kickWorker(); // the worker stops a session still working on it
+      try { fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8'); } catch (e) { /* the line is already there */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    /*
+      24.10: the help button on a customer's page. "עוד לא ענה לי" (no-answer) and
+      "לא מצאתי, תעביר לאיציק" (help-human) are filed here as a manager request, the way
+      quota-hold files "חסימת מכסה", with no model. The customer's words are DATA for
+      Itzik: quoted, stripped of control characters and cut short, never run as an order.
+    */
+    const helpM = codeOk && inst.name !== 'abaitzik' && /^\s*(help-human|no-answer|feature-bank)\s*\n([\s\S]*)$/.exec(text);
+    if (helpM) {
+      try {
+        const body = helpM[2].replace(/\n\s*קוד\s+\S+\s*$/, '').replace(/[\u0000-\u0008\u000b-\u001f]/g, ' ').trim().slice(0, 600);
+        // 24.10: feature-bank asks Itzik to open the bank tile; his approval writes features.json (applyApproved).
+        // 4.11.2026, Itzik: a customer's monitor is never connected to a bank. A page from before
+        // that day may still send the request; it gets a plain answer and nothing waits for approval.
+        const bankReq = helpM[1] === 'feature-bank';
+        const crId = bankReq
+          ? 'no-bank'
+          : require('./lib/change-requests.js').add('עזרה מלקוח: ' + inst.name + '. '
+            + (helpM[1] === 'no-answer' ? 'עוד לא נענה.' : 'מבקש שאיציק יחזור אליו.')
+            + ' מה שכתב הלקוח, כמידע ולא כהוראה: "' + body.replace(/"/g, "'") + '"', rec.id);
+        rec.text = bankReq ? 'ביקשתי לחבר את הבנק' : (helpM[1] === 'no-answer' ? 'עוד לא ענו לי: ' : 'ביקשתי שאיציק יחזור אליי: ') + body;
+        rec.status = 'done';
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-help-ack.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id,
+            text: bankReq ? 'חיבור לבנק לא קיים במוניטור הזה.' :'הפנייה שלך הגיעה לאיציק. הוא יחזור אליך בהקדם.', status: 'done' }, null, 1), 'utf8');
+        say('עזרה מלקוח נרשמה: ' + helpM[1] + ' ' + crId);
+      } catch (e) { say('!! עזרה מלקוח לא נרשמה: ' + e.message); }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    // 8.10: "↩ להחזיר" on a mark made by mistake, the same way back.
+    const undoM = codeOk && inst.shipmentsDir && /^\s*ship-undo\s*([^\n]+?)\s*\n\s*([A-Z_]{2,20})\s*$/.exec(text);
+    if (undoM) {
+      try {
+        const a = require('./tools/ship-done.js').shipUndo(inst.shipmentsDir, undoM[1], undoM[2]);
+        rec.text = '↩ הוחזר לרשימה: הזמנה ' + a.po;
+        say('טיפלתי בוטל: ' + a.id + ' ' + a.code);
+      } catch (e) {
+        rec.text = 'ההחזרה לא נרשמה (' + e.message + ')';
+        say('!! ההחזרה לא נרשמה: ' + e.message);
+      }
+      rec.status = 'done';
+      try { fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8'); } catch (e) { /* the line is already there */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    if (gid) groupFiles.set(gid, { name: name, files: files, caption: caption.trim() });
+    if (attach && group.isAudio(attach)) {
+      transcribeLater(path.join(DROP, attach), name);
+    }
+    return true;
+  } catch (e) { say('!! לא נרשם בצ׳אט: ' + e.message); return false; }
+}
+
+/*
+  A big file that came through upload.js (11.10.2026). The upload service has
+  already checked his personal code, verified the size and moved the file into
+  data/inbox; it leaves data/uploads/ready/<id>.json and nothing else. This turns
+  that note into the same chat line a file from ntfy gets: from itzik, status
+  working, files [name], then the page is built and the worker kicked. The note
+  is claimed by renaming it first, so a crash can lose a line but never write
+  two of them.
+*/
+/*
+  19.11.2026: texts the page sent to our own upload service instead of ntfy (lib/upload-server.js handleText).
+  Each is handled exactly like an ntfy message, one at a time, then deleted.
+*/
+const TEXTS = path.join(inst.dataPath, 'uploads', 'text');
+let textsBusy = false;
+async function pollTexts() {
+  if (textsBusy) return;
+  let names = [];
+  try { names = fs.readdirSync(TEXTS).filter(function (f) { return /^own[0-9a-f]{18}\.json$/.test(f); }).sort(); } catch (e) { return; }
+  if (!names.length) return;
+  textsBusy = true;
+  try {
+    for (const f of names) {
+      const taken = path.join(TEXTS, f.replace(/\.json$/, '.taken'));
+      try { fs.renameSync(path.join(TEXTS, f), taken); } catch (e) { continue; }
+      let m = null;
+      try { m = JSON.parse(fs.readFileSync(taken, 'utf8')); } catch (e) { say('!! הודעה מהשרת פגומה: ' + f); }
+      if (m && m.id && m.message) { try { await handle({ id: m.id, time: m.time, event: 'message', title: m.title, message: m.message }); } catch (e) { say('!! הודעה מהשרת לא טופלה: ' + e.message); } }
+      try { fs.unlinkSync(taken); } catch (e) {}
+    }
+  } finally { textsBusy = false; }
+}
+const READY = path.join(inst.dataPath, 'uploads', 'ready');
+function pollUploads() {
+  let names = [];
+  try { names = fs.readdirSync(READY); } catch (e) { return; }
+  let wrote = false;
+  names.filter(function (f) { return /^[0-9a-f]{32}\.json$/.test(f); }).forEach(function (f) {
+    const taken = path.join(READY, f.replace(/\.json$/, '.taken'));
+    try { fs.renameSync(path.join(READY, f), taken); } catch (e) { return; }
+    let up;
+    try { up = JSON.parse(fs.readFileSync(taken, 'utf8')); } catch (e) { say('!! פתק העלאה פגום: ' + f); return; }
+    const name = String(up.name || '');
+    if (!name || name !== path.basename(name) || !fs.existsSync(path.join(DROP, name))) { say('!! קובץ גדול נעלם: ' + name); return; }
+    const at = new Date();
+    // 19.11.2026, the end to end check: one campaign with three files became three chat lines with the same words, the
+    // session answered each one ("הסרטון לא נפתח", "זו אותה בקשה"...). A file whose caption is the same request as a line
+    // that came in the last five minutes and is still open joins that line.
+    const capKey = String(up.caption || '').trim().split(String.fromCharCode(10))[0].replace(/\n?\[re:[^\]\s]+\]\s*$/, '').slice(0, 400);
+    if (capKey.length > 20) {
+      let joined = false;
+      try {
+        for (const n of fs.readdirSync(CHAT).filter(function (x) { return /-itzik-auto(-\d+)?\.json$/.test(x); }).sort().reverse().slice(0, 30)) {
+          let r0; try { r0 = JSON.parse(fs.readFileSync(path.join(CHAT, n), 'utf8')); } catch (e) { continue; }
+          // 19.11.2026: a video is converted to 1080p before its note comes (lib/upload-server.js). It joins when
+          // the line is from the last five minutes, or from five minutes around when the file was sent (up.at).
+          if (!r0 || r0.from !== 'itzik' || r0.status === 'done') continue;
+          if (at - Date.parse(r0.at) > 5 * 60e3 && Math.abs((Date.parse(up.at) || at.getTime()) - Date.parse(r0.at)) > 5 * 60e3) continue;
+          if (String(r0.text || '').split(String.fromCharCode(10))[0].slice(0, 400) !== capKey) continue;
+          r0.files = (r0.files || []).concat([name]);
+          r0.text = group.groupText(String(up.caption || '').trim().replace(/\n?\[re:[^\]\s]+\]\s*$/, ''), r0.files);
+          fs.writeFileSync(path.join(CHAT, n), JSON.stringify(r0, null, 1), 'utf8');
+          say('קובץ גדול צורף לאותה בקשה: ' + name);
+          logPull('file', name);
+          try { fs.renameSync(taken, path.join(READY, f.replace(/\.json$/, '.done'))); } catch (e) {}
+          joined = true; wrote = true; break;
+        }
+      } catch (e) {}
+      if (joined) return;
+    }
+    const file = chatName(at);
+    // 4.11: the same [re:<time>] tag as a phone send links a big file to the bubble it was aimed at.
+    const upTag = String(up.caption || '').trim().match(/\n?\[re:([^\]\s]+)\]\s*$/);
+    const rec = { at: at.toISOString(), from: 'itzik', text: group.groupText(String(up.caption || '').trim().replace(/\n?\[re:[^\]\s]+\]\s*$/, ''), [name]),
+      status: 'working', ackAt: at.toISOString(), id: 'up-' + up.id, auto: true, files: [name] };
+    if (upTag) rec.re = reKeyFor(upTag[1]);
+    try {
+      fs.mkdirSync(CHAT, { recursive: true });
+      fs.writeFileSync(path.join(CHAT, file), JSON.stringify(rec, null, 1), 'utf8');
+    } catch (e) { say('!! קובץ גדול לא נרשם בצ׳אט: ' + e.message); return; }
+    say('קובץ גדול נקלט: ' + name + ' (' + up.size + ')');
+    if (/^קמפיין:/.test(String(up.caption || '').trim())) campaignAck(rec, at);
+    logPull('file', name);
+    if (group.isAudio(name) && Number(up.size) < 200 * 1024 * 1024) transcribeLater(path.join(DROP, name), file);
+    try { fs.renameSync(taken, path.join(READY, f.replace(/\.json$/, '.done'))); } catch (e) {}
+    wrote = true;
+  });
+  if (wrote) { publishChat(); kickWorker(); }
+}
+
+/*
+  A measurement is written the moment it lands.
+
+  The drain screen sends one line per submit, and on 18.9 he sent four of them
+  a few seconds apart, one tube at a time. The chat held all four and the log
+  held nothing, until a session read them by eye at 10:58 and typed the row in.
+  Two hours is not a log, it is a memory, and it only worked because a session
+  happened to be running.
+
+  So the listener writes it itself. It never overwrites a number with "לא
+  נמדד", a number that contradicts an earlier one becomes a correction line in
+  the note, and a failure here is said out loud rather than swallowed: the chat
+  record is already safe on disk, so the worst case is the old one, a session
+  writing the row by hand, and now it at least knows that it has to.
+*/
+function recordDrain(text, at) {
+  let out;
+  try { out = drains.record(DRAINS, text, at); }
+  catch (e) { say('!! מדידת ניקוזים לא נרשמה: ' + e.message); return; }
+  if (!out) return;
+  const tot = drains.total(out.row);
+  say('ניקוזים נרשמו ב' + out.file + ': '
+    + [1, 2, 3, 4].map(n => n + '=' + (typeof out.row['d' + n] === 'number' ? out.row['d' + n] : '·')).join(' ')
+    + (tot === null ? '' : ' · סה״כ ' + tot)
+    + (out.fixed.length ? ' · ' + out.fixed.join(' · ') : ''));
+}
+
+/*
+  What he said, on his screen, before anyone has answered him.
+
+  Itzik, 17.9: "you said within three minutes I get an answer from the monitor.
+  Why is that not happening." A recording used to reach the page as the line
+  "voice note: voice-20260917075848.webm" and stayed that way until a session
+  finished, which is between four and twelve minutes later. For all that time
+  the page could not even show that the words had arrived, let alone which
+  words, and a red line quoting a filename back at him is indistinguishable
+  from a message that fell on the floor.
+
+  Whisper needs about twenty seconds for a note of his length. That is cheap
+  enough to spend here, and it buys two separate things: he sees his own
+  sentence on the page within roughly half a minute, and the session that
+  answers it is handed the text instead of a filename, so it no longer spends
+  its own first minute transcribing.
+
+  It runs detached from the stream on purpose. The listener must never block on
+  it: a transcript that fails or takes too long costs the note nothing, because
+  the record is already written and the session can still transcribe for
+  itself.
+*/
+/*
+  11.10, a 133 second note at 08:45 failed both tries: each try is killed at
+  three minutes, and large-v3 on this machine needs more than that for a note
+  over two minutes, so every long note fell through to the session. The limit
+  now grows with the recording: about 23 KB is a second of his webm, and each
+  second of audio gets two and a half seconds of work, never less than three
+  minutes.
+*/
+function transcribeBudget(audio) {
+  let bytes = 0;
+  try { bytes = fs.statSync(audio).size; } catch (e) {}
+  return Math.max(180000, Math.round(bytes / 23000 * 2500));
+}
+function transcribeLater(audio, file) {
+  const started = Date.now();
+  const budget = transcribeBudget(audio);
+  execFile('node', ['transcribe.js', audio], { cwd: __dirname, timeout: budget },
+    function (err, out) {
+      const text = String(out || '').trim().split(String.fromCharCode(10)).filter(Boolean).pop() || '';
+      if (err || !text || /^\(/.test(text)) {
+        say('!! תמלול מיידי נכשל: ' + path.basename(audio));
+        /*
+          One retry, and then he is told.
+
+          19.9, 05:44 to 05:53: four notes in a row failed to transcribe while
+          four agents were loading the machine. The page showed him a filename,
+          no session knew what he had asked, and the only trace was this line in
+          a log on a machine he cannot read. He waited, then asked in the chat
+          why nobody had answered. Run by hand afterwards, every one of the four
+          transcribed on the first try in about five seconds, so the failure was
+          load and not the recording.
+
+          A retry costs twenty seconds. Silence cost him twenty minutes.
+        */
+        execFile('node', ['transcribe.js', audio], { cwd: __dirname, timeout: budget },
+          function (err2, out2) {
+            const text2 = String(out2 || '').trim().split(String.fromCharCode(10)).filter(Boolean).pop() || '';
+            if (err2 || !text2 || /^\(/.test(text2)) {
+              say('!! תמלול נכשל גם בניסיון השני: ' + path.basename(audio));
+              /*
+                If I cannot read it, he can still hear it.
+
+                Itzik, 19.9: "אם אתה לא מצליח לתמלל שלח לי שאני אקשיב". He is
+                right, and it is the obvious answer. A failed transcript used to
+                leave the note as a filename on his page and nothing he could
+                press. The recording is already on this machine; copying it to
+                docs/files makes it a link he can play from the phone, and then
+                the worst case is that he listens to his own note and tells a
+                session what it said, instead of the message being lost.
+              */
+              let link = '';
+              try {
+                const pub = path.join(__dirname, 'docs', 'files');
+                fs.mkdirSync(pub, { recursive: true });
+                fs.copyFileSync(audio, path.join(pub, path.basename(audio)));
+                link = 'files/' + path.basename(audio);
+              } catch (e2) {
+                say('!! לא הצלחתי להעתיק את ההקלטה לדף: ' + e2.message);
+              }
+              try {
+                const full2 = path.join(CHAT, file);
+                const rec2 = JSON.parse(fs.readFileSync(full2, 'utf8'));
+                if (!rec2.note && rec2.status !== 'done') {
+                  rec2.note = link
+                    ? 'לא הצלחתי לתמלל. ההקלטה כאן ואפשר להאזין: ' + link
+                    : (fs.existsSync(audio)
+                      ? 'לא הצלחתי לתמלל, וגם לא להעלות את ההקלטה לדף.'
+                      // 28.9: the note from 23:21 expired on ntfy while the
+                      // listener was down, so there is nothing to play. Say so
+                      // plainly and ask for it again, on the page and not as a
+                      // push (his rule from 19.9).
+                      : 'ההקלטה לא הגיעה לשרת, כנראה פג תוקפה לפני שנקלטה. אפשר להקליט אותה שוב?');
+                  fs.writeFileSync(full2, JSON.stringify(rec2, null, 1), 'utf8');
+                  publishChat();
+                }
+              } catch (e2) {}
+              /*
+                No message to him about this.
+
+                Itzik, 19.9: "אתה ממשיך לשלוח לי הודעות ... תכניס לי את זה
+                לכפתור ייעודי במוניטור". A notification saying I could not read
+                his note is one more thing for him to handle from a phone, and
+                it tells him nothing he can act on in the moment. The recording
+                now lands on its own screen and waits for him there.
+              */
+              return;
+            }
+            applyTranscript(text2, file, started);
+          });
+        return;
+      }
+      applyTranscript(text, file, started);
+    });
+}
+
+function applyTranscript(text, file, started) {
+  const full = path.join(CHAT, file);
+  let rec;
+  try { rec = JSON.parse(fs.readFileSync(full, 'utf8')); } catch (e) { return; }
+  // Never overwrite an answer. If a session already got here and closed the
+  // message, its transcript is the one that was acted on.
+  if (rec.note || rec.status === 'done') return;
+  rec.note = 'תמלול: ' + text;
+  try { fs.writeFileSync(full, JSON.stringify(rec, null, 1), 'utf8'); } catch (e) { return; }
+  say('תומלל ב' + Math.round((Date.now() - started) / 1000) + ' שניות: ' + text.slice(0, 60));
+  publishChat();
+  kickWorker();
+}
+/*
+  8.10: the worker used to find a new message on its next one minute tick, after
+  a further 20 second settle, so an answer started 20 to 80 seconds late. Now the
+  listener touches status/kick a little after the worker's settle window, and a
+  systemd path unit starts the worker on that touch. The one minute timer stays
+  as the fallback if the path unit is missing.
+*/
+const KICK = path.join(STATUS, 'kick');
+function kickWorker() {
+  setTimeout(function () {
+    try { fs.writeFileSync(KICK, new Date().toISOString(), 'utf8'); }
+    catch (e) { say('!! kick failed: ' + e.message); }
+  }, 6000);
+}
+let publishing = false, publishAgain = false;
+function publishChat() {
+  if (publishing) { publishAgain = true; return; }
+  publishing = true;
+  execFile('node', ['build.js'], { cwd: __dirname, timeout: 120000 }, function (err, out) {
+    if (err) { say('!! build נכשל: ' + String(out).slice(0, 120)); return finish(); }
+    /*
+      The measurement travels with the page.
+
+      The first version committed 'data/chat' and 'docs' only, so a drain row
+      the listener had just written sat uncommitted in the working tree while
+      the published table already showed it. The number on the screen was real
+      and the file behind it was not saved anywhere, which is the wrong half to
+      lose: the page is rebuilt from the file, not the other way round.
+    */
+    git(['add', '--', 'data/chat', 'data/drains', 'docs'], function () {
+      git(['commit', '-m', 'listener: received, working on it'], function (err2, out2) {
+        if (/nothing to commit/i.test(out2)) return finish();
+        if (err2) { say('!! commit נכשל: ' + out2.trim().slice(0, 120)); return finish(); }
+        git(['push'], function (err3) {
+          if (!err3) { say('אישור הקבלה פורסם לדף'); return finish(); }
+          resync(function () {
+            git(['push'], function (err4) {
+              say(err4 ? '!! פרסום אישור הקבלה נכשל' : 'אישור הקבלה פורסם לדף (אחרי rebase)');
+              finish();
+            });
+          });
+        });
+      });
+    });
+  });
+  function finish() {
+    publishing = false;
+    if (publishAgain) { publishAgain = false; publishChat(); }
+  }
+}
+
+/*
+  Code on disk, and code in memory.
+
+  19.9, 05:02: his second drains round of the night was written on top of the
+  first one and three real numbers were replaced. The reading code had been
+  fixed the afternoon before and the fix was correct. It simply was not
+  running: this process had started at 11:06, node had loaded the old module
+  into memory, and nothing ever made it read the file again. A listener that
+  stays up for a day is a listener running yesterday's code, and the failure is
+  silent, which is the worst kind here because the thing it quietly damages is
+  his measurements.
+
+  So the sources are stamped at startup and watched. When one of them changes,
+  this process says so and leaves; the guard that started it puts it back up
+  five seconds later with the code that is actually on disk. Nothing is lost by
+  exiting, because the stream is resumed from the last seen message.
+*/
+// 8.10: instance.json too, so pausing a customer takes hold within a minute.
+const SOURCES = [__filename, path.join(__dirname, 'instance.json')].concat(
+  fs.existsSync(path.join(__dirname, 'lib'))
+    ? fs.readdirSync(path.join(__dirname, 'lib'))
+        .filter(function (f) { return /\.js$/.test(f); })
+        .map(function (f) { return path.join(__dirname, 'lib', f); })
+    : []
+);
+function stampSources() {
+  return SOURCES.map(function (f) {
+    try { return f + '@' + fs.statSync(f).mtimeMs; } catch (e) { return f + '@?'; }
+  }).join('|');
+}
+const SOURCE_STAMP = stampSources();
+// Set while a message is being handled, so a restart never lands in the middle
+// of writing one of his rows.
+let busy = false;
+function checkSources() {
+  if (busy) return;
+  if (stampSources() === SOURCE_STAMP) return;
+  say('הקוד על הדיסק השתנה. יוצא כדי שהשומר יעלה אותי מחדש עם הגרסה החדשה.');
+  releaseLock();
+  process.exit(0);
+}
+
+const NOTES = path.join(inst.dataPath, 'notes', 'notes');
+async function recordNotesSync(m) {
+  let raw;
+  try { const res = await fetch(m.attachment.url); raw = res.ok ? await res.text() : ''; }
+  catch (e) { raw = ''; }
+  let got;
+  // 10.11.2026: a sealed copy ("enc1:") is opened first; a plain one passes as before.
+  try { got = JSON.parse(gateSeal.openMessage(raw)); } catch (e) { got = null; }
+  // The topic is public, so the copy is only taken with his code inside it.
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! סנכרון פתקים בלי קוד, לא נשמר'); return; }
+  delete got.code;
+  let out;
+  try { out = notesSync.record(NOTES, got); } catch (e) { say('!! סנכרון פתקים נכשל: ' + e.message); return; }
+  if (!out) return;
+  say('פתקים נשמרו בשרת: ' + out.notes.length + ' פתקים, ' + Object.keys(out.tasksDone).length + ' משימות שסומנו');
+  publishChat();
+}
+
+// The approval ticks on the candle.times page (docs/ner/candle.html), 23.10.
+// Itzik: "תכין תיבת סימון ליד אם אישור ואז יהיה לך אישור לכל השבוע". A tick
+// sets approved on the named queue items; ner-post.js still does the posting.
+const NER_QUEUE = '/home/monitor/ner-queue.json';
+async function recordNerApprove(m) {
+  let got;
+  try { const res = await fetch(m.attachment.url); got = JSON.parse(res.ok ? await res.text() : ''); }
+  catch (e) { got = null; }
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! אישור נרות בלי קוד, לא נשמר'); return; }
+  const names = Array.isArray(got.names) ? got.names.map(String) : [];
+  let q;
+  try { q = JSON.parse(fs.readFileSync(NER_QUEUE, 'utf8')); } catch (e) { say('!! תור הנרות לא נקרא'); return; }
+  let n = 0;
+  q.forEach(function (it) {
+    if (names.indexOf(it.name) < 0 || it.posted) return;
+    it.approved = !!got.approved;
+    // 31.10, the new candle.html: "לא מאשר" sends rejected:true, which holds the
+    // item so ner-post.js never posts it; its undo (or מאשר) sends rejected:false,
+    // which lifts only a hold this page put there.
+    if (got.rejected === true) { it.approved = false; it.hold = true; it.rejected = 'page ' + new Date().toISOString().slice(0, 10); }
+    else if (got.rejected === false && it.rejected) { delete it.rejected; it.hold = false; }
+    n++;
+  });
+  if (!n) return;
+  fs.writeFileSync(NER_QUEUE, JSON.stringify(q, null, 1));
+  say('נרות: ' + n + ' פריטים ' + (got.rejected === true ? 'סומנו לא מאשר' : got.approved ? 'אושרו' : 'בוטל האישור') + ' מהדף');
+  execFile(process.execPath, ['ner-post.js', '--mirror'], { cwd: __dirname, timeout: 120000 }, function () {});
+}
+
+// 13.11.2026, Itzik: the 🎁 tile. "העליתי" deletes the waiting carousel or video (data/ready/<id>.json and its files) and rebuilds.
+async function recordReadyDone(m) {
+  let got;
+  try { const res = await fetch(m.attachment.url); got = JSON.parse(res.ok ? await res.text() : ''); }
+  catch (e) { got = null; }
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! מחיקת מוכן להעלאה בלי קוד, לא בוצעה'); return; }
+  const id = String(got.id || '');
+  if (!/^[a-z0-9-]{4,60}$/.test(id)) return;
+  const p = path.join(__dirname, 'data', 'ready', id + '.json');
+  let r;
+  try { r = JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { say('מוכן להעלאה: ' + id + ' כבר לא קיים'); return; }
+  (Array.isArray(r.files) ? r.files : []).map(String).filter((n) => /^[^/]+$/.test(n) && n !== '.' && n !== '..').forEach(function (n) {
+    try { fs.unlinkSync(path.join(__dirname, 'data', 'files-private', n)); } catch (e) { /* already gone */ }
+  });
+  try { fs.unlinkSync(p); } catch (e) { /* gone */ }
+  say('מוכן להעלאה: ' + id + ' הועלה ונמחק');
+  publishChat();
+}
+
+// The "posted" tick on the WhatsApp status page (docs/status/index.html), 1.11. Records the item name
+// in wa-status-done.json so wa-status-morning.js stays quiet for it. Nothing here touches WhatsApp.
+const WA_STATUS_DONE = '/home/monitor/wa-status-done.json';
+async function recordWaStatusDone(m) {
+  let got;
+  try { const res = await fetch(m.attachment.url); got = JSON.parse(res.ok ? await res.text() : ''); }
+  catch (e) { got = null; }
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! סימון סטטוס בלי קוד, לא נשמר'); return; }
+  let d = {};
+  try { d = JSON.parse(fs.readFileSync(WA_STATUS_DONE, 'utf8')); } catch (e) {}
+  const name = String(got.name || '');
+  if (!name) return;
+  if (got.done === false) delete d[name]; else d[name] = new Date().toISOString();
+  fs.writeFileSync(WA_STATUS_DONE, JSON.stringify(d, null, 1));
+  say('סטטוס וואטסאפ: ' + name + (got.done === false ? ' בוטל הסימון' : ' סומן כהועלה'));
+}
+
+// 10.11.2026: 🎛️ לוח הפרסומים, an edit of the week plan or of an item's time, from the page (lib/post-plan.js).
+async function recordPostPlan(m) {
+  let got;
+  try { const res = await fetch(m.attachment.url); got = JSON.parse(res.ok ? await res.text() : ''); }
+  catch (e) { got = null; }
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! שינוי בלוח הפרסומים בלי קוד, לא נשמר'); return; }
+  try { say('לוח הפרסומים: ' + require('./lib/post-plan.js').save(__dirname, got)); } catch (e) { say('!! לוח הפרסומים: ' + e.message); }
+}
+
+// The "next week" tick on the same page, 23.10. Itzik: on Thursday the tile
+// blinks, he ticks "תכין לי עוד סטוריז ופוסטים לכל השבוע הבא", the PC builds it
+// by clip/week_stories/ner_week/RECIPE.md and the week goes into the queue approved.
+const NER_REQ = path.join(__dirname, 'docs', 'ner', 'request.json');
+async function recordNerWeek(m) {
+  let got;
+  try { const res = await fetch(m.attachment.url); got = JSON.parse(res.ok ? await res.text() : ''); }
+  catch (e) { got = null; }
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! בקשת שבוע נרות בלי קוד, לא נשמרה'); return; }
+  let cur = {};
+  try { cur = JSON.parse(fs.readFileSync(NER_REQ, 'utf8')); } catch (e) {}
+  if (cur.status === 'building' && Date.now() - Date.parse(cur.at || 0) < 12 * 3600 * 1000) { say('נרות: שבוע כבר בבנייה'); return; }
+  const job = 'candle.times: לבנות את השבוע הבא של פוסטים וסטוריז לחשבון הנרות, 24 פריטים, '
+    + 'לפי C:/Users/User/clip/week_stories/ner_week/RECIPE.md. הכל עולה מאושר, לא לבקש אישור. איציק סימן באריח.';
+  const r = require('child_process').spawnSync(process.execPath, ['pc-task.js', 'add', '--quiet', '--re', 'ner-week', job], { cwd: __dirname, encoding: 'utf8', timeout: 60000 });
+  fs.writeFileSync(NER_REQ, JSON.stringify({ status: 'building', at: new Date().toISOString(), task: String(r.stdout || '').trim().split(String.fromCharCode(10))[0] }));
+  say('נרות: בקשה לשבוע חדש נשלחה למחשב ' + String(r.stdout || r.stderr || '').trim());
+  execFile(process.execPath, ['push.js', 'ner: next week requested'], { cwd: __dirname, timeout: 120000 }, function () {});
+}
+
+// The "מה בצלחת" tile (docs/plate/plate.html), 23.10. Itzik: the stories in order,
+// a way to delete, and every approved story goes up to the site's /plate/ page.
+// approve marks it and hands the PC clip/plate_tile/publish_plate.py; delete removes
+// it and its video; move swaps it with its neighbour.
+const PLATE_Q = '/home/monitor/plate-queue.json';
+async function recordPlateAction(m) {
+  let got;
+  try { const res = await fetch(m.attachment.url); got = JSON.parse(res.ok ? await res.text() : ''); }
+  catch (e) { got = null; }
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! פעולת מה בצלחת בלי קוד, לא נשמרה'); return; }
+  let q;
+  try { q = JSON.parse(fs.readFileSync(PLATE_Q, 'utf8')); } catch (e) { say('!! תור מה בצלחת לא נקרא'); return; }
+  q.sort(function (a, b) { return a.order - b.order; });
+  const i = q.findIndex(function (x) { return x.id === String(got.id); });
+  if (i < 0) return;
+  const it = q[i];
+  if (got.action === 'delete') {
+    q.splice(i, 1);
+    [it.file, it.poster].forEach(function (f) { if (/^media\/[^/]+$/.test(String(f || ''))) { try { fs.unlinkSync(path.join(__dirname, 'docs', 'plate', f)); } catch (e) {} } });
+  } else if (got.action === 'posted') {
+    // 26.10, Itzik: "תסמן". He uploads the story himself and ticks it here. The tile keeps it
+    // for the day, media-clean.js drops its video after that, and the PC adds it to /plate/.
+    if (it.posted) return;
+    it.posted = true;
+    it.postedAt = new Date().toISOString();
+    const job = 'מה בצלחת: איציק סימן באריח ש"' + it.name + '" (id ' + it.id + ') עלה לאינסטגרם. להוסיף לאתר: '
+      + 'cd C:/Users/User/clip/plate_tile && python publish_plate.py ' + it.id
+      + ' . אם הסקריפט אומר שאין מלל, לחלץ פריימים מהסרטון, להעתיק את המלל של כל מסך כמו שהוא, לשמור כ texts.json ולהריץ עם --text texts.json. בלי מקפים.'
+      // 26.10, Itzik: "אפשר להכניס אותו להיילייט. אתה תעשה?" The Instagram API has no highlights, so Chrome does it.
+      + ' אחר כך, בכרום בחשבון abaitzik: לפתוח את הסטורי של היום, "הוספה להיילייט" (Highlight), לבחור את ההיילייט הקיים "מה בצלחת? 🍽️" ולשמור. לא ליצור היילייט חדש, לא לגעת בסטוריז אחרים. לבדוק בפרופיל שהוא נכנס אחרון בהיילייט.';
+    require('child_process').spawnSync(process.execPath, ['pc-task.js', 'add', '--quiet', '--re', 'plate-' + it.id, job], { cwd: __dirname, encoding: 'utf8', timeout: 60000 });
+  } else if (got.action === 'move') {
+    const j = i + (Number(got.dir) < 0 ? -1 : 1);
+    if (j < 0 || j >= q.length) return;
+    const t = q[i].order; q[i].order = q[j].order; q[j].order = t;
+  } else if (got.action === 'approve') {
+    if (it.approved) return;
+    it.approved = true;
+    // 15.11.2026, Itzik: "אני רוצה שיהיה באתר שיופיע רק מה שעלה לאינסטגרם". Approval no longer puts the
+    // story on /plate/; only the "posted" tick (and the manager's plateSiteMissing) does.
+  } else if (got.action === 'unapprove') {
+    // 23.10, Itzik: a tick by mistake can be undone. Not yet on the site: publish_plate.py stops on its own.
+    // Already on the site: the PC takes it off.
+    if (!it.approved && !it.onSite) return;
+    const wasOn = !!it.onSite;
+    it.approved = false;
+    if (wasOn) {
+      const job = 'מה בצלחת: איציק ביטל באריח את האישור של "' + it.name + '" (id ' + it.id + '). להוריד מהאתר: '
+        + 'cd C:/Users/User/clip/plate_tile && python unpublish_plate.py ' + it.id;
+      require('child_process').spawnSync(process.execPath, ['pc-task.js', 'add', '--quiet', '--re', 'plate-' + it.id, job], { cwd: __dirname, encoding: 'utf8', timeout: 60000 });
+    }
+  } else return;
+  fs.writeFileSync(PLATE_Q, JSON.stringify(q, null, 1));
+  fs.writeFileSync(path.join(__dirname, 'docs', 'plate', 'queue.json'), JSON.stringify(q, null, 1));
+  say('מה בצלחת: ' + got.action + ' ' + it.name);
+  execFile(process.execPath, ['push.js', 'plate: ' + got.action + ' ' + it.id], { cwd: __dirname, timeout: 120000 }, function () {});
+}
+
+// 8.11.2026, Itzik: the AI channel reels page (docs/ai/ai.html). He uploads the reel himself and ticks it here;
+// the tick (or its undo) is kept in the queue and the page shows what went up and what did not.
+const AI_Q = '/home/monitor/ai-queue.json';
+async function recordAiAction(m) {
+  let got;
+  try { const res = await fetch(m.attachment.url); got = JSON.parse(res.ok ? await res.text() : ''); }
+  catch (e) { got = null; }
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! פעולת ערוץ AI בלי קוד, לא נשמרה'); return; }
+  let q;
+  try { q = JSON.parse(fs.readFileSync(AI_Q, 'utf8')); } catch (e) { say('!! תור ערוץ AI לא נקרא'); return; }
+  const it = q.find(function (x) { return x.id === String(got.id); });
+  if (!it) return;
+  if (got.action === 'posted') { if (it.posted) return; it.posted = true; it.postedAt = new Date().toISOString(); }
+  else if (got.action === 'unposted') { if (!it.posted) return; it.posted = false; it.postedAt = null; }
+  // 10.11.2026, Itzik: "בסרטונים שמחכים לאישור שלי אין כפתור לאשר אותם". The button on the page is the explicit approval:
+  // it lifts the hold, so the video goes up at 20:00 in its turn (ai-post.js skips a held item). "בטל אישור" puts it back.
+  else if (got.action === 'approve') { if (it.posted || !it.hold) return; delete it.hold; delete it.note; it.approvedAt = new Date().toISOString(); }
+  else if (got.action === 'unapprove') { if (it.posted || it.hold) return; it.hold = true; delete it.approvedAt; }
+  else return;
+  fs.writeFileSync(AI_Q, JSON.stringify(q, null, 1));
+  fs.writeFileSync(path.join(__dirname, 'docs', 'ai', 'queue.json'), JSON.stringify(q, null, 1));
+  say('ערוץ AI: ' + got.action + ' ' + it.name);
+  execFile(process.execPath, ['push.js', 'ai: ' + got.action + ' ' + it.id], { cwd: __dirname, timeout: 120000 }, function () {});
+}
+
+// The wrapper exists only so that a throw inside cannot leave the busy flag
+// set and freeze the restart check forever.
+async function handle(m) {
+  busy = true;
+  try { await handleOne(m); }
+  finally { busy = false; }
+  checkSources();
+}
+
+/*
+  12.10, Itzik: Rinat's work should run on her own Claude subscription. She makes
+  a key on her computer (`claude setup-token`) and sends it here, in the chat,
+  as "חיבור חשבון: sk-ant-oat...". The key never reaches the log, the chat or a
+  session: it goes to data/status/own-token.txt (600), and root's
+  monitor-owntoken@<id>.path puts it in /etc/<id>.env, tests it and deletes the
+  file (setup/apply-own-token.sh). The page sends it with Cache: no, so ntfy
+  keeps no copy. Itzik's own monitor never takes one.
+*/
+function ownToken(m) {
+  const body = String(m.message || '');
+  const key = (/sk-ant-oat[0-9A-Za-z_-]{20,}/.exec(body) || [])[0];
+  if (!key) return false;
+  if (inst.name === 'abaitzik' || !ownerCodeOk(body)) { say('הגיע מפתח חשבון שלא מכאן או בלי קוד. נמחק בלי לשמור.'); return true; }
+  try {
+    const f = path.join(inst.dataPath, 'status', 'own-token.txt');
+    fs.writeFileSync(f, key + '\n', { mode: 0o600 });
+    fs.chmodSync(f, 0o600);
+    const at = new Date();
+    const stamp = at.toISOString().replace(/[-:]/g, '').slice(0, 15).replace('T', '-');
+    fs.mkdirSync(CHAT, { recursive: true });
+    const id = 'owntoken-' + at.getTime().toString(36);
+    fs.writeFileSync(path.join(CHAT, stamp + '-itzik-owntoken.json'), JSON.stringify({ at: at.toISOString(), from: 'itzik', id,
+      text: 'חיבור חשבון (המפתח נשמר במקום נעול ולא מוצג כאן)', status: 'done' }, null, 1), 'utf8');
+    fs.writeFileSync(path.join(CHAT, stamp + '-claude-owntoken.json'), JSON.stringify({ at: at.toISOString(), from: 'claude', re: id,
+      text: 'המפתח התקבל. תוך דקה המוניטור עובר לעבוד על החשבון שלך, ותקבלי כאן אישור.', status: 'done' }, null, 1), 'utf8');
+    say('מפתח חשבון התקבל ונשמר (לא מוצג).');
+  } catch (e) { say('!! מפתח חשבון לא נשמר: ' + e.message); }
+  return true;
+}
+
+const shachar = {
+  deps() {
+    return {
+      dir: inst.dataPath,
+      fetch: fetch,
+      now: () => new Date(),
+      ownerCodeOk: ownerCodeOk,
+      notify: (t, msg) => execFile(process.execPath, ['notify.js', t, msg], { cwd: __dirname, timeout: 60000 }, function () {}),
+      rebuild: () => execFile(process.execPath, ['push.js', 'שחר: עדכון הרשימות'], { cwd: __dirname, timeout: 240000 }, function () {}),
+    };
+  },
+};
+
+/*
+  10.11.2026, agreement audit: the page seals the body of a text message with the gate key before it
+  goes to ntfy.sh ("enc1:" + base64, see ntfyText in build.js), so ntfy never holds readable text.
+  Open it here, first, so nothing below knows the difference. Plain text still passes (an old cached
+  page). A sealed message that does not verify is dropped, never read as garbage.
+*/
+const gateSeal = require('./gate.js');
+function openSealed(m) {
+  if (!m || typeof m.message !== 'string' || m.message.slice(0, 5) !== 'enc1:') return m;
+  let plain = null;
+  try { plain = gateSeal.openMessage(m.message); } catch (e) { plain = null; }
+  if (plain === null) { say('!! הודעה מוצפנת שלא נפתחה, נמחקה בלי לקרוא'); return null; }
+  return Object.assign({}, m, { message: plain });
+}
+
+/*
+  14.11.2026, Itzik approved: the 📌 button in the files screen keeps one file with no limit (lib/file-keep.js
+  reads data/files-pins.json). The body is {code, n, pin}, sealed like a message.
+*/
+function recordFilePin(m) {
+  let got;
+  try { got = JSON.parse(String(m.message || '')); } catch (e) { got = null; }
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! שמירת קובץ בלי קוד, לא בוצעה'); return; }
+  const n = String(got.n || '');
+  if (!n || n.length > 300 || n.split('/').some((p) => !p || p === '.' || p === '..')) return;
+  const f = path.join(inst.dataPath, 'files-pins.json');
+  let list = [];
+  try { list = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) {}
+  if (!Array.isArray(list)) list = [];
+  list = list.filter((x) => x !== n);
+  if (got.pin) list.push(n);
+  try { fs.writeFileSync(f + '.tmp', JSON.stringify(list.slice(-2000))); fs.renameSync(f + '.tmp', f); }
+  catch (e) { say('!! שמירת קובץ: ' + e.message); return; }
+  say(got.pin ? 'קובץ סומן לשמירה בלי הגבלה' : 'קובץ חזר לכלל השמירה');
+  publishChat();
+}
+
+async function handleOne(m) {
+  const seen = mark();
+  if (m.time === seen.time && seen.ids.includes(m.id)) return;
+  received++;
+  lastMsgAt = Date.now();
+  m = openSealed(m);
+  if (!m) return;
+  // 14.11.2026: 📌 on a file. Before anything logs the message, since its body carries the code.
+  if (!m.attachment && m.title === 'file-pin') { recordFilePin(m); remember(m); return; }
+  if (ownToken(m)) { remember(m); return; }
+  // 24.10.2026: a phone's push subscription is stored, never chatted or sent to Claude.
+  const pushSub = m.attachment ? null : wp.fromMessage(m.message);
+  if (pushSub) { recordPushSub(m, pushSub); remember(m); return; }
+  say('הודעה: ' + group.stripCode(String(m.message || '(צרופה)')).slice(0, 80));
+  // The notes and task ticks the page keeps on the server too. Not a message:
+  // it never enters the chat, it only refreshes the copy a new phone fills from.
+  if (m.attachment && m.title === 'notes-sync') {
+    await recordNotesSync(m);
+    remember(m);
+    return;
+  }
+  if (m.attachment && m.title === 'plate-action') {
+    await recordPlateAction(m);
+    remember(m);
+    return;
+  }
+  if (m.attachment && m.title === 'ai-action') {
+    await recordAiAction(m);
+    remember(m);
+    return;
+  }
+  // 31.10: the Shachar tile (lib/shachar.js). One message per tap, signed with the owner code.
+  if (!m.attachment && (m.title === 'shachar-invite' || m.title === 'shachar-refresh')) {
+    try {
+      const r = await require('./lib/shachar.js').route(m, shachar.deps());
+      say('שחר: ' + m.title + ' ' + (r.ok ? 'בוצע' : (r.reason || (r.status || 'ממתין'))));
+    } catch (e) { say('!! שחר: ' + e.message); }
+    remember(m);
+    return;
+  }
+  if (m.attachment && m.title === 'ner-week') {
+    await recordNerWeek(m);
+    remember(m);
+    return;
+  }
+  if (m.attachment && m.title === 'post-plan') {
+    await recordPostPlan(m);
+    remember(m);
+    return;
+  }
+  if (m.attachment && m.title === 'ready-done') {
+    await recordReadyDone(m);
+    remember(m);
+    return;
+  }
+  if (m.attachment && m.title === 'wa-status-done') {
+    await recordWaStatusDone(m);
+    remember(m);
+    return;
+  }
+  if (m.attachment && m.title === 'ner-approve') {
+    await recordNerApprove(m);
+    remember(m);
+    return;
+  }
+  // A long text that ntfy turned into attachment.txt: read it back as the
+  // message, so its code line is checked like any other send (see group.js).
+  if (group.isLongText(m.attachment)) {
+    let raw = '';
+    try { const res = await fetch(m.attachment.url); raw = res.ok ? await res.text() : ''; }
+    catch (e) { raw = ''; }
+    if (raw.trim()) {
+      say('הודעה ארוכה הגיעה כקובץ, נקראת כטקסט');
+      m = Object.assign({}, m, { message: raw });
+      delete m.attachment;
+      m = openSealed(m);
+      if (!m) return;
+    }
+  }
+  if (m.attachment) {
+    const saved = await saveAttachment(m);
+    if (saved && joinSlices(m) === 'waiting') { remember(m); await beat(); return; }
+  }
+  if (m.message) logPull('text', m.message);
+  // With the bridge off, a message that looks like a Codex request is an
+  // ordinary message. Routing it anyway would swallow it: matched messages
+  // never reach recordIncoming, so it would leave no trace in his chat.
+  const routed = process.env.ABAITZIK_CODEX === '1'
+    ? await codexRoute.route(m, codexBridge)
+    : { matched: false };
+  if (routed.matched) {
+    say(routed.duplicate ? 'בקשת קודקס כבר נמסרה: ' + routed.sourceId
+      : 'בקשת קודקס נמסרה לשיחה: ' + routed.sourceId);
+  } else if (recordIncoming(m)) {
+    publishChat();
+    kickWorker();
+  }
+  remember(m);
+  await beat();
+}
+
+/*
+  One long connection.
+
+  ntfy sends a keepalive every 45 seconds. The dangerous failure is not a
+  socket that closes, which throws and reconnects on its own: it is a socket
+  the machine still believes is open after the nightly sleep, which yields
+  nothing and never errors. The listener would sit there looking connected
+  while Itzik's messages piled up on the server, which is the exact failure
+  this whole thing exists to end. So silence longer than two and a half minutes
+  is treated as death and the connection is torn down and rebuilt.
+*/
+const STALL_MS = 150000;
+async function connect() {
+  const since = mark().time || 'all';
+  const ac = new AbortController();
+  let lastEvent = Date.now();
+  const watchdog = setInterval(function () {
+    if (Date.now() - lastEvent > STALL_MS) {
+      say('הזרם שתק ' + Math.round((Date.now() - lastEvent) / 1000) + ' שניות. מנתק ומתחבר מחדש.');
+      ac.abort();
+    }
+  }, 15000);
+  /*
+    During a rotation window both inbound topics are held on one connection,
+    ntfy's comma separated subscribe, so a page still open with the old topic
+    loses nothing. When the window closes the connection is dropped on purpose
+    and the next one is made to the new topic alone.
+  */
+  const topics = inst.inTopics();
+  let windowEnd = null;
+  try {
+    if (!topics.length) throw new Error('אין ערוץ נכנס: חסר ntfyIn ב-data/keys.json');
+    if (topics.length > 1) {
+      const ms = Date.parse(inst.ntfy.inOldUntil) - Date.now();
+      windowEnd = setTimeout(function () {
+        say('חלון המעבר נסגר. עובר לערוץ החדש בלבד.');
+        ac.abort();
+      }, Math.max(1000, Math.min(ms + 1000, 2147000000)));
+    }
+    const res = await fetch('https://ntfy.sh/' + topics.join(',') + '/json?since=' + since,
+      { signal: ac.signal });
+    if (!res.ok || !res.body) throw new Error('ntfy ' + res.status);
+    connectedAt = Date.now();
+    lastEvent = Date.now();
+    say('מחובר לערוץ. מאזין.');
+    if (topics.length > 1) say('מאזין גם לערוץ הקודם עד ' + inst.ntfy.inOldUntil + '.');
+    await beat();
+    let buf = '';
+    for await (const chunk of res.body) {
+      lastEvent = Date.now();
+      buf += Buffer.from(chunk).toString('utf8');
+      let i;
+      while ((i = buf.indexOf(String.fromCharCode(10))) >= 0) {
+        const line = buf.slice(0, i).trim();
+        buf = buf.slice(i + 1);
+        if (!line) continue;
+        let m;
+        try { m = JSON.parse(line); } catch (e) { continue; }
+        if (m.event === 'message') await handle(m);
+      }
+    }
+    throw new Error('הזרם נסגר');
+  } finally {
+    clearInterval(watchdog);
+    if (windowEnd) clearTimeout(windowEnd);
+  }
+}
+
+// Whatever could not go out while the channels were down is retried on the
+// same clock as the pulse. Nothing here shouts: if it still cannot go out it
+// stays on the queue and the count travels on the next beat.
+async function drainQueue() {
+  try {
+    const q = await ch.releaseQuiet();
+    if (q.sent) say('שעות שקטות נגמרו: ' + q.sent + ' התראות יצאו בהתראה אחת.');
+  } catch (e) { say('!! התראת הבוקר של השעות השקטות: ' + e.message); }
+  try {
+    const before = ch.queueLength();
+    if (!before) return;
+    const r = await ch.drain();
+    if (r.sent) say('נשלחו ' + r.sent + ' הודעות שהמתינו בתור. נשארו ' + r.left + '.');
+  } catch (e) { /* the queue survives to the next round */ }
+}
+
+/*
+  Only ever one of me.
+
+  There are two things that start this now, a scheduled task and a shortcut in
+  the Startup folder, and for a while both were live at once. Two listeners
+  means two pulses, two sets of commits and twice the spend against the daily
+  allowance, which is the exact shape of the fault that started all of this. A
+  lock file settles it: the second one to arrive says so and leaves.
+
+  The lock holds a pid, so a lock left behind by a process that was killed is
+  recognised as stale rather than blocking the restart forever.
+*/
+const LOCK = path.join(STATUS, 'listen.lock');
+function alive(pid) {
+  try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
+}
+function claimLock() {
+  try {
+    const held = JSON.parse(fs.readFileSync(LOCK, 'utf8'));
+    if (held.pid && held.pid !== process.pid && alive(held.pid)) return false;
+  } catch (e) { /* no lock, or an unreadable one: take it */ }
+  fs.mkdirSync(STATUS, { recursive: true });
+  fs.writeFileSync(LOCK, JSON.stringify({ pid: process.pid, at: new Date().toISOString() }), 'utf8');
+  return true;
+}
+function releaseLock() {
+  try {
+    const held = JSON.parse(fs.readFileSync(LOCK, 'utf8'));
+    if (held.pid === process.pid) fs.unlinkSync(LOCK);
+  } catch (e) { /* nothing to release */ }
+}
+['exit', 'SIGINT', 'SIGTERM'].forEach(function (sig) {
+  process.on(sig, function () { releaseLock(); if (sig !== 'exit') process.exit(0); });
+});
+
+module.exports = { recordIncoming, recordPushSub, isSystemText, recordDrain, TOPIC, LIVE, inTopics: (now) => inst.inTopics(now) };
+
+/*
+  Requiring this file must not open a connection or claim the lock. A test that
+  exercises the merge would otherwise become a second listener.
+*/
+if (require.main === module) (async () => {
+  if (!claimLock()) {
+    say('מאזין אחר כבר רץ. יוצא בלי לעשות כלום.');
+    return;
+  }
+  /*
+    Codex is off. Itzik, 25.9: "אין לנו צורך בקודקס".
+
+    It also could not have worked here: the mailbox lives in a folder on his
+    PC, and since the move to the cloud server this line only produced a
+    failure notice on every restart. The route below is left in place, so
+    turning the bridge back on is one environment variable and nothing else.
+  */
+  if (process.env.ABAITZIK_CODEX === '1') {
+    try {
+      const mailbox = await codexBridge.ensureMailbox();
+      say(mailbox.started ? 'תיבת קודקס הופעלה מחדש.' : 'תיבת קודקס מחוברת.');
+    } catch (e) {
+      say('!! תיבת קודקס לא זמינה: ' + e.message);
+    }
+  }
+  setInterval(beat, BEAT_MS);
+  setInterval(drainQueue, BEAT_MS);
+  // A fix pushed while nothing is arriving should not have to wait for his
+  // next message to take effect.
+  setInterval(checkSources, 60000);
+  setInterval(pcWatch, 60000);
+  setInterval(pollUploads, 3000);
+  setInterval(pollTexts, 2000);
+  let wait = 2000;
+  for (;;) {
+    try {
+      await connect();
+      wait = 2000;
+    } catch (e) {
+      say('נותק: ' + e.message + '. מנסה שוב בעוד ' + Math.round(wait / 1000) + ' שניות.');
+      connectedAt = 0;
+      await beat();
+      await new Promise(r => setTimeout(r, wait));
+      wait = Math.min(wait * 2, 60000);
+    }
+  }
+})();

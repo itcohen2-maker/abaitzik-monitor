@@ -1,0 +1,15 @@
+The ilay.abaitzik.com block in /etc/caddy/Caddyfile (11.10.2026). The page itself is
+the last, plain handle: a site level try_files would rewrite /up/* to index.html
+before the handles are looked at. Backup of the old file: Caddyfile.bak-20261011.
+
+ilay.abaitzik.com {
+	root * /home/ily/ily-monitor/docs
+	handle /api/* { reverse_proxy 127.0.0.1:8790 }
+	handle /up/*  { reverse_proxy 127.0.0.1:8791 }
+	handle {
+		try_files {path} {path}.html /index.html
+		file_server
+	}
+	header Cache-Control "no-cache"
+	header X-Robots-Tag "noindex, nofollow"
+}

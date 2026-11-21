@@ -1,0 +1,13 @@
+[Unit]
+Description=one WhatsApp message a day with what is still open (wa-daily.js)
+After=network-online.target
+[Service]
+Type=oneshot
+User=monitor
+Group=monitor
+Environment=HOME=/home/monitor
+WorkingDirectory=/home/monitor/abaitzik-monitor
+ExecStart=/usr/bin/node wa-daily.js
+TimeoutStartSec=5min
+StandardOutput=append:/var/log/monitor-wa-daily.log
+StandardError=append:/var/log/monitor-wa-daily.log

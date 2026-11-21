@@ -1,0 +1,115 @@
+'use strict';
+// 4.11.2026: tests for lib/manager.js (the manager's morning round).
+const { test } = require('node:test');
+const assert = require('node:assert');
+const M = require('../lib/manager.js');
+
+const WED = Date.parse('2026-11-04T07:25:00+02:00');
+const SAT = Date.parse('2026-11-07T07:25:00+02:00');
+
+const base = {
+  now: WED,
+  reports: [{ _file: '20261104-0703-morning-brief.json', at: '2026-11-04T05:03:00Z', title: 'דוח בוקר 4.11: רשות המסים', body: 'דחוף\nרשות המסים: הודעה חדשה\nטופס לא מופעל\n\nמיילים\nאחר' }],
+  cal: { at: '2026-11-04T05:15:00Z', events: [
+    { id: 'a', title: 'פגישה עם לקוח', start: '2026-11-04T11:00:00+02:00', allDay: false },
+    { id: 'b', title: 'יום הולדת', start: '2026-11-04', allDay: true },
+    { id: 'c', title: 'מחר', start: '2026-11-05T09:00:00+02:00', allDay: false },
+  ] },
+  health: { cards: [{ id: 'abaitzik', problems: ['x'] }, { id: 'rinat', title: 'המוניטור של רינת', problems: ['המאזין לא רץ'] }, { id: 'alon', title: 'המוניטור של אלון', problems: [] }] },
+  chat: [{ heldWhy: 'lead', at: '2026-11-04T04:00:00Z', text: 'ליד מהאתר' }],
+  contacts: [],
+  plate: [{ name: 'לימון', posted: true, postedAt: '2026-11-03T10:00:00Z', order: 3 }, { name: 'אפונה', order: 4 }],
+  status: [{ date: '2026-11-04', topic: 'האתר' }],
+};
+
+test('a full round has every item in order', () => {
+  const m = M.build(base);
+  assert.deepStrictEqual(m.items.map(i => i.k), ['brief', 'mail', 'cal', 'clients', 'leads', 'plate', 'status']);
+  const by = Object.fromEntries(m.items.map(i => [i.k, i]));
+  assert.strictEqual(by.mail.st, 'warn');
+  assert.match(by.mail.t, /2 דברים דחופים/);
+  assert.strictEqual(by.cal.st, 'todo');
+  assert.match(by.cal.sub, /^יום הולדת · 11:00 פגישה/);
+  assert.strictEqual(by.clients.st, 'warn');
+  assert.match(by.clients.sub, /רינת/);
+  assert.strictEqual(by.leads.st, 'warn');
+  assert.match(by.plate.sub, /אפונה/);
+  assert.strictEqual(by.status.st, 'todo');
+});
+
+test('no dashes anywhere in the visible text', () => {
+  const m = M.build({ ...base, cal: { at: base.cal.at, events: [{ id: 'd', title: 'פגישה - חשובה', start: '2026-11-04T12:00:00+02:00' }] } });
+  for (const i of m.items) assert.ok(!/[-–—]/.test(i.t + (i.sub || '')), i.t);
+});
+
+test('missing brief and stale calendar are warnings, not silence', () => {
+  const m = M.build({ ...base, reports: [], cal: null });
+  assert.strictEqual(m.items.find(i => i.k === 'brief').st, 'warn');
+  assert.strictEqual(m.items.find(i => i.k === 'cal').st, 'warn');
+});
+
+test('plate posted today is done; Saturday has no status', () => {
+  const m = M.build({ ...base, now: SAT, plate: [{ name: 'אפונה', posted: true, postedAt: '2026-11-07T06:00:00Z' }] });
+  assert.strictEqual(m.items.find(i => i.k === 'plate').st, 'done');
+  assert.strictEqual(m.items.find(i => i.k === 'status').st, 'done');
+});
+
+test('alarms only for timed events still ahead, once', () => {
+  const m = M.build(base);
+  assert.deepStrictEqual(M.alarmsDue(m, WED, []).map(e => e.id), ['a']);
+  assert.deepStrictEqual(M.alarmsDue(m, WED, ['2026-11-04|a']), []);
+});
+
+test('push lists only what is open', () => {
+  const p = M.pushText(M.build(base));
+  assert.ok(p.title.startsWith('המנהל'));
+  assert.ok(!/דוח הבוקר מוכן/.test(p.body));
+});
+
+test('an appointment of the monitor counts, once, even with no calendar', () => {
+  const appts = [{ id: 'x', what: 'רופא שיניים', when: '2026-11-04T18:45:00+02:00' }];
+  const m = M.build({ ...base, cal: null, appts });
+  const c = m.items.find(i => i.k === 'cal');
+  assert.strictEqual(c.st, 'todo');
+  assert.match(c.sub, /18:45 רופא שיניים/);
+  assert.ok(!('_ev' in c));
+  assert.deepStrictEqual(M.alarmsDue(m, WED, []).map(e => e.id), ['appt-x']);
+  const both = M.build({ ...base, appts: [{ id: 'y', what: 'פגישה', when: '2026-11-04T11:00:00+02:00' }] });
+  assert.strictEqual(both.items.find(i => i.k === 'cal').sub.split('·').length, 2);
+});
+
+// 12.11.2026: security is the first line of the round.
+test('securityItem: first line, warns on a failing check, quiet when all pass', () => {
+  const ok = { at: new Date(WED - 3600e3).toISOString(), checks: [{ k: 'isolation', ok: true, t: 'בידוד' }, { k: 'logs', ok: true, t: 'יומנים' }] };
+  assert.strictEqual(M.securityItem(undefined, WED), null);
+  assert.strictEqual(M.securityItem(ok, WED).st, 'done');
+  const bad = { at: ok.at, checks: [{ k: 'isolation', ok: false, t: 'בידוד בין הלקוחות', sub: 'alon > pablo' }, { k: 'logs', ok: true, t: 'יומנים' }] };
+  const w = M.securityItem(bad, WED);
+  assert.strictEqual(w.st, 'warn');
+  assert.match(w.t, /בעיה אחת/);
+  assert.match(w.sub, /alon/);
+  assert.strictEqual(M.securityItem({ at: new Date(WED - 20 * 3600e3).toISOString(), checks: ok.checks }, WED).st, 'warn');
+  assert.strictEqual(M.securityItem(null, WED).st, 'warn');
+  const m = M.build(Object.assign({}, base, { security: bad }));
+  assert.strictEqual(m.items[0].k, 'security');
+});
+
+// 15.11.2026, Itzik: חלק מעבודת המנהל זה לדאוג שתמיד יהיו פוסטים למפרע.
+test('linkedin stock: short of two weeks ahead is a line, two weeks is quiet', () => {
+  const m = require('../lib/manager.js');
+  const now = new Date('2026-11-15T08:00:00Z');
+  assert.strictEqual(m.linkedinStockItem([], now), null);
+  const short = m.linkedinStockItem([{ id: 'a', date: '2026-11-19' }, { id: 'b', date: '2026-11-08', posted: 'x' }], now);
+  assert.ok(short && /עד 19\.11/.test(short.t) && /29\.11/.test(short.sub));
+  assert.strictEqual(m.linkedinStockItem([{ id: 'a', date: '2026-11-30' }], now), null);
+  assert.ok(m.linkedinStockItem([{ id: 'a', date: '2026-11-30', failed: 'x' }], now));
+});
+
+// 15.11.2026, Itzik: "תבדוק שיש מספיק מקום לכולם".
+test('disk: plenty is quiet done, low is a line, very low is a warning', () => {
+  const m = require('../lib/manager.js');
+  assert.strictEqual(m.diskItem(undefined), null);
+  assert.strictEqual(m.diskItem(19e9).st, 'done');
+  assert.strictEqual(m.diskItem(6e9).st, 'todo');
+  assert.strictEqual(m.diskItem(2e9).st, 'warn');
+});

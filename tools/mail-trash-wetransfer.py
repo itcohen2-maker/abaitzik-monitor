@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""Moves WeTransfer notices and read Pegasus update mails out of Itzik's Gmail, by his request (8.10.2026).
+
+"Every WeTransfer mail, throw it away, every time one comes, after I see it,
+they fill the mail." So: only mail from wetransfer.com, only once it is read
+(\\Seen), and it goes to the Gmail trash, where it can still be restored for 30
+days. Nothing else in the mailbox is touched. mail-search.py stays read only.
+
+  python3 tools/mail-trash-wetransfer.py          read ones only (the cron, every 10 minutes)
+  python3 tools/mail-trash-wetransfer.py --all    also unread ones (the first cleanup)
+"""
+import imaplib
+import sys
+import os
+
+sys.path.insert(0, os.path.dirname(__file__))
+from importlib import import_module
+creds = import_module('mail-search').creds
+
+# 14.10 Itzik: the Pegasus live-update mails (sent by the PC to himself) go the same
+# way: the moment he has opened one, it goes to the trash.
+# 15.11 Itzik: "תמחק את כל האימיילים האלה שמאשרים, אני לא אוהב את זה, מיותרים". Google's security alert
+# that an account (his, Lolos, hagitit7) gave our own app it-solution.co.il access: to the trash, read or not.
+# Only alerts that name it-solution.co.il; any other Google alert (a new sign in, another app) stays.
+# 15.11 Itzik, same day: the alerts about his old accounts that list him as recovery mail go the same way.
+# 21.11.2026, security: the account names and senders are real people's, and the code is public. They live in
+# data/mail-trash-private.json (not in git). Without that file only the generic part runs.
+def _private(key, fallback):
+    try:
+        import json
+        with open(os.path.join(os.path.dirname(__file__), '..', 'data', 'mail-trash-private.json'), encoding='utf8') as f:
+            return json.load(f)[key]
+    except Exception:
+        return fallback
+OWN_APP = _private('OWN_APP', '(from:no-reply@accounts.google.com "it-solution.co.il")')
+OWNER = _private('OWNER', '')
+QUERY = '(from:wetransfer.com' + ((' OR (from:%s to:%s subject:פגסוס)' % (OWNER, OWNER)) if OWNER else '') + ')'
+
+
+# 15.10 Itzik: "אני ממשיך לקבל מיילים של הום סטייל ... לא נקבל מיילים יותר". ICL keep
+# him on their list and Yael answers all, so her replies got past the ilcargo
+# filter. Shipment mail goes to the trash at once, read or not. His sister and Roni are not in it.
+NOW = _private('NOW', '(from:ilcargo.com OR subject:"תיק עמילות" OR subject:"הודעת חוסר בניירת")')
+
+
+LABEL = 'הום סטייל'
+
+# 12.11 Itzik: "אם המיילים לא מוכרים וממשיכים ... פעם הבאה שיופיעו, תעשה אותם כספאם ותחסום".
+# it-solution.co.il was someone else's domain before 27.10.2026, and Forward Email passes every
+# address to his Gmail, so mail for the old owner's people lands with him.
+# Mail to an address of the domain that is not one of his goes to spam (Gmail learns the sender).
+OURS = ('info', 'contact', 'conect')
+STRANGERS = ('to:it-solution.co.il ' + ' '.join('-to:%s@it-solution.co.il' % a for a in OURS)
+             + ' -from:it-solution.co.il' + (' -from:' + OWNER if OWNER else '') + ' -in:spam -in:trash')
+
+
+def mutf7(name):
+    # IMAP folder names are modified UTF-7 (RFC 3501), quoted.
+    import base64
+    out, buf = [], ''
+    for ch in name + '\0':
+        if 0x20 <= ord(ch) <= 0x7e or ch == '\0':
+            if buf:
+                enc = base64.b64encode(buf.encode('utf-16-be')).decode().rstrip('=')
+                out.append('&' + enc.replace('/', ',') + '-')
+                buf = ''
+            if ch != '\0':
+                out.append('&-' if ch == '&' else ch)
+        else:
+            buf += ch
+    return '"' + ''.join(out) + '"'
+
+
+def main():
+    take_all = '--all' in sys.argv
+    user, pw = creds()
+    m = imaplib.IMAP4_SSL('imap.gmail.com')
+    m.login(user, pw)
+    m.select('"[Gmail]/All Mail"')
+    m.literal = ('(' + QUERY + ('' if take_all else ' is:read') + ' OR ' + OWN_APP + ') -in:trash').encode('utf8')
+    _, data = m.uid('SEARCH', 'CHARSET', 'UTF-8', 'X-GM-RAW')
+    uids = data[0].split()
+    if uids:
+        m.uid('STORE', b','.join(uids).decode(), '+X-GM-LABELS', '(\\Trash)')
+    # 18.10 Itzik: "עד שהום סטייל יחליטו איך מתקדמים ... תעשה תווית מיוחדת
+    # ... שמה נוכל לעקוב אחרי זה, אני לא רוצה לראות את זה בפרונט". Shipment mail
+    # is no longer thrown away: it gets the label and leaves the inbox. The old
+    # Gmail filter still sends ilcargo mail to the trash, so the trash is
+    # emptied of it first, back into the label.
+    box = mutf7(LABEL)
+    m.select('"[Gmail]/Trash"')
+    m.literal = NOW.encode('utf8')
+    _, data = m.uid('SEARCH', 'CHARSET', 'UTF-8', 'X-GM-RAW')
+    back = data[0].split()
+    if back:
+        m.uid('MOVE', b','.join(back).decode(), box)
+    m.select('"[Gmail]/All Mail"')
+    m.literal = (NOW + ' (in:inbox OR -label:' + LABEL.replace(' ', '-') + ')').encode('utf8')
+    _, data = m.uid('SEARCH', 'CHARSET', 'UTF-8', 'X-GM-RAW')
+    ship = data[0].split()
+    if ship:
+        ids = b','.join(ship).decode()
+        m.uid('STORE', ids, '+X-GM-LABELS', '(' + box + ')')
+        m.uid('STORE', ids, '-X-GM-LABELS', '(\\Inbox)')
+    m.literal = STRANGERS.encode('utf8')
+    _, data = m.uid('SEARCH', 'CHARSET', 'UTF-8', 'X-GM-RAW')
+    odd = data[0].split()
+    if odd:
+        m.uid('MOVE', b','.join(odd).decode(), '"[Gmail]/Spam"')
+    print(f'moved to trash: {len(uids)}, shipments labelled: {len(ship)}, out of trash: {len(back)}, strangers to spam: {len(odd)}')
+    m.logout()
+
+
+if __name__ == '__main__':
+    main()
