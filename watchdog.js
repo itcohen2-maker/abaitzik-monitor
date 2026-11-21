@@ -280,8 +280,11 @@ function liveBehind(now) {
   if (prev.ok && now - Date.parse(prev.at) < 10 * 60000) return '';
   const local = readJson(path.join(__dirname, 'docs', 'version.json'), null);
   if (!local || !local.builtAt) return '';
-  let live = null;
-  try { live = JSON.parse(execFileSync('curl', ['-s', '-m', '15', inst.publicUrl + 'version.json?w=' + now], { encoding: 'utf8', timeout: 20000 })); } catch (e) {}
+  // 21.11: one failed fetch is a glitch, not a fault (the 19:16 alarm came while the disk was
+  // full and passed two minutes later). Retry once after five seconds before saying the site is down.
+  const fetchLive = () => { try { return JSON.parse(execFileSync('curl', ['-s', '-m', '15', inst.publicUrl + 'version.json?w=' + now], { encoding: 'utf8', timeout: 20000 })); } catch (e) { return null; } };
+  let live = fetchLive();
+  if (!live) { try { execFileSync('sleep', ['5']); } catch (e) {} live = fetchLive(); }
   // pending: the oldest build made here that the live site has not shown yet. The
   // local build changes every few minutes, so its own age says nothing.
   const liveAt = live && live.builtAt ? Date.parse(live.builtAt) : NaN;
