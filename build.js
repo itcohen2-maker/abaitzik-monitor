@@ -235,6 +235,7 @@ function leadsTile() {
   const open = all.filter((r) => r.status !== 'נסגר' && r.status !== 'אבד' && iso(r));
   const top = open.slice().sort((a, b) => iso(a).localeCompare(iso(b))).pop();
   const newest = top ? iso(top) : '';
+  if (require('./lib/trade-cards.js').leadsQuiet(inst, open.length)) return ''; // a trade without a leads screen: no empty tile
   const SRC = { whatsapp: 'מוואטסאפ', messenger: 'ממסנג׳ר', signup: 'מהרשמה עצמית', site: 'מהאתר', instagram: 'מאינסטגרם', facebook: 'מפייסבוק', tiktok: 'מטיקטוק' };
   const who = top ? (String(top.name || '').slice(0, 40) + ' ' + (SRC[top.source] || '')).trim() : '';
   const small = (fresh.length ? (fresh.length === 1 ? 'ליד חדש אחד' : fresh.length + ' לידים חדשים') + ' · ' : '') + all.length + ' בסך הכל';
@@ -4949,6 +4950,7 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
 
 <section id="pH">
 ${require('./lib/trade-cards.js').html(inst)}
+${require('./lib/trade-desk.js').html(inst)}
 ${require('./lib/home-ui.js').greet}
 ${require('./lib/approvals-ui.js').html}
 ${require('./lib/home-ui.js').html}
