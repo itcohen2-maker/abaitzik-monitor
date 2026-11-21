@@ -79,7 +79,7 @@ test('a signup without a phone, or with a wrong one, is refused', () => {
 
 test('a typo in the mail ending is refused before a code goes nowhere (12.11)', () => {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), 'su-typo-'));
-  ['hagitit7@gmail.con', 'a@gmial.com', 'a@gmail.co', 'a@x.cmo'].forEach((e) => assert.equal(S.start(d, who({ email: e }), T0).error, 'email', e));
+  ['fam@gmail.con', 'a@gmial.com', 'a@gmail.co', 'a@x.cmo'].forEach((e) => assert.equal(S.start(d, who({ email: e }), T0).error, 'email', e));
   ['a@gmail.com', 'a@walla.co.il', 'a@x.co', 'a@company.co.il', 'a@x.com'].forEach((e) => assert.notEqual(S.start(d, who({ email: e, ip: e }), T0).error, 'email', e));
 });
 
@@ -109,10 +109,10 @@ test('the phone is required', () => {
 
 test("17.11.2026: two dots in a row, or a dot at the edge, is not a valid address", () => {
   const S = require("../lib/signup.js");
-  assert.strictEqual(S.emailOk("hagitit7@gmail..com"), false);
+  assert.strictEqual(S.emailOk("fam@gmail..com"), false);
   assert.strictEqual(S.emailOk("a..b@gmail.com"), false);
   assert.strictEqual(S.emailOk("x@.gmail.com"), false);
-  assert.strictEqual(S.emailOk("hagitit7@gmail.com"), true);
+  assert.strictEqual(S.emailOk("fam@test.example"), true);
   assert.strictEqual(S.emailOk("dana.levi@walla.co.il"), true);
 });
 

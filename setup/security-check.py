@@ -156,7 +156,7 @@ add('headers', not nohdr, 'כותרות אבטחה בכל האתרים', ('חס�
 # 11. 20.11.2026: a page is sealed, so its index.html carries no personal data. A lead's details were written into
 # Itzik's page in plain text (window.LEAD_NEW_DATA) from 1.11 to 20.11. Scan every monitor's page for a mobile
 # number or a mail that is not one of ours. Names only in the report, never the number.
-OURS = ('candletimes.com', 'abaitzik.com', 'it-solution.co.il', 'mac.org.il', 'itcohen2@gmail.com', 'example.com')
+OURS = ('candletimes.com', 'abaitzik.com', 'it-solution.co.il', 'mac.org.il', 'example.com')
 leaky = []
 pages = [os.path.join(REPO, 'docs', 'index.html')] + [os.path.join(d, 'docs', 'index.html') for d in [x[1] if isinstance(x, (list, tuple)) else (x.get('dir') if isinstance(x, dict) else x) for x in tenants()]]
 for pg in pages:

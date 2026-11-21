@@ -23,27 +23,35 @@ creds = import_module('mail-search').creds
 # that an account (his, Lolos, hagitit7) gave our own app it-solution.co.il access: to the trash, read or not.
 # Only alerts that name it-solution.co.il; any other Google alert (a new sign in, another app) stays.
 # 15.11 Itzik, same day: the alerts about his old accounts that list him as recovery mail go the same way.
-OWN_APP = '(from:no-reply@accounts.google.com ("it-solution.co.il" OR king.gamer02 OR best.d.4.us OR tomcohenlol OR Mailsuite))'
-QUERY = '(from:wetransfer.com OR (from:itcohen2@gmail.com to:itcohen2@gmail.com subject:פגסוס))'
+# 21.11.2026, security: the account names and senders are real people's, and the code is public. They live in
+# data/mail-trash-private.json (not in git). Without that file only the generic part runs.
+def _private(key, fallback):
+    try:
+        import json
+        with open(os.path.join(os.path.dirname(__file__), '..', 'data', 'mail-trash-private.json'), encoding='utf8') as f:
+            return json.load(f)[key]
+    except Exception:
+        return fallback
+OWN_APP = _private('OWN_APP', '(from:no-reply@accounts.google.com "it-solution.co.il")')
+OWNER = _private('OWNER', '')
+QUERY = '(from:wetransfer.com' + ((' OR (from:%s to:%s subject:פגסוס)' % (OWNER, OWNER)) if OWNER else '') + ')'
 
 
 # 15.10 Itzik: "אני ממשיך לקבל מיילים של הום סטייל ... לא נקבל מיילים יותר". ICL keep
 # him on their list and Yael answers all, so her replies got past the ilcargo
-# filter. Shipment mail goes to the trash at once, read or not. Rinat his sister
-# (rinata@) and Roni are not in it.
-NOW = ('(from:ilcargo.com OR from:yaele@extraretail.co.il OR from:rinatb@extraretail.co.il'
-       ' OR from:yael@homestyle.co.il OR subject:"תיק עמילות" OR subject:"הודעת חוסר בניירת")')
+# filter. Shipment mail goes to the trash at once, read or not. His sister and Roni are not in it.
+NOW = _private('NOW', '(from:ilcargo.com OR subject:"תיק עמילות" OR subject:"הודעת חוסר בניירת")')
 
 
 LABEL = 'הום סטייל'
 
 # 12.11 Itzik: "אם המיילים לא מוכרים וממשיכים ... פעם הבאה שיופיעו, תעשה אותם כספאם ותחסום".
 # it-solution.co.il was someone else's domain before 27.10.2026, and Forward Email passes every
-# address to his Gmail, so mail for the old owner's people (tamiz@, iditl@) lands with him.
+# address to his Gmail, so mail for the old owner's people lands with him.
 # Mail to an address of the domain that is not one of his goes to spam (Gmail learns the sender).
 OURS = ('info', 'contact', 'conect')
 STRANGERS = ('to:it-solution.co.il ' + ' '.join('-to:%s@it-solution.co.il' % a for a in OURS)
-             + ' -from:it-solution.co.il -from:itcohen2@gmail.com -in:spam -in:trash')
+             + ' -from:it-solution.co.il' + (' -from:' + OWNER if OWNER else '') + ' -in:spam -in:trash')
 
 
 def mutf7(name):

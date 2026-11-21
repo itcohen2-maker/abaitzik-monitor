@@ -2,7 +2,7 @@
 /*
   10.11.2026: read-only reader for a second mailbox through the Gmail API (scope gmail.readonly,
   nothing can be sent, changed or deleted). Same command line as tools/mail-search.py, plus --account.
-  Accounts are listed in data/gmail-accounts.json: { "hagitit7": { "setup": "<setup token>", "step": "google", "who": "hagitit7@gmail.com" } }
+  Accounts are listed in data/gmail-accounts.json: { "hagitit7": { "setup": "<setup token>", "step": "google", "who": "<the address>" } }
   The refresh token sits in data/setup/<token>.secrets.json, written by the Google button of the setup page.
   A session never runs this directly (denied in .claude/settings.json): it goes through mail-read.js.
 */

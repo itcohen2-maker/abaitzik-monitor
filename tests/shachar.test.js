@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+process.env.PRIVATE_IDS_FILE = require('path').join(__dirname, 'private-ids.fixture.json'); // 21.11.2026: made up addresses
 const sh = require('../lib/shachar.js');
 
 function setup(opts) {
@@ -126,13 +127,13 @@ test('refresh loads the waitlist and retries pending invites', async () => {
 
 test('state drift: invites made straight through the API show up as invited on refresh', async () => {
   const t = setup({
-    waitlist: [{ email: 'ilayco10@gmail.com', created_at: '2026-10-31T23:12:42Z', invited: true }],
-    apiInvites: [{ email: 'ilayco10@gmail.com', invited_at: '2026-11-01T12:20:00Z', note: null }, { email: 'Hagitit7@gmail.com', invited_at: '2026-10-31T22:38:00Z', note: 'n' }],
+    waitlist: [{ email: 'friend@test.example', created_at: '2026-10-31T23:12:42Z', invited: true }],
+    apiInvites: [{ email: 'friend@test.example', invited_at: '2026-11-01T12:20:00Z', note: null }, { email: 'Fam@test.example', invited_at: '2026-10-31T22:38:00Z', note: 'n' }],
   });
   const r = await sh.route(msg('shachar-refresh', { code: '1234' }), t.deps);
   assert.equal(r.ok, true);
   const s = sh.load(t.dir);
-  assert.deepEqual(s.invites.map((x) => [x.email, x.status]), [['ilayco10@gmail.com', 'invited'], ['hagitit7@gmail.com', 'invited']]);
+  assert.deepEqual(s.invites.map((x) => [x.email, x.status]), [['friend@test.example', 'invited'], ['fam@test.example', 'invited']]);
   assert.equal(s.invites[0].letterAt, undefined);
   assert.equal(t.calls.filter((c) => c.url.includes('forwardemail')).length, 0);
 });
@@ -306,7 +307,7 @@ test('auto invite: more than 25 in a day stops, the rest wait and Itzik is told 
 
 // 3.11: who could not get in gets one "ready" mail, only once Supabase lets new people sign up.
 function readySetup(open) {
-  const t = setup({ mailToken: 'tok', apiInvites: [{ email: 'hagit@x.co' }, { email: 'itcohen2@gmail.com' }] });
+  const t = setup({ mailToken: 'tok', apiInvites: [{ email: 'hagit@x.co' }, { email: 'owner@test.example' }] });
   const inner = t.deps.fetch;
   t.deps.fetch = async (url, init) => {
     if (String(url).includes('/auth/v1/settings')) { t.calls.push({ url, init: init || {} }); return { ok: true, status: 200, json: async () => ({ disable_signup: !open }) }; }

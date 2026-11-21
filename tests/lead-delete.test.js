@@ -9,6 +9,7 @@ const assert = require('node:assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+process.env.PRIVATE_IDS_FILE = require('path').join(__dirname, 'private-ids.fixture.json'); // 21.11.2026: made up addresses
 const D = require('../lib/lead-delete.js');
 const OWN = require('../lib/own-leads.js');
 const H = require('../lib/handle.js');
@@ -113,22 +114,22 @@ test('handle: bizId is stored and goes to the page; an old site item gets it fro
 // 4. his own phone and mail are tests
 test('own contacts: the constant list, the normalized allow list, phone formats and mails', () => {
   const d = tmp();
-  assert.ok(OWN.isOwn(d, { phone: '0526507525' }));
-  assert.ok(OWN.isOwn(d, { phone: '+972 52-650-7525' }));
-  assert.ok(OWN.isOwn(d, { email: 'ITCOHEN2@gmail.com' }));
-  assert.ok(OWN.isOwn(d, { email: 'hagitit7@gmail.com' }));
+  assert.ok(OWN.isOwn(d, { phone: '0529990000' }));
+  assert.ok(OWN.isOwn(d, { phone: '+972 52-999-0000' }));
+  assert.ok(OWN.isOwn(d, { email: 'OWNER@test.example' }));
+  assert.ok(OWN.isOwn(d, { email: 'fam@test.example' }));
   assert.ok(OWN.isOwn(d, { email: 'info@it-solution.co.il' }));
   assert.ok(!OWN.isOwn(d, { phone: '0521111111', email: 'dana@example.com' }));
   put(d, 'wa.json', { allow: ['972541234567'] });
   assert.ok(OWN.isOwn(d, { phone: '054-1234567' }), 'the allow list in data/wa.json counts');
-  assert.ok(OWN.isOwnText(d, 'ליד מהאתר\nשם: דנה\nאימייל: itcohen2@gmail.com\nטלפון: לא ניתן'));
-  assert.ok(OWN.isOwnText(d, 'ליד מהאתר\nשם: דנה\nטלפון: 052-650-7525'));
+  assert.ok(OWN.isOwnText(d, 'ליד מהאתר\nשם: דנה\nאימייל: owner@test.example\nטלפון: לא ניתן'));
+  assert.ok(OWN.isOwnText(d, 'ליד מהאתר\nשם: דנה\nטלפון: 052-999-0000'));
   assert.ok(!OWN.isOwnText(d, 'ליד מהאתר\nשם: דנה\nאימייל: dana@example.com\nטלפון: 0521111111'));
 });
 
 test('own lead from the scanner is created with test:true and is not counted in the summary', () => {
   const d = tmp();
-  const mine = L.addFound(d, { src: 'leadform', key: 'f1', name: 'איציק', text: 'בדיקה', at: AT, email: 'hagitit7@gmail.com' });
+  const mine = L.addFound(d, { src: 'leadform', key: 'f1', name: 'איציק', text: 'בדיקה', at: AT, email: 'fam@test.example' });
   const real = L.addFound(d, { src: 'leadform', key: 'f2', name: 'דנה', text: 'שלום', at: AT, phone: '0521111111' });
   assert.strictEqual(mine.test, true);
   assert.ok(!real.test);
@@ -138,7 +139,7 @@ test('own lead from the scanner is created with test:true and is not counted in 
 });
 
 test('own lead from the site: created and marked test, with no item, and manager and page counts skip it', () => {
-  const text = 'ליד מהאתר\nשם: איציק\nאימייל: itcohen2@gmail.com\nטלפון: לא ניתן\nמקור: site\nשלום';
+  const text = 'ליד מהאתר\nשם: איציק\nאימייל: owner@test.example\nטלפון: לא ניתן\nמקור: site\nשלום';
   const d = tmp();
   assert.strictEqual(biz.isTestLead(text), false, 'it is still a lead that is created');
   assert.ok(biz.leadFromSite(text, AT, ID));
@@ -155,7 +156,7 @@ test('own lead from whatsapp: record test:true, no 📋 item, no push; a strange
   const items = [], pushes = [];
   const o = { textOf: (m) => m.text.body, handle: (x) => items.push(x), notify: (t, b) => pushes.push([t, b]), publish: () => {}, send: async () => {}, log: () => {} };
   const msg = (from, body, n) => ({ id: 'w' + n, from, type: 'text', text: { body } });
-  const mine = await stranger.intake(d, msg('972526507525', 'בדיקה', 1), Object.assign({ name: 'איציק', now: Date.parse(AT) }, o));
+  const mine = await stranger.intake(d, msg('972529990000', 'בדיקה', 1), Object.assign({ name: 'איציק', now: Date.parse(AT) }, o));
   assert.strictEqual(mine.rec.test, true);
   assert.strictEqual(items.length, 0);
   assert.strictEqual(pushes.length, 0);

@@ -1,0 +1,16 @@
+{
+ "_why": "made up addresses for the tests; the real ones are in data/private-ids.json on the server only",
+ "owner": "owner@test.example",
+ "lolos": "lolos@test.example",
+ "leadMails": [
+  "owner@test.example",
+  "fam@test.example"
+ ],
+ "leadPhones": [
+  "0529990000"
+ ],
+ "shacharOwn": [
+  "owner@test.example",
+  "fam@test.example"
+ ]
+}

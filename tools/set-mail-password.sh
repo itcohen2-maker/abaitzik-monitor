@@ -4,7 +4,9 @@
 read -r -p "סיסמת האפליקציה (16 אותיות): " P
 P="${P// /}"
 umask 027
-printf 'GMAIL_USER=itcohen2@gmail.com\nGMAIL_APP_PASSWORD=%s\n' "$P" > /etc/monitor-mail.env
+# 21.11.2026: the address is read from data/private-ids.json, not written in this public file
+U=$(node -e 'process.stdout.write(require("/home/monitor/abaitzik-monitor/data/private-ids.json").owner)')
+printf 'GMAIL_USER=%s\nGMAIL_APP_PASSWORD=%s\n' "$U" "$P" > /etc/monitor-mail.env
 chown root:monitor /etc/monitor-mail.env
 chmod 640 /etc/monitor-mail.env
 clear

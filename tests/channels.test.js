@@ -31,7 +31,7 @@ function fresh() {
 }
 
 const os = require('os');
-const FAKE = { ntfyIn: 'test-in-topic', ntfyLive: 'test-live-topic', ntfyOut: 'test-out-topic', mail: 'itcohen2@gmail.com' };
+const FAKE = { ntfyIn: 'test-in-topic', ntfyLive: 'test-live-topic', ntfyOut: 'test-out-topic', mail: 'owner@test.example' };
 
 // Run fn with an instance whose data folder holds fake keys, then restore.
 async function withKeys(extra, fn) {
@@ -74,7 +74,7 @@ test('the outbound channel reads its addresses from the instance, never from lit
   await withKeys({}, () => {
     const inst = require(path.join(ROOT, 'lib', 'instance.js'));
     assert.equal(inst.ntfy.out, FAKE.ntfyOut);
-    assert.equal(inst.mailbox, 'itcohen2@gmail.com');
+    assert.equal(inst.mailbox, 'owner@test.example');
     assert.equal(inst.origin, 'https://itcohen2-maker.github.io');
   });
   for (const file of ['lib/notify-channels.js', 'lib/instance.js', 'listen.js', 'inbox.js', 'alarm.js', 'build.js']) {

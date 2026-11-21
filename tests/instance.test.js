@@ -31,7 +31,7 @@ const BEFORE = {
   publicUrl: 'https://itcohen2-maker.github.io/abaitzik-monitor/',
   basePath: '/abaitzik-monitor/',
   origin: 'https://itcohen2-maker.github.io',
-  mailbox: 'itcohen2@gmail.com',
+  mailbox: 'owner@test.example',
   dataDir: 'data',
   taskPrefix: 'AbaItzik',
   screens: null,
@@ -48,7 +48,7 @@ const FAKE = {
   ntfyIn: 'test-in-topic',
   ntfyLive: 'test-live-topic',
   ntfyOut: 'test-out-topic',
-  mail: 'itcohen2@gmail.com',
+  mail: 'owner@test.example',
 };
 function fakeData(extra) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'abaitzik-keys-'));

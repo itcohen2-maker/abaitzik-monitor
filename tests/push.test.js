@@ -39,7 +39,7 @@ async function withData(fn, opts) {
   // Quiet hours off: these tests pin channel order, and at night (22:00 to 07:00 Israel) every send was held as 'quiet'.
   fs.writeFileSync(path.join(dir, 'status', 'quiet.json'), JSON.stringify({ on: false }));
   fs.writeFileSync(path.join(dir, 'keys.json'), JSON.stringify({
-    ntfyIn: 'test-in-topic', ntfyLive: 'test-live-topic', ntfyOut: 'test-out-topic', mail: 'itcohen2@gmail.com',
+    ntfyIn: 'test-in-topic', ntfyLive: 'test-live-topic', ntfyOut: 'test-out-topic', mail: 'owner@test.example',
   }));
   if (opts && opts.subs) {
     fs.mkdirSync(path.join(dir, 'push'), { recursive: true });
