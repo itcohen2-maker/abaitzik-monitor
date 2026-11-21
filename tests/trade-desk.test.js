@@ -46,9 +46,9 @@ test('every rule lives inside the one media query, so a phone is not touched', (
   assert.strictEqual(css.trim().slice(-1), '}');
 });
 
-test('the same output for every trade (the page reads the monitor, not the trade)', () => {
-  const a = TD.html(inst('gypsum'));
-  TRADE_IDS.forEach((id) => assert.strictEqual(TD.html(inst(id)), a));
+test('the style is the same for every trade (the look comes from the page tokens), only the examples differ', () => {
+  const a = styleOf(TD.html(inst('gypsum')));
+  TRADE_IDS.forEach((id) => assert.strictEqual(styleOf(TD.html(inst(id))), a));
 });
 
 test('the page function is plain, parses, and has no closing script tag', () => {
@@ -82,4 +82,31 @@ test('the rail is the real navigation restyled, not a second one', () => {
 
 test('reduced motion is respected', () => {
   assert.match(styleOf(TD.html(inst('gypsum'))), /prefers-reduced-motion:reduce/);
+});
+
+test('the empty conversation: a line, three examples, no dash, gender forms', () => {
+  TRADE_IDS.forEach((id) => {
+    const t = trades.get(id);
+    ['m', 'f'].forEach((g) => {
+      const e = TD.emptyState(t, g === 'f');
+      assert.strictEqual(e.hello, 'מה לעשות בשבילך היום?');
+      assert.strictEqual(e.prompts.length, 3, id + ': three examples');
+      e.prompts.forEach((p) => { assert.ok(p.trim().length > 6, id + ': a real line'); assert.ok(!/[-‐-―־]/.test(p), 'no dash in ' + p); });
+      [e.hello, e.hint].forEach((s) => assert.ok(!/[-‐-―־]/.test(s), 'no dash in ' + s));
+    });
+    assert.match(TD.emptyState(t, false).hint, /לחץ.*כתוב/);
+    assert.match(TD.emptyState(t, true).hint, /לחצי.*כתבי/);
+    // the first example is what the trade's sample owner says in its WhatsApp
+    assert.ok(t.wa[0][1].includes(TD.emptyState(t, false).prompts[0]) || id === 'consult', id);
+  });
+  // the page gets the same data, feminine when the instance says so
+  assert.ok(TD.html({ trade: 'beauty', dataPath: '/tmp/none', gender: 'f' }).includes('לחצי על שורה'));
+  assert.ok(TD.html({ trade: 'beauty', dataPath: '/tmp/none' }).includes('לחץ על שורה'));
+});
+
+test('the docked conversation keeps the monitor\'s own controls reachable', () => {
+  const css = styleOf(TD.html(inst('gypsum')));
+  assert.match(css, /#fcSheet\.gFull\{top:var\(--dkChatTop/);
+  assert.ok(!/#bareBtn\{[^}]*display:none/.test(css) && !/#leadAlert\{[^}]*display:none/.test(css), 'nothing of the home is hidden');
+  assert.match(css, /\.ytopx/); // only the close button of the permanent chat goes
 });
