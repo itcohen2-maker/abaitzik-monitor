@@ -140,7 +140,8 @@ test('the lock card: a text keyboard for a passphrase, the keypad for a code', (
   const html = renderPage(fixture({}));
   const ui = html.slice(html.indexOf('function gateUI(){'), html.indexOf('function gateBoot(){'));
   const words = ui.slice(ui.indexOf('<form id="gateForm" class="gw">'), ui.indexOf(':\'<form id="gateForm">'));
-  assert.ok(words.includes('type="password"'));
+  // 21.11.2026: not type=password, an iPhone gives that only a Latin keyboard; plain text hidden by .gmask
+  assert.ok(words.includes('type="text" class="gmask"') && !words.includes('type="password"'));
   assert.ok(words.includes('autocorrect="off"') && words.includes('autocapitalize="off"'));
   assert.ok(!words.includes('inputmode') && !words.includes('maxlength'), 'nothing may block a long Hebrew passphrase');
   assert.ok(ui.includes('id="gateEye"'));

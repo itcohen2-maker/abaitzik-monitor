@@ -4608,6 +4608,9 @@ ${require('./lib/motion.js').css}
 #gateIn:focus{outline:2px solid var(--accent);outline-offset:1px}
 #gateForm.gw{flex-direction:column}
 #gateForm.gw #gateIn{letter-spacing:0;font:600 17px Heebo,sans-serif;text-align:right}
+/* 21.11.2026: on an iPhone a type=password field takes only a Latin keyboard, so the Hebrew words could not be typed
+   and no keyboard came up at all. The field is plain text, hidden with dots by this rule. */
+#gateIn.gmask{-webkit-text-security:disc;text-security:disc}
 #gateForm.gw #gateGo{padding:12px 18px}
 .gt-eye{background:none;border:0;margin-top:10px;color:var(--dim,#9aa7ba);font:600 13.5px Heebo,sans-serif;
  text-decoration:underline;cursor:pointer}
@@ -24907,10 +24910,10 @@ function gateUI(){
  w.innerHTML='<div class="gatecard">'
   +'<b class="gt-t">'+esc((INSTANCE&&INSTANCE.name==='abaitzik')?'אבא איציק':(INSTANCE&&INSTANCE.owner||''))+'</b>'
   +(W?'<div class="gt-s">הדף נעול. תקליד את הסיסמה פעם אחת והמכשיר הזה יזכור אותה.'
-    +'<br>זו הסיסמה שקיבלת כשהדף הוקם, במייל "המוניטור שלך מוכן". מקלידים אותה בדיוק כמו שקיבלת.</div>'
+    +'<br>'+((INSTANCE&&INSTANCE.name==='abaitzik')?'חמש מילים בעברית, עם רווח בין מילה למילה.':'זו הסיסמה שקיבלת כשהדף הוקם, במייל "המוניטור שלך מוכן". מקלידים אותה בדיוק כמו שקיבלת.')+'</div>'
   :'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.'
   +'<br>'+((INSTANCE&&INSTANCE.name!=='abaitzik')?'זה הקוד שבחרת בהתקנה.':'הקוד נשלח אליך בהתראה לטלפון, בנושא הקוד לפתיחת הדף.')+'</div>')
-  +(W?'<form id="gateForm" class="gw"><input id="gateIn" type="password" autocomplete="off" autocapitalize="off"'
+  +(W?'<form id="gateForm" class="gw"><input id="gateIn" type="text" class="gmask" autocomplete="off" autocapitalize="off"'
     +' autocorrect="off" spellcheck="false" dir="rtl" lang="he" placeholder="הסיסמה">'
     +'<button type="submit" id="gateGo">פתיחה</button></form>'
     +'<button type="button" class="gt-eye" id="gateEye">להציג את מה שהקלדתי</button>'
@@ -24933,8 +24936,8 @@ function gateBoot(){
  var eye=document.getElementById('gateEye');
  var bad=GATE.words?'הסיסמה לא מתאימה. אפשר ללחוץ להציג ולבדוק.':'הקוד לא מתאים.';
  if(eye)eye.onclick=function(){
-  var hid=box.type==='password';
-  box.type=hid?'text':'password';
+  var hid=box.classList.contains('gmask');
+  box.classList.toggle('gmask',!hid);
   eye.textContent=hid?'להסתיר':'להציג את מה שהקלדתי';
   try{box.focus();}catch(e){}
  };
