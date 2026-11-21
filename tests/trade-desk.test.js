@@ -96,8 +96,8 @@ test('the empty conversation: a line, three examples, no dash, gender forms', ()
     });
     assert.match(TD.emptyState(t, false).hint, /לחץ.*כתוב/);
     assert.match(TD.emptyState(t, true).hint, /לחצי.*כתבי/);
-    // the first example is what the trade's sample owner says in its WhatsApp
-    assert.ok(t.wa[0][1].includes(TD.emptyState(t, false).prompts[0]) || id === 'consult', id);
+    // the examples are the hand written ones of lib/trades.js (ask)
+    assert.deepStrictEqual(TD.emptyState(t, false).prompts, t.ask, id);
   });
   // the page gets the same data, feminine when the instance says so
   assert.ok(TD.html({ trade: 'beauty', dataPath: '/tmp/none', gender: 'f' }).includes('לחצי על שורה'));
@@ -109,4 +109,64 @@ test('the docked conversation keeps the monitor\'s own controls reachable', () =
   assert.match(css, /#fcSheet\.gFull\{top:var\(--dkChatTop/);
   assert.ok(!/#bareBtn\{[^}]*display:none/.test(css) && !/#leadAlert\{[^}]*display:none/.test(css), 'nothing of the home is hidden');
   assert.match(css, /\.ytopx/); // only the close button of the permanent chat goes
+});
+
+
+const ASK = {
+  gypsum: ['תזכיר למשפחת לוי בנימוס על היתרה', 'תכין הצעת מחיר לתקרת גבס בסלון', 'מה מחכה לי היום?'],
+  beauty: ['תבדוק מי לא הייתה אצלי חודשיים', 'תכתוב לי פוסט לאינסטגרם על טיפול פנים', 'מה מחכה לי היום?'],
+  consult: ['תסכם לי את הפגישה עם בית הקפה של נועה', 'תכין תזכורת ריטיינר לשגיא שיווק', 'מה הבטחתי ללקוחות השבוע?'],
+  photo: ['תשלח לזוג של 14.1 חוזה לחתימה', 'תזכיר לעדי ותומר על המקדמה', 'אילו אירועים יש לי החודש?'],
+};
+test('H: each trade has its three hand written examples, and a feminine variant only when given', () => {
+  TRADE_IDS.forEach((id) => {
+    assert.deepStrictEqual(trades.get(id).ask, ASK[id], id);
+    assert.deepStrictEqual(TD.emptyState(trades.get(id), true).prompts, ASK[id], id + ' (feminine owner, no askF)');
+  });
+  const t = { ask: ['א'], askF: ['ב', 'ג', 'ד'] };
+  assert.deepStrictEqual(TD.emptyState(t, true).prompts, ['ב', 'ג', 'ד']);
+  assert.deepStrictEqual(TD.emptyState(t, false).prompts, ['א']);
+});
+
+test('C: a real divider between the day and the work area', () => {
+  const h = TD.html(inst('gypsum')), css = styleOf(h);
+  assert.ok(h.includes("'trDeskW'")); // kept on this browser
+  assert.ok(h.includes("'role', 'separator'"));
+  assert.ok(h.includes("'aria-orientation', 'vertical'"));
+  assert.ok(h.includes('MIN = 340, MAX = 560'));
+  assert.ok(h.includes('DEF = 460'));
+  assert.ok(h.includes('dblclick') && h.includes('ArrowLeft') && h.includes('ArrowRight'));
+  assert.match(css, /#deskSplit\{[^}]*width:6px;cursor:col-resize/);
+  assert.ok(css.includes('var(--dkDay,460px)'));
+  assert.match(css, /body\.deskDragging[^{]*\{[^}]*user-select:none/); // a drag selects nothing
+});
+
+test('A, D, E: no selecting the chrome, the ring column holds, thin scrollbars, no iPhone help on a desktop', () => {
+  const css = styleOf(TD.html(inst('gypsum')));
+  assert.match(css, /body:not\(\.offHome\) \.wrap,\.bn,#fcSheet,#deskSplit\{[^}]*user-select:none/);
+  assert.match(css, /#tradeCards \.trList:not\(\[hidden\]\)\{flex:1 1 0;min-height:70px;overflow-y:auto/);
+  assert.ok(css.includes('#trTry,#tradeWa{display:none!important}'));
+  assert.ok(css.includes('scrollbar-width:thin'));
+  assert.ok(css.includes('::-webkit-scrollbar-thumb'));
+  assert.ok(css.includes('var(--dkBot,0px)')); // the demo's bottom bar is read, not guessed
+});
+
+test('G: no empty leads tile on a trade home, a real open lead keeps it', () => {
+  const TC = require('../lib/trade-cards.js');
+  TRADE_IDS.forEach((id) => {
+    assert.ok(!(trades.get(id).screens || []).includes('gLeads'), id + ' lists no leads screen');
+    assert.strictEqual(TC.leadsQuiet({ trade: id }, 0), true, id + ': nothing open, no tile');
+    assert.strictEqual(TC.leadsQuiet({ trade: id }, 1), false, id + ': an open lead keeps the tile (and its blink)');
+  });
+  assert.strictEqual(TC.leadsQuiet({}, 0), false, 'a monitor without a trade is as before');
+  assert.strictEqual(TC.leadsQuiet({ name: 'abaitzik' }, 0), false);
+});
+
+test('B: a mouse hold on the home does not start the arranging mode; Escape leaves it', () => {
+  const src = TD.page.toString();
+  assert.ok(src.includes("pointerType !== 'mouse'") && src.includes('stopImmediatePropagation'));
+  assert.ok(src.includes("'Escape'") && src.includes("'editDone'"));
+  // a press on the ring column never reaches the home's long press (lib/trade-cards.js)
+  const tc = require('fs').readFileSync(require('path').join(__dirname, '..', 'lib', 'trade-cards.js'), 'utf8');
+  assert.ok(tc.includes("w.addEventListener('pointerdown', function (e) { if (!window.editing) e.stopPropagation(); });"));
 });
