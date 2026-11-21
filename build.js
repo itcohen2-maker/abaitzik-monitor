@@ -6857,7 +6857,7 @@ function waFiles(m){
  waPrep[k]=st;return st;
 }
 // 11.11.2026: send the monitor's signup page (name, mail, a free week) to someone, by WhatsApp or mail, or open it.
-var SIGNUP_URL='https://it-solution.co.il/start/?k=ottpdpckxey9zt5k';
+var SIGNUP_URL='https://it-solution.co.il/day/?k=ottpdpckxey9zt5k';
 function signupShare(){
  var NL=String.fromCharCode(10),txt=['שלום,','אם אתה מנהל עסק לבד ונופל עליך הכל, יש דרך פשוטה יותר.','','המוניטור העסקי מרכז את כל העסק במקום אחד. את הכל מבקשים ממנו בהודעת וואטסאפ, כמו שכותבים לעובד:','• מייל: קורא, מסכם ומכין טיוטת תשובה','• הצעות מחיר: מוכנות לשליחה, והלקוח חותם מהטלפון','• חשבוניות: מחובר לתוכנת החשבוניות שלך','• יומן ותזכורות: פגישות, ותזכורת בדיוק בשעה שביקשת','• לידים: כל פנייה נרשמת ואף אחת לא נשכחת','','שבוע ניסיון בחינם עם 40 פעולות, בלי כרטיס אשראי. נרשמים עם שם ומייל:',SIGNUP_URL].join(NL); // 17.11.2026, Itzik: why it is worth it, not only how to sign up
  var w=document.createElement('div');w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','דף הרשמה');
