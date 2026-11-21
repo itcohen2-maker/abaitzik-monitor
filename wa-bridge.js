@@ -167,7 +167,12 @@ function pageUrl() {
 function absFiles(text) {
   const base = pageUrl();
   if (!base) return String(text || '');
-  return String(text || '').replace(/(^|[\s(])files\/([^\s)\]]+)/g, function (m, pre, name) { return pre + base + 'files/' + name; });
+  // 21.11.2026: a private (sealed) file has no address of its own, the link opens it in the monitor's viewer
+  return String(text || '').replace(/(^|[\s(])files\/([^\s)\]]+)/g, function (m, pre, name) {
+    const tail = (name.match(/[.,;:!?]+$/) || [''])[0], clean = tail ? name.slice(0, -tail.length) : name;
+    let priv = false; try { priv = clean.indexOf('..') < 0 && fs.statSync(path.join(DATA, 'files-private', clean)).isFile(); } catch (e) {}
+    return pre + base + (priv ? '#file=' + encodeURIComponent(clean) : 'files/' + clean) + tail;
+  });
 }
 /*
   15.11.2026, Itzik: "כל דבר שמישהו מבקש צירוף של משהו, ואם מצאת, אתה צריך לחבר את זה ולצרף את זה."
@@ -714,7 +719,7 @@ function waPushSweep() {
       if (!d || !d.waPush || d.from !== 'claude' || !d.text) return;
       st.pushed[k] = Date.now(); ch = true;
       const open = st.lastIn && st.lastIn[phone] && Date.now() - st.lastIn[phone] < 23.5 * 3600e3;
-      (d.alarm && d.alarmId ? alarmSend(phone, t.tenant, d.alarmId, d.text, open) : open ? tenantSend(phone, String(d.text)) : waTemplate(phone, d.text)).then(function (ok) { log('wa push ' + t.tenant + ' ' + f + (open ? ' text' : ' template') + (ok === false ? ' (not delivered)' : '')); })
+      (d.alarm && d.alarmId ? alarmSend(phone, t.tenant, d.alarmId, d.text, open) : open ? tenantSend(phone, String(d.waText || d.text)) : waTemplate(phone, d.waText || d.text)).then(function (ok) { log('wa push ' + t.tenant + ' ' + f + (open ? ' text' : ' template') + (ok === false ? ' (not delivered)' : '')); })
         .catch(function (e) { log('wa push failed ' + t.tenant + ' ' + f + ': ' + e.message.slice(0, 160)); });
     });
   });
@@ -1015,32 +1020,47 @@ function payWho(id) {
 */
 async function payDone(u, s) {
   const P = require('./lib/sumit.js');
+  const PG = require('./lib/pay-guard.js');
   const pid = String(u.searchParams.get('OG-PaymentID') || '').replace(/\D/g, '');
   const ext = String(u.searchParams.get('OG-ExternalIdentifier') || '');
   if (!pid || !/^[a-z0-9-]+$/.test(ext)) throw new Error('bad return params');
   const dir = path.join(DATA, 'pay'); fs.mkdirSync(dir, { recursive: true });
   const rec = path.join(dir, pid + '.json');
   const who = payWho(ext);
-  if (!fs.existsSync(rec)) {
-    const p = await P.getPayment(pid);
-    const PO = require('./lib/pay-offer.js'), of = PO.live(ext);
-    if (!P.paymentOk(p, of ? PO.total(of) : 0)) throw new Error('payment ' + pid + ' not valid');
-    const out = { at: new Date().toISOString(), tenant: ext, paymentId: Number(pid), customerId: p.CustomerID, amount: p.Amount, recurring: null };
-    fs.writeFileSync(rec, JSON.stringify(out, null, 1));
-    // The package: entry from now on (the plan file is read by the customer's worker and page).
-    const pf = '/srv/monitor-changes/' + ext + '.plan.json';
-    let st = {}; try { st = JSON.parse(fs.readFileSync(pf, 'utf8')); } catch (e) {}
-    const month = require('./lib/plan.js').monthOf();
-    const newPlan = (of && of.plan) || 'entry';
-    st = Object.assign({}, st, { plan: newPlan, month, extra: 0, applied: st.applied || [], history: (st.history || []).concat([{ at: out.at, kind: 'paid', plan: newPlan, paymentId: Number(pid) }]) });
-    delete st.start;
-    fs.writeFileSync(pf + '.tmp', JSON.stringify(st, null, 1)); fs.renameSync(pf + '.tmp', pf);
-    if (of) { try { PO.markPaid(ext, Number(pid)); } catch (e) { log('pay offer: ' + e.message); } }
-    try { out.recurring = await P.startRecurring(p.CustomerID, undefined, undefined, of ? of.monthly : null); } catch (e) { out.recurringError = e.message; log('pay recurring: ' + e.message); }
-    fs.writeFileSync(rec, JSON.stringify(out, null, 1));
-    try { require('./lib/handle.js').complete({ key: 'paid-' + pid, kind: 'lead', who: who.name, title: (of ? 'שילם: ' + of.items.map(function (x) { return x.name; }).join(' + ') + ' (' : 'שילם על חבילת הכניסה (') + p.Amount + ' ₪).' + (out.recurringError ? ' החיוב החודשי לא נפתח, לפתוח בסאמיט.' : ' החיוב החודשי נפתח מהחודש הבא.'), link: 'biz' }); } catch (e) { log('pay handle: ' + e.message); }
-    log('paid ' + ext + ' ' + pid);
-  }
+  // 21.11.2026 (security review): a payment id is one tenant's, for good. The browser's tenant is only a hint.
+  const done = (() => { try { return JSON.parse(fs.readFileSync(rec, 'utf8')); } catch (e) { return null; } })();
+  if (done && done.tenant !== ext) throw new Error('payment ' + pid + ' belongs to another tenant');
+  // Reserved on disk before the first await: a double click or a second return cannot start a second standing order.
+  const lock = done ? null : PG.reserve(DATA, pid);
+  if (!done && !lock) { s.writeHead(302, { Location: who.home ? who.home + '?paid=1' : 'https://it-solution.co.il/trial/?paid=1' }); return s.end(); }
+  try {
+    if (!done) {
+      const p = await P.getPayment(pid);
+      const chk = await PG.checkPayment(DATA, p, ext, Date.now(), { lookup: (cid) => require('./lib/sumit.js').getCustomer(cid).then((c) => (c && c.ExternalIdentifier) || ''), owner: (t) => { try { require('./lib/handle.js').complete({ key: 'pay-unverified-' + pid, kind: 'lead', who: ext, title: t, link: 'biz' }); } catch (e) { log('pay owner: ' + e.message); } } });
+      if (!chk.ok) throw new Error('payment ' + pid + ' ' + chk.why);
+      // Entry (no order): a payment page this tenant opened within 24 hours, always.
+      if (!PG.startRecent(DATA, ext, Date.now())) throw new Error('payment ' + pid + ' without a recent start');
+      const bound = PG.bindCustomer(DATA, ext, p.CustomerID);
+      if (!bound.ok) throw new Error('payment ' + pid + ' customer ' + bound.why);
+      const PO = require('./lib/pay-offer.js'), of = PO.live(ext);
+      if (!P.paymentOk(p, of ? PO.total(of) : 0)) throw new Error('payment ' + pid + ' not valid');
+      const out = { at: new Date().toISOString(), tenant: ext, paymentId: Number(pid), customerId: p.CustomerID, amount: p.Amount, recurring: null };
+      PG.recordWrite(DATA, pid, out);
+      // The package: entry from now on (the plan file is read by the customer's worker and page).
+      const pf = '/srv/monitor-changes/' + ext + '.plan.json';
+      let st = {}; try { st = JSON.parse(fs.readFileSync(pf, 'utf8')); } catch (e) {}
+      const month = require('./lib/plan.js').monthOf();
+      const newPlan = (of && of.plan) || 'entry';
+      st = Object.assign({}, st, { plan: newPlan, month, extra: 0, applied: st.applied || [], history: (st.history || []).concat([{ at: out.at, kind: 'paid', plan: newPlan, paymentId: Number(pid) }]) });
+      delete st.start;
+      fs.writeFileSync(pf + '.tmp', JSON.stringify(st, null, 1)); fs.renameSync(pf + '.tmp', pf);
+      if (of) { try { PO.markPaid(ext, Number(pid)); } catch (e) { log('pay offer: ' + e.message); } }
+      try { out.recurring = await P.startRecurring(p.CustomerID, undefined, undefined, of ? of.monthly : null); } catch (e) { out.recurringError = e.message; log('pay recurring: ' + e.message); }
+      PG.recordWrite(DATA, pid, out);
+      try { require('./lib/handle.js').complete({ key: 'paid-' + pid, kind: 'lead', who: who.name, title: (of ? 'שילם: ' + of.items.map(function (x) { return x.name; }).join(' + ') + ' (' : 'שילם על חבילת הכניסה (') + p.Amount + ' ₪).' + (out.recurringError ? ' החיוב החודשי לא נפתח, לפתוח בסאמיט.' : ' החיוב החודשי נפתח מהחודש הבא.'), link: 'biz' }); } catch (e) { log('pay handle: ' + e.message); }
+      log('paid ' + ext + ' ' + pid);
+    }
+  } finally { PG.release(lock); }
   s.writeHead(302, { Location: who.home ? who.home + '?paid=1' : 'https://it-solution.co.il/trial/?paid=1' });
   s.end();
 }
@@ -1055,7 +1075,9 @@ async function addonDone(u, s) {
   const oid = u.pathname.split('/').pop();
   let who = { home: null, name: '' };
   try { who = payWho(JSON.parse(fs.readFileSync(path.join(DATA, 'pay', 'orders', oid + '.json'), 'utf8')).tenant); } catch (e) {}
-  const r = await require('./lib/addon-pay.js').done({ DATA, P: require('./lib/sumit.js'), PIO: require('./lib/plan-io.js') }, oid,
+  const r = await require('./lib/addon-pay.js').done({ DATA, P: require('./lib/sumit.js'), PIO: require('./lib/plan-io.js'), now: Date.now(),
+    lookup: (cid) => require('./lib/sumit.js').getCustomer(cid).then((c) => (c && c.ExternalIdentifier) || ''),
+    owner: (t) => { try { require('./lib/handle.js').complete({ key: 'addon-unverified-' + oid, kind: 'lead', who: '', title: t, link: 'biz' }); } catch (e) { log('addon owner: ' + e.message); } } }, oid,
     u.searchParams.get('OG-PaymentID'), String(u.searchParams.get('OG-ExternalIdentifier') || ''));
   if (r.out) {
     const o = r.order, out = r.out;
@@ -1082,6 +1104,39 @@ function csignTell(tenant, text) {
     log('csign tell ' + tenant + ' failed: ' + e.message);
     try { require('./lib/handle.js').complete({ key: 'csign-' + tenant + '-' + Date.now(), kind: 'lead', who: tenant, title: 'הודעת חתימה לא נכנסה למוניטור של הלקוח: ' + String(text).slice(0, 120), link: 'biz' }); } catch (x) {}
   }
+}
+/*
+  22.11.2026 (lib/book-page.js): the public booking page of a business. THE BRIDGE ONLY PROXIES. It never reads or writes inside a
+  tenant's folder for this feature (a tenant owns its folder and could plant links, pipes and locks there): it asks the tenant's
+  own agent (lib/book-agent.js, run by that tenant's listener as the tenant's own user) over /var/lib/monitor-book/<tenant>/s.sock,
+  asynchronously, with a timeout. The platform keeps only link -> tenant (data/book/links).
+*/
+function bookSock(tenant) { return /^[a-z0-9-]{1,32}$/.test(String(tenant || '')) ? '/var/lib/monitor-book/' + tenant + '/s.sock' : ''; }
+let bookApi = null;
+function BOOK() {
+  if (!bookApi) bookApi = require('./lib/book-page.js').create({ DATA, sockPath: bookSock, sockDir: (t) => '/var/lib/monitor-book/' + t, log, demo: { request: (r) => require('./lib/book-demo.js').request(r) } });
+  return bookApi;
+}
+function bookRoute(q, u, s) {
+  const origin = q.headers.origin || '';
+  const h = { 'Cache-Control': 'no-store', Vary: 'Origin' };
+  if (u.pathname === '/api/book/link' && originOk(origin)) { h['Access-Control-Allow-Origin'] = origin; h['Access-Control-Allow-Headers'] = 'Content-Type'; h['Access-Control-Allow-Methods'] = 'POST, OPTIONS'; }
+  if (q.method === 'OPTIONS' && u.pathname === '/api/book/link') { s.writeHead(204, h); return s.end(); }
+  const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',').pop().trim();
+  const send = (r) => { s.writeHead(r.status, Object.assign({ 'Content-Type': r.type }, h, r.headers || {})); s.end(r.body); };
+  const fail = () => { try { s.writeHead(503, h); s.end(); } catch (e) {} };
+  const query = {}; u.searchParams.forEach((v, k) => { query[k] = v; });
+  if (q.method === 'GET') { BOOK().handle({ method: 'GET', path: u.pathname, query, body: null, ip }).then(send, fail); return; }
+  if (q.method !== 'POST') { s.writeHead(405, h); return s.end(); }
+  readBody(q, 8192).then(function (raw) {
+    let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400, h); return s.end('{}'); }
+    if (u.pathname === '/api/book/link') {
+      const vn = require('./lib/visits.js').nameByKey(DATA, b && b.key);
+      if (!vn) { s.writeHead(403, Object.assign({ 'Content-Type': 'application/json' }, h)); return s.end('{"error":"key"}'); }
+      return BOOK().makeLink(vn).then(function (r) { s.writeHead(r.ok ? 200 : 503, Object.assign({ 'Content-Type': 'application/json' }, h)); s.end(JSON.stringify(r.ok ? { link: r.link } : { error: r.error })); }, fail);
+    }
+    BOOK().handle({ method: 'POST', path: u.pathname, query, body: b, ip }).then(send, fail);
+  }).catch(function () { try { s.writeHead(400, h); s.end('{}'); } catch (e) {} });
 }
 function tenantByKey(c) {
   c = String(c || ''); if (c.length < 24) return null;
@@ -1173,6 +1228,8 @@ async function api(q, s, u) {
       const who = payWho(vn);
       // 12.11.2026: a customer with an offer that Itzik turned on pays its own lines (lib/pay-offer.js).
       const of = require('./lib/pay-offer.js').live(vn);
+      // 21.11.2026: the start record the entry payment checks (lib/pay-guard.js startRecent, 24 hours).
+      require('./lib/pay-guard.js').startWrite(DATA, vn, Date.now());
       const url = await P.beginEntry({ tenant: vn, name: (of && of.name) || who.name, email: (of && of.email) || who.email, phone: who.phone, items: of ? of.items : null, redirect: 'https://wa.abaitzik.com/api/pay/done', cancel: who.home });
       s.writeHead(200, h); return s.end(JSON.stringify({ url }));
     } catch (e) { log('pay start: ' + e.message); s.writeHead(502, h); return s.end('{"error":"pay"}'); }
@@ -1539,11 +1596,13 @@ const server = http.createServer(function (q, s) {
       const C = require('./lib/csign.js');
       const r = C.create(DATA, vn, b, require('./lib/plan-io.js').stateOf(vn));
       if (!r.ok) { s.writeHead(r.why === 'limit' ? 409 : 400, h); return s.end(JSON.stringify({ error: r.why, limit: r.limit || 0 })); }
-      log('csign link ' + vn + ' ' + r.tok);
+      log('csign link ' + vn);
       s.writeHead(200, h); s.end(JSON.stringify({ link: r.link, left: r.left }));
     }).catch(function () { try { s.writeHead(400, h); s.end('{}'); } catch (e) {} });
     return;
   }
+  // 22.11.2026 (lib/book-page.js): the public booking page, /b/<link>, /b/a/<link>.<tok> and /api/book*.
+  if (/^\/b\/[a-f0-9]/.test(u.pathname) || /^\/api\/book(\/|$)/.test(u.pathname)) { bookRoute(q, u, s); return; }
   /*
     16.11.2026: a quote made in 🧾 is kept on our side, data/tenant-quotes/<customer>/biz-home/quotes.json (lib/biz-home.js
     addQuote), not only on the phone that made it. This service runs as monitor and can not write into a customer's home,

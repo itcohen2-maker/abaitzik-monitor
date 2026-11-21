@@ -22,7 +22,7 @@ test('a trade gives the kind of business when he did not say', () => {
 });
 
 test('what goes into his instance.json: only what he answered', () => {
-  assert.deepStrictEqual(P.instanceFields(P.sanitize({ gender: 'f', trade: 'beauty' })), { gender: 'f', trade: 'beauty' });
+  assert.deepStrictEqual(P.instanceFields(P.sanitize({ gender: 'f', trade: 'beauty' })), { gender: 'f', trade: 'beauty', bookings: true }); // a NEW customer of a trade with the appointments diary gets it on (22.11.2026)
   assert.deepStrictEqual(P.instanceFields(P.sanitize({ gender: 'm' })), { gender: '' });
   assert.deepStrictEqual(P.instanceFields(P.sanitize({ pains: ['money'] })), {});
   assert.deepStrictEqual(P.instanceFields(null), {});

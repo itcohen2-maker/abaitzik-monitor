@@ -31,7 +31,7 @@ function world(plan, items, amountFor) {
     fs.writeFileSync(path.join(DATA, 'pay', 'orders', oid + '.json'), JSON.stringify(Object.assign({ id: oid, tenant: 'ten1', status: 'open' }, q)));
     return oid;
   }
-  return { DATA, plans, calls, deps: { DATA, P: P2, PIO, now: NOW }, order };
+  return { DATA, plans, calls, deps: { DATA, P: P2, PIO, now: NOW, lookup: async () => 'ten1', owner: () => {} }, order };
 }
 
 test('addon pay: an upgrade changes the plan, cancels only the package order and starts the new one', async () => {

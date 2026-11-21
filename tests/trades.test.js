@@ -16,7 +16,7 @@ test('every trade is complete', () => {
     assert.strictEqual(t.id, id);
     assert.match(t.host, /^demo-[a-z]+\.m\.it-solution\.co\.il$/);
     assert.match(t.accent, /^#[0-9a-f]{6}$/);
-    assert.ok(Array.isArray(t.did) && t.did.length > 0 && t.did.every((d) => /^[gby]$/.test(d[0]) && d.length === 4));
+    assert.ok(Array.isArray(t.did) && t.did.length > 0 && t.did.every((d) => /^[gby]$/.test(d[0]) && (d.length === 4 || d.length === 5)));
     assert.ok(t.screens.length > 0);
     for (const s of t.screens.concat([t.dayOpen, t.debtOpen])) assert.ok(BUILD.includes('  ' + s + ': ['), 'no screen ' + s);
     assert.doesNotMatch(JSON.stringify(t), BAD);

@@ -113,3 +113,12 @@ test('disk: plenty is quiet done, low is a line, very low is a warning', () => {
   assert.strictEqual(m.diskItem(6e9).st, 'todo');
   assert.strictEqual(m.diskItem(2e9).st, 'warn');
 });
+
+// 21.11.2026: a post Itzik rejected is his decision, not a fault line (the evening reminder carried "לא עלה" for it).
+test('linkedin: a post Itzik rejected is not a fault line', () => {
+  const now = Date.parse('2026-11-21T18:00:00+02:00');
+  const rej = [{ id: 'li-0612', date: '2026-12-06', time: '09:00', approved: false, failed: 'איציק לא אישר (20.11.2026)', rejectedAt: '2026-11-20T21:50:00+02:00' }];
+  assert.strictEqual(M.linkedinItem(rej, now), null);
+  const real = [{ id: 'x', date: '2026-11-21', time: '09:00', approved: true, failed: 'boom' }];
+  assert.strictEqual(M.linkedinItem(real, now).t, 'פוסט לינקדין לא עלה');
+});

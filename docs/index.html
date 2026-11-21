@@ -2714,7 +2714,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 }
 .bn button.hasnew svg{animation:tabnudge 1.8s ease-in-out infinite}
 .bn button.hasnew{color:var(--red)}
-.bn button[aria-pressed="true"].hasnew{color:#fff}
+.bn button[aria-pressed="true"].hasnew{color:var(--ink)}
 @media(prefers-reduced-motion:reduce){.bn button.hasnew svg{animation:none}}
 .bn button[aria-pressed="true"]{color:#fff;background:linear-gradient(150deg,#5aa9fb,var(--blue));
  border-radius:14px;box-shadow:0 5px 12px rgba(66,133,244,.35)}
@@ -2820,7 +2820,7 @@ body.offHome #talkCard,body.offHome #gBackChat,body.offHome .gMenu{display:none!
 :root.calm .bn button.hasnew svg{transform:none}
 :root.calm .bn button.hasnew,
 :root.calm .bn button.hasnew.blink{background:none;color:var(--red);box-shadow:none}
-:root.calm .bn button[aria-pressed="true"].hasnew{color:#fff}
+:root.calm .bn button[aria-pressed="true"].hasnew{color:var(--ink)}
 :root.calm .sent.working .s-dot{background:var(--green);box-shadow:none}
 :root.calm .dot{box-shadow:0 0 0 0 rgba(229,72,77,0)}
 :root.calm .live .pulse{box-shadow:none}
@@ -3330,7 +3330,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-21T14:30:13.188Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-21T19:10:03.391Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3443,6 +3443,8 @@ try{
  <button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>
 
 <section id="pH">
+
+
 
 
 <div class="hm-greet" id="hmGreet" aria-live="off" hidden></div>
@@ -3600,6 +3602,8 @@ try{
   <button type="button" class="ic icNew" data-grp="day" id="icPersonal" data-new="1"><span class="c c-ps">🏡</span>מצב אישי</button>
   <button type="button" class="ic icNew" data-grp="work" id="icBoard" data-new="1"><span class="c c-board">🎛️</span>לוח בקרה</button><button type="button" class="ic icNew" data-grp="work" id="icLeadBoard" data-new="1"><span class="c c-lboard">🔔</span>לוח לידים</button>
   <button type="button" class="ic icNew" data-grp="work" id="icSignup" data-new="1"><span class="c c-its">🚀</span>דף הרשמה</button>
+  <button type="button" class="ic icNew" data-grp="work" id="icPrices" data-new="1"><span class="c c-its">💰</span>מחירון</button>
+  <button type="button" class="ic icNew" data-grp="work" id="icCampForm" data-new="1"><span class="c c-its">📣</span>טופס קמפיין</button>
   <button type="button" class="ic icNew" data-grp="work" id="icCamp" data-new="1"><span class="c c-camp">📣</span>קמפיין</button>
   <button type="button" class="ic icNew" data-grp="proj" id="icSites" data-new="1" data-upd="20261121-sites"><span class="c c-its"><em class="icN">3</em>🌐</span>האתרים שלי</button>
   <button type="button" class="ic icNew" data-grp="day" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>
@@ -4082,7 +4086,7 @@ try{
    </div>
    <div class="row">
     <button type="button" data-list="bul">• רשימה</button>
-    <button type="button" data-list="dash">– רשימה</button>
+    <button type="button" data-list="dash">רשימת קווים</button>
     <button type="button" data-list="num">1. רשימה</button>
     <button type="button" data-cmd="outdent">⇥</button>
     <button type="button" data-cmd="indent">⇤</button>
@@ -5282,7 +5286,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='b77bbc1182';
+var CODE_ID='58c6958276';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9036,7 +9040,10 @@ var sheetExt=0;
 })();
 function overlayOpen(not){
  var l=document.querySelectorAll('.ysheet,.fview');
- for(var i=l.length-1;i>=0;i--)if(l[i]!==not)return l[i];
+ for(var i=l.length-1;i>=0;i--){
+  if(l[i]===not||l[i].hasAttribute('data-desk-auto'))continue;
+  return l[i];
+ }
  return null;
 }
 function dlgShown(el){return !!(el&&el.isConnected&&!el.hidden&&el.getClientRects().length);}
@@ -9050,6 +9057,7 @@ function dlgClose(){
  if(qs&&qs.classList.contains('on'))return function(){var sh=q('qhShade');if(sh)sh.click();};
  if(dlgShown(q('liveSheet'))&&q('lsClose'))return function(){q('lsClose').click();};
  if(dlgShown(q('noteAiBox'))&&q('noteAiNo'))return function(){q('noteAiNo').click();};
+ if(window.trBackClose&&!navStack.length&&!overlayOpen(null)){var tb=window.trBackClose();if(tb)return tb;}
  return null;
 }
 document.addEventListener('click',function(ev){
@@ -14123,36 +14131,30 @@ function clalitSheet(){
 }
 on('gClalit',clalitSheet);
 var SWAP_ITEMS=[
- {n:"210",v:1,t:"כללי: העסק עובד 8 שעות. ואתה עוד 4 אחריו?",r:"sb-1811-general.mp4"},
- {n:"215",v:5,t:"מטפלת בקליניקה: בין מטופל למטופל, 12 הודעות על תורים",r:"sb-1811-clinic.mp4"},
- {n:"216",v:6,t:"משרד שיווק: 5 לקוחות, 20 פוסטים בשבוע",r:"sb-1811-marketing.mp4"},
+ {n:"220",v:1,t:"קבלן שיפוצים: גמרת עבודה. והלקוח עוד לא שילם?",r:"trade-gypsum-v5.mp4"},
+ {n:"221",v:2,t:"קוסמטיקאית: נמאס לענות כל היום ליש לך מקום?",r:"trade-beauty-v5.mp4"},
+ {n:"222",v:3,t:"יועץ עסקי: עוד פגישה. ומי יכתוב את הסיכום?",r:"trade-consult-v5.mp4"},
+ {n:"223",v:4,t:"צלם אירועים: הזוג עוד לא חתם. ולא שילם מקדמה?",r:"trade-photo-v5.mp4"},
 ];
 var TOM_ITEMS=[
- {h:"📣 בקמפיין ובאישור"},
- {n:"201",t:"📣 קמפיין · 🆕 לאישורך · תור 15 שניות",r:"tor-1711-15s.mp4"},
- {n:"204",t:"📣 קמפיין · ✅ איליי 4: רוב בעלי העסקים משלמים על 7 מערכות · קמפיינים ותוכן",r:"ilay-1711-4-mefotzatz.mp4"},
- {n:"203",t:"📣 קמפיין · ✅ איליי 3: תסגור את כל החלוניות · מסך אחד ווואטסאפ",r:"ilay-1711-4-masachim.mp4"},
- {n:"202",t:"📣 קמפיין · ✅ איליי 2: כמה כסף בעלי עסקים מפסידים · הכסף",r:"ilay-1711-4-animatziot.mp4"},
- {n:"200",t:"📣 קמפיין · ✅ איליי 1: שבע מערכות בשביל חשבונית · מה הוא בונה לך",r:"ilay-1711-4-naki.mp4"},
- {n:"11",t:"📲 לרשתות · סטורי · מפחד ממה שאתה לא יודע?",r:"ads-pain3-story.png"},
- {n:"10",t:"📲 לרשתות · סטורי · המידע של הלקוחות. באמת מוגן?",r:"ads-pain2-story.png"},
- {n:"9",t:"📲 לרשתות · סטורי · יש לך אתר שעובד. ואין אפליקציה?",r:"ads-pain1-story.png"},
- {n:"8",t:"📣 קמפיין · ✅ באוויר מ 13.11 · 🖼️ מפחד ממה שאתה לא יודע? · לצ׳אט",r:"ads-pain3-feed.png"},
- {n:"7",t:"📣 קמפיין · ✅ באוויר מ 13.11 · 🖼️ המידע של הלקוחות. באמת מוגן? · לצ׳אט",r:"ads-pain2-feed.png"},
- {n:"6",t:"📣 קמפיין · ✅ באוויר מ 13.11 · 🖼️ יש לך אתר שעובד. ואין אפליקציה? · לצ׳אט",r:"ads-pain1-feed.png"},
- {n:"5",t:"📣 קמפיין · ✅ באוויר מ 2.11 · 🖼️ שרפת קרדיטים · Base44 · לצ׳אט",r:"ads-nov01-card9-story.mp4"},
- {n:"4",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · אנימציות קלות · לשבוע התנסות",r:"ilay-1411-animatziot.mp4"},
- {n:"3",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · מסכים · לשבוע התנסות",r:"ilay-1411-masachim.mp4"},
- {n:"2",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · מפוצץ · לשבוע התנסות",r:"ilay-1411-mefotzatz.mp4"},
- {n:"1",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · נקי · לשבוע התנסות",r:"ilay-1411-naki.mp4"},
- {n:"100",t:"📲 לסטטוס · 🎬 איליי, המוניטור · אנימציות קלות · להרשמה",r:"ilay-1411-animatziot-status.mp4"},
- {n:"101",t:"📲 לסטורי · 🎬 איליי, המוניטור · אנימציות קלות · להרשמה",r:"ilay-1411-animatziot-story.mp4"},
- {n:"102",t:"📲 לסטטוס · 🎬 איליי, המוניטור · מסכים · להרשמה",r:"ilay-1411-masachim-status.mp4"},
- {n:"103",t:"📲 לסטורי · 🎬 איליי, המוניטור · מסכים · להרשמה",r:"ilay-1411-masachim-story.mp4"},
- {n:"104",t:"📲 לסטטוס · 🎬 איליי, המוניטור · מפוצץ · להרשמה",r:"ilay-1411-mefotzatz-status.mp4"},
- {n:"105",t:"📲 לסטורי · 🎬 איליי, המוניטור · מפוצץ · להרשמה",r:"ilay-1411-mefotzatz-story.mp4"},
- {n:"106",t:"📲 לסטטוס · 🎬 איליי, המוניטור · נקי · להרשמה",r:"ilay-1411-naki-status.mp4"},
- {n:"107",t:"📲 לסטורי · 🎬 איליי, המוניטור · נקי · להרשמה",r:"ilay-1411-naki-story.mp4"}
+ {h:"🆕 קמפיין המקצועות · מחכה לאישור שלך · עוד לא במטא"},
+ {n:"301",t:"📣 קמפיין · 🆕 לאישורך · קבלן שיפוצים · גמרת עבודה. והלקוח עוד לא שילם?",r:"trade-gypsum-v5.mp4"},
+ {n:"302",t:"📣 קמפיין · 🆕 לאישורך · קוסמטיקאית · נמאס לענות כל היום ל״יש לך מקום?״",r:"trade-beauty-v5.mp4"},
+ {n:"303",t:"📣 קמפיין · 🆕 לאישורך · יועץ עסקי · עוד פגישה. ומי יכתוב את הסיכום?",r:"trade-consult-v5.mp4"},
+ {n:"304",t:"📣 קמפיין · 🆕 לאישורך · צלם אירועים · הזוג עוד לא חתם. ולא שילם מקדמה?",r:"trade-photo-v5.mp4"},
+ {h:"✅ באוויר: קמפיין החילוץ · 25 ₪ ביום · לצ׳אט"},
+ {n:"25",t:"📣 קמפיין · ✅ באוויר מ 21.11 · 🖼️ יש לך פרימיום ואין איך לגבות",r:"camp-live-2111-pay.jpg"},
+ {n:"24",t:"📣 קמפיין · ✅ באוויר מ 19.11 · 🖼️ תיקנת באג, נשברו שלושה",r:"camp-live-1911-bug3.jpg"},
+ {n:"23",t:"📣 קמפיין · ✅ באוויר מ 13.11 · 🖼️ אתר בלי אפליקציה",r:"camp-live-1311-app.jpg"},
+ {n:"22",t:"📣 קמפיין · ✅ באוויר מ 12.11 · 🎬 נתקעת באמצע",r:"camp-live-1211-stuck.mp4"},
+ {n:"21",t:"📣 קמפיין · ✅ באוויר מ 2.11 · 🎬 שרפת קרדיטים · המודעה החזקה",r:"ads-nov01-card9-story.mp4"},
+ {h:"⏸️ נעצר 21.11: קמפיין המוניטור הישן"},
+ {n:"203",t:"📣 קמפיין · ⏸️ נעצר 21.11 · 🎬 איליי 3: מסך אחד",r:"ilay-1711-4-masachim.mp4"},
+ {n:"204",t:"📣 קמפיין · ⏸️ נעצר 21.11 · 🎬 איליי 4: קמפיינים",r:"ilay-1711-4-mefotzatz.mp4"},
+ {n:"205",t:"📣 קמפיין · ⏸️ נעצר 21.11 · 🎬 תור לרופא שיניים",r:"camp-live-1711-tor.jpg"},
+ {n:"200",t:"📣 קמפיין · ⏸️ נעצר 21.11 · 🎬 איליי 1: שבע מערכות",r:"ilay-1711-4-naki.mp4"},
+ {n:"202",t:"📣 קמפיין · ⏸️ נעצר 21.11 · 🎬 איליי 2: הכסף",r:"ilay-1711-4-animatziot.mp4"},
+ {n:"206",t:"📣 קמפיין · ⏸️ נעצר 21.11 · 🎬 מי לא שילם",r:"camp-live-1711-pay.jpg"},
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
@@ -14375,7 +14377,7 @@ function vidTabs(){
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
   {id:'sr',l:'📱 סטורי'+(srN?' ('+srN+')':''),upd:'20261117-story',h:'סטורי לאינסטגרם ולפייסבוק: סרטון קצר, ובסוף מסגרת להדבקת מדבקת הקישור להרשמה',L:vqRows('sr').concat([{h:'📂 הדף המלא'},{k:'go',t:'📱 פתיחת כל הסטורי המוכן',u:'story/index.html'}])},
   {id:'ads',l:'📣 קמפיין',upd:'20261117-ilay4b',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
-  {id:'swap',l:'🔄 סרטונים להחלפה',upd:'20261118-swap',h:'לקמפיין עתידי: סרטונים שמחכים להחלפה במטא',L:[{h:'6 סרטונים בסדרה · מוכנים: 1, 5, 6 · בהכנה: 2 יועץ עסקי, 3 סוכנת ביטוח, 4 מתווך'}].concat(SWAP_ITEMS.filter(function(it){return !it.h;}).map(function(it){return {k:'tom',it:it,lab:'🎬 סרטון '+it.v+' מתוך 6 · '+it.t};}))},
+  {id:'swap',l:'🔄 סרטונים להחלפה',upd:'20261121-swap',h:'קמפיין המקצועות: סרטונים שמחכים לאישור שלך ולהעלאה למטא',L:[{h:'4 סרטונים, גרסה 5 · קבלן, קוסמטיקאית, יועץ עסקי, צלם'}].concat(SWAP_ITEMS.filter(function(it){return !it.h;}).map(function(it){return {k:'tom',it:it,lab:'🎬 סרטון '+it.v+' מתוך 4 · '+it.t};}))},
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
   {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
   {id:'ai',l:'🤖 ערוץ AI'+(aiN?' ('+aiN+')':''),upd:'20261110-approve',h:'הרילים של ערוץ ה AI להעלאה, בעברית ובאנגלית: מה עדיין לא עלה. מה שעלה יורד מכאן לבד',L:vqRows('ai').concat([{h:'📂 הדף המלא'},{k:'go',t:'🤖 פתיחת הרילים של ערוץ ה AI',u:'ai/ai.html'}])},
@@ -15096,6 +15098,8 @@ function boardMore(){
  document.body.appendChild(w);
 }
 on('icSignup',function(){signupShare();});
+on('icPrices',function(){fileOpen('pricing-trades.html');});
+on('icCampForm',function(){window.open('https://form.it-solution.co.il/p/5100c3b8e29eea71ebb2.html','_blank','noopener');});
 var CAMP_URL='https://form.it-solution.co.il/p/c851a7a3231353fa6107.html';
 function campShare(){
  var NL=String.fromCharCode(10),txt='המודעות שרצות עכשיו בקמפיין, עם הסרטונים, הטקסטים והמספרים:'+NL+CAMP_URL;
@@ -15141,7 +15145,7 @@ function lbState(r){var s=r.status||'חדש';return s==='נסגר'?'ok':s==='א�
 function lbWa(p){var d=String(p||'').replace(/[^0-9]/g,'');if(d.indexOf('0')===0)d='972'+d.slice(1);return 'https://wa.me/'+d;}
 function leadBoard(wk){
  if(typeof wk==='number')LB_WEEK=wk;
- if(typeof ensure==='function'&&!(D.biz&&D.biz.length)&&!leadBoard._t){leadBoard._t=1;return ensure('biz',function(){leadBoard._t=0;leadBoard();});}
+ if(typeof ensure==='function'&&!(D.biz&&D.biz.length)&&LAZY.biz&&!lazyDone.biz&&!leadBoard._t){leadBoard._t=1;return ensure('biz',function(){leadBoard._t=0;leadBoard();});}
  leadBoard._t=0;
  var old=document.getElementById('bdGrid');if(old)old.remove();
  var L=(D.biz||[]).filter(function(r){return r&&r.kind==='lead'&&!r.test;});
@@ -19504,11 +19508,11 @@ on('resetBtn',function(){
  toast('אופס. רק מה שיגיע מעכשיו יידלק.');
 });
 on('wipeBtn',function(){
- if(!confirm('נשלחת בקשה למחיקה. מנהל IT Solution יאשר, ואחרי זה הכל יימחק ולא יחזור. לשלוח את הבקשה?'))return;
+ if(!confirm(window.PUBLIC_DEMO?'בהדגמה לא נשלחת בקשה ולא נמחק כלום. אצלך הבקשה מחכה לאישור של מנהל IT Solution, ורק אחריו הכל נמחק. להראות איך זה נראה?':'נשלחת בקשה למחיקה. מנהל IT Solution יאשר, ואחרי זה הכל יימחק ולא יחזור. לשלוח את הבקשה?'))return;
  var w=prompt('עוד לא נמחק כלום. כדי לשלוח את הבקשה כתוב כאן את המילה: למחוק','');
  if(w!=='למחוק'){toast('לא נשלח. כדי לשלוח את הבקשה צריך לכתוב בדיוק: למחוק');return;}
  sendText('מחיקת כל הנתונים','בקשה למחיקת כל הנתונים','הגדרה').then(function(){
-  toast('נשלחה הבקשה. היא מחכה לאישור.');
+  toast(window.PUBLIC_DEMO?'בהדגמה לא נשלחה בקשה ולא נמחק כלום.':'נשלחה הבקשה. היא מחכה לאישור.');
  }).catch(function(){toast('לא יצא, אין רשת. לנסות שוב.');});
 });
 
@@ -20769,13 +20773,14 @@ function renderHome(){
   var b=m.parentNode,inp=b.querySelector('input,textarea');if(!inp)return;
   if(recBtn===m){stop();return;}
   stop();
+  if(window.PUBLIC_DEMO&&window.demoToast){inp.focus();window.demoToast({got:'הקלטה קולית',did:'אצלך מדברים, ואני מתמלל ומבצע. בהדגמה כותבים בתיבה.'});return;}
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){inp.focus();if(typeof toast==='function')toast('לוחצים על המיקרופון במקלדת ומדברים.');return;}
+  if(!SR){inp.focus();if(typeof toast==='function')toast(window.matchMedia&&matchMedia('(pointer:fine)').matches?'הדפדפן הזה לא מקליט כאן. אפשר לכתוב בתיבה.':'לוחצים על המיקרופון במקלדת ומדברים.');return;}
   var base=inp.value?inp.value.replace(/ +$/,'')+' ':'';
   try{
    rec=new SR();rec.lang='he-IL';rec.interimResults=true;rec.continuous=false;
    rec.onresult=function(ev){var s='';for(var i=0;i<ev.results.length;i++)s+=ev.results[i][0].transcript;inp.value=base+s;try{inp.dispatchEvent(new Event('input',{bubbles:true}));}catch(x){}};
-   rec.onerror=function(ev){var w=ev&&ev.error;stop();if(w==='not-allowed'||w==='service-not-allowed'){inp.focus();if(typeof toast==='function')toast('אין גישה למיקרופון. אפשר ללחוץ על המיקרופון במקלדת.');}};
+   rec.onerror=function(ev){var w=ev&&ev.error;stop();if(w==='aborted')return;if(w==='not-allowed'||w==='service-not-allowed'){inp.focus();if(typeof toast==='function')toast('אין גישה למיקרופון. אפשר ללחוץ על המיקרופון במקלדת.');}else if(typeof toast==='function')toast(w==='no-speech'?'לא שמעתי כלום. לוחצים שוב ומדברים.':'ההקלטה לא עבדה. אפשר לכתוב בתיבה.');};
    rec.onend=function(){if(recBtn===m)stop();};
    recBtn=m;m.classList.add('on');rec.start();
   }catch(x){stop();inp.focus();}

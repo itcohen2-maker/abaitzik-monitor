@@ -20,3 +20,8 @@ test('the ring centre is a dome, like the original microphone button', () => {
   assert.ok(src.includes("radial-gradient(circle at 34% 24%"));
   assert.ok(src.includes('#tradeRing:active{transform:translateY(3px) scale(.97)}'));
 });
+test('in a demo the ring never clicks the real microphone button', () => {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'lib', 'trade-cards.js'), 'utf8');
+  assert.ok(src.includes('if (DEMO) { listening = true; paint(); return; }'));
+  assert.ok(src.includes("if (DEMO) { listening = false; paint(); if (window.demoToast)"));
+});

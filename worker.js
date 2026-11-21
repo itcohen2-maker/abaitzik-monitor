@@ -378,6 +378,8 @@ function prompt(list) {
     */
     // 14.11.2026 (lib/alarms.js): "תזכיר לי" at an exact time on WhatsApp, and offering it when a message has a date.
     ...require('./lib/alarms.js').promptLines(inst.dataPath),
+    // 22.11.2026 (lib/bookings.js): a trade with bookings is its owner's appointments diary: free text and voice go through node booking.js
+    ...(() => { try { return inst.bookings === true && require('./lib/bookings-ui.js').enabled(inst) ? require('./lib/bookings.js').promptLines() : []; } catch (e) { return []; } })(),
     // 14.11.2026 (partner-sync.js): publishing to his own Instagram and Facebook Page, only on his explicit request.
     ...(inst.name !== 'abaitzik' && fs.existsSync(path.join(inst.dataPath, 'conn', 'partner.json')) ? [
       'פרסום ברשתות של הלקוח: הפייסבוק והאינסטגרם שלו מחוברים (data/conn/partner.json). כשהוא מבקש במפורש לפרסם סרטון',
@@ -832,7 +834,7 @@ function run(list) {
     args.splice(args.indexOf('--dangerously-skip-permissions'), 1);
     args.push('--allowedTools', 'Read', 'Grep', 'Glob', 'Write', 'Edit',
       'Bash(node pc-task.js:*)', 'Bash(node quote-draft.js:*)', 'Bash(node push.js:*)', 'Bash(node change-request.js:*)',
-      'Bash(node transcribe.js:*)', 'Bash(node lib/personal.js:*)', 'Bash(node build.js:*)', 'Bash(npm test:*)', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(date:*)');
+      'Bash(node transcribe.js:*)', 'Bash(node lib/personal.js:*)', ...(inst.bookings === true ? ['Bash(node booking.js:*)'] : []), 'Bash(node build.js:*)', 'Bash(npm test:*)', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(date:*)');
     say('מחשב הלקוח מחובר: הסשן כאן רק מעביר מלל ומשימות');
   }
   // 14.10: a shell only on Windows (claude.cmd). On Linux the shell split the
@@ -1338,12 +1340,36 @@ function alarmsTick() {
   } catch (e) { say('!! תזכורות: ' + e.message); }
 }
 
+/*
+  22.11.2026 (lib/bookings-remind.js): the diary's minute tick, code only. Bookings past their end become done, the public
+  page's changes ask for a rebuild, and once a day (remindAt) the reminders of tomorrow's bookings are prepared as a send
+  list in 📤 הודעות לשליחה, with one push to the owner. Nothing is sent to a client from here.
+*/
+function bookingsTick() {
+  try {
+    if (inst.bookings !== true || !require('./lib/bookings-ui.js').enabled(inst)) return;
+    const r = require('./lib/bookings-remind.js').tick(inst, Date.now(), {
+      push: (title, body) => { require('./lib/notify-channels.js').notify(title, body, { kind: 'reminders' }).catch(() => {}); },
+      owner: (text, waText) => {
+        const at = new Date(), pad = (n) => String(n).padStart(2, '0');
+        const stamp = at.getFullYear() + pad(at.getMonth() + 1) + pad(at.getDate()) + '-' + pad(at.getHours()) + pad(at.getMinutes()) + pad(at.getSeconds());
+        fs.mkdirSync(CHAT, { recursive: true });
+        let name = stamp + '-claude-push-remind.json'; for (let i = 2; fs.existsSync(path.join(CHAT, name)); i++) name = stamp + '-claude-push-remind-' + i + '.json';
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify({ at: at.toISOString(), from: 'claude', text, status: 'done', waPush: true, waText: String(waText || 'יש עדכון ביומן התורים שלך במוניטור.'), id: 'bk-' + at.getTime().toString(36) }, null, 1), 'utf8');
+      },
+    });
+    if (r.reminded) say('תזכורות לתורים של מחר: ' + r.reminded);
+    if (r.rebuild) execFile(process.execPath, ['push.js', 'תורים'], { cwd: __dirname, timeout: 240000 }, function () {});
+  } catch (e) { say('!! תורים: ' + e.message); }
+}
+
 function main() {
   // 8.10: a paused customer gets no sessions at all.
   if (inst.paused) { say('מושהה. לא עונה.'); return; }
   // 10.11.2026: "🧑‍💼 מנהלת IT Solution". A reminder routine is a push, code only: it costs nothing, so no hold below stops it.
   if (!DRY) routinesTick('remind');
   if (!DRY) alarmsTick();
+  if (!DRY) bookingsTick();
   if (onHold()) return;
   if (quotaHold()) return;
   if (planHold()) return;

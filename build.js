@@ -1153,6 +1153,9 @@ function build() {
   if (inst.bizHome) {
     try { payload.bizHome = require('./lib/biz-home.js').view(inst.dataPath, __dirname); } catch (e) { console.error('bizHome: ' + e.message); }
   }
+  // 21.11.2026: a trade with bookings (lib/trades.js): the diary's hours, services, bookings and client names. Inside the sealed payload,
+  // never in the page source (lib/bookings-ui.js reads window.D.bookings when the screen opens).
+  try { const bu = require('./lib/bookings-ui.js'); if (bu.enabled(inst)) payload.bookings = bu.data(inst, Date.now()); } catch (e) { console.error('bookings: ' + e.message); }
   // A report's body is most of its weight, and only the newest few are read
   // off the card without opening the screen.
   const BODY_HEAD = 3;
@@ -1309,6 +1312,8 @@ function build() {
   if (Array.isArray(screens) && screens.length && require('./lib/plan-ui.js').on(inst.name)) screens.push('gPack');
   // 16.11.2026, Itzik: a quote the monitor prepared brings 🧾 back, also where the intake never chose it.
   try { if (Array.isArray(screens) && screens.length && screens.indexOf('gBhQuote') < 0 && require('./lib/biz-home.js').monitorQuote(inst.dataPath)) screens.push('gBhQuote'); } catch (e) { /* none */ }
+  // 21.11.2026: a trade with bookings always has 📅 התורים שלי, also where its screens came from the intake and not from lib/trades.js
+  try { if (Array.isArray(screens) && screens.length && screens.indexOf('gBkAppts') < 0 && require('./lib/bookings-ui.js').enabled(inst)) screens.push('gBkAppts'); } catch (e) { /* none */ }
   // 10.11.2026, Itzik: the campaigns tile appears by itself only once the customer gave his Facebook and numbers came in
   // (data/ads/status.json ok:true, written by ads-sync.js after setup-intake.js registered him). Until then nothing.
   if (Array.isArray(screens) && screens.length && screens.indexOf('gAds') < 0) {
@@ -1500,6 +1505,8 @@ const TENANT_TILES = {
   gBhMeet: ['g12', '🎙️ סיכומי פגישות', 'סיכום, החלטות ומשימות מכל פגישה'],
   gBhClients: ['g16', '👥 הלקוחות שלי', 'מה פתוח מול כל לקוח, ומתי נפגשים'],
   gBhCal: ['g15', '📅 פגישות ויומן', 'מה יש לי היום, ומה בהמשך'],
+  // 21.11.2026, Itzik: a trade with bookings (lib/trades.js) is its owner's appointments diary (lib/bookings-ui.js, store lib/bookings.js).
+  gBkAppts: ['g12', '📅 התורים שלי', 'מי מגיע מתי, מה פנוי, ותור חדש בלחיצה'],
   gConn: ['g4', '🔌 חיבורים', 'מה מחובר, וחיבור בלחיצה'],
   gYtCom: ['g11', '▶️ תגובות ביוטיוב', 'מה כתבו לך בערוץ, שאלות ופניות למעלה'],
   gBhMail: ['g11', '📧 מייל', 'מה חשוב, ולמי לחזור'],
@@ -1644,6 +1651,7 @@ function tenantTiles(inst) {
   ids.push('gAdminReq');
   // 10.11.2026: a per tenant opt out (instance hideTiles, an array of tile ids). gConn and gAdminReq can never be hidden.
   // 11.11.2026, Itzik: the notes app is installed by default in every monitor, so gNotes can never be hidden either.
+  try { if (ids.indexOf('gBkAppts') < 0 && require('./lib/bookings-ui.js').enabled(inst)) ids.unshift('gBkAppts'); } catch (e) { /* none */ }
   if (Array.isArray(inst.hideTiles)) { const hide = inst.hideTiles.filter((id) => id !== 'gConn' && id !== 'gAdminReq' && id !== 'gNotes'); for (let i = ids.length - 1; i >= 0; i--) if (hide.indexOf(ids[i]) >= 0) ids.splice(i, 1); }
   // 16.11.2026, Itzik: "גם אם הוא מחק". A quote the monitor prepared brings 🧾 back, first, even if hideTiles took it off.
   try { if (ids.indexOf('gBhQuote') < 0 && require('./lib/biz-home.js').monitorQuote(inst.dataPath || 'data')) ids.unshift('gBhQuote'); } catch (e) { /* none */ }
@@ -4395,7 +4403,8 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 }
 .bn button.hasnew svg{animation:tabnudge 1.8s ease-in-out infinite}
 .bn button.hasnew{color:var(--red)}
-.bn button[aria-pressed="true"].hasnew{color:#fff}
+/* 21.11.2026 (QA 5): the pressed tab with something new keeps its red ring; the label was white on the bar (the blue pill it was written for is gone) */
+.bn button[aria-pressed="true"].hasnew{color:var(--ink)}
 @media(prefers-reduced-motion:reduce){.bn button.hasnew svg{animation:none}}
 .bn button[aria-pressed="true"]{color:#fff;background:linear-gradient(150deg,#5aa9fb,var(--blue));
  border-radius:14px;box-shadow:0 5px 12px rgba(66,133,244,.35)}
@@ -4552,7 +4561,7 @@ body.offHome #talkCard,body.offHome #gBackChat,body.offHome .gMenu{display:none!
 :root.calm .bn button.hasnew svg{transform:none}
 :root.calm .bn button.hasnew,
 :root.calm .bn button.hasnew.blink{background:none;color:var(--red);box-shadow:none}
-:root.calm .bn button[aria-pressed="true"].hasnew{color:#fff}
+:root.calm .bn button[aria-pressed="true"].hasnew{color:var(--ink)}
 :root.calm .sent.working .s-dot{background:var(--green);box-shadow:none}
 :root.calm .dot{box-shadow:0 0 0 0 rgba(229,72,77,0)}
 :root.calm .live .pulse{box-shadow:none}
@@ -4997,6 +5006,8 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
 <section id="pH">
 ${require('./lib/trade-cards.js').html(inst)}
 ${require('./lib/trade-desk.js').html(inst)}
+${(() => { try { return require('./lib/bookings-ui.js').html(inst); } catch (e) { console.error('bookings off: ' + e.message); return ''; } })()}
+${(() => { try { return require('./lib/trade-free.js').html(inst); } catch (e) { return ''; } })()}
 ${require('./lib/home-ui.js').greet}
 ${require('./lib/approvals-ui.js').html}
 ${require('./lib/home-ui.js').html}
@@ -5272,6 +5283,9 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icBoard" data-new="1"><span class="c c-board">🎛️</span>לוח בקרה</button><button type="button" class="ic icNew" data-grp="work" id="icLeadBoard" data-new="1"><span class="c c-lboard">🔔</span>לוח לידים</button>' : ''}
   <!-- 11.11.2026, Itzik: "שימו לי במוניטור אייקון של הטופס הזה, שאני אוכל לשלוח אותו לאנשים בוואטסאפ או במייל". The signup page (it-solution.co.il/start). -->
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icSignup" data-new="1"><span class="c c-its">🚀</span>דף הרשמה</button>' : ''}
+  <!-- 21.11.2026, Itzik: "שים לי אייקון במוניטור, מחירון". The price list of the two products, his eyes only. -->
+  ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icPrices" data-new="1"><span class="c c-its">💰</span>מחירון</button>' : ''}
+  ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icCampForm" data-new="1"><span class="c c-its">📣</span>טופס קמפיין</button>' : ''}
   <!-- 19.11.2026, Itzik: "תעשה לי אייקון במוניטור, תרשום עליו קמפיין ותיתן לי אופציה לשתף אותו" (round, not a tile). Opens campShare():
        the page of every active ad per campaign plus the videos waiting to replace them, built by /root/campaign-page.js. -->
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icCamp" data-new="1"><span class="c c-camp">📣</span>קמפיין</button>' : ''}
@@ -5924,7 +5938,7 @@ ${require('./lib/activity-ui.js').html}
    </div>
    <div class="row">
     <button type="button" data-list="bul">• רשימה</button>
-    <button type="button" data-list="dash">– רשימה</button>
+    <button type="button" data-list="dash">רשימת קווים</button>
     <button type="button" data-list="num">1. רשימה</button>
     <button type="button" data-cmd="outdent">⇥</button>
     <button type="button" data-cmd="indent">⇤</button>
@@ -12209,7 +12223,12 @@ function overlayOpen(not){
  // 1.11.2026, Itzik: back inside a sheet opened from a sheet must close the top one first.
  // The last one in the page is the one on top, so search from the end.
  var l=document.querySelectorAll('.ysheet,.fview');
- for(var i=l.length-1;i>=0;i--)if(l[i]!==not)return l[i];
+ for(var i=l.length-1;i>=0;i--){
+  // 21.11.2026 (QA 4): the docked conversation of the trade desktop (lib/trade-desk.js) is the work area, not a window over the
+  // page; counted as one it made Back remove the chat instead of closing the screen that was open.
+  if(l[i]===not||l[i].hasAttribute('data-desk-auto'))continue;
+  return l[i];
+ }
  return null;
 }
 // 24.10.2026, Itzik: "תבדוק בכל המוניטור שתמיד יהיה כפתור חזרה". These windows had their own
@@ -12227,6 +12246,9 @@ function dlgClose(){
  if(qs&&qs.classList.contains('on'))return function(){var sh=q('qhShade');if(sh)sh.click();};
  if(dlgShown(q('liveSheet'))&&q('lsClose'))return function(){q('lsClose').click();};
  if(dlgShown(q('noteAiBox'))&&q('noteAiNo'))return function(){q('noteAiNo').click();};
+ // 21.11.2026 (QA 4): a trade monitor (lib/trade-cards.js) says what its own sheets, the + menu and the open tools are.
+ // Last in line: a real window or screen is closed first.
+ if(window.trBackClose&&!navStack.length&&!overlayOpen(null)){var tb=window.trBackClose();if(tb)return tb;}
  return null;
 }
 document.addEventListener('click',function(ev){
@@ -18435,43 +18457,34 @@ on('gClalit',clalitSheet);
 */
 // 18.11.2026, Itzik: "תשים אותם בלשונית נפרדת, קמפיין עתידי, תקרא לזה סרטונים להחלפה". Videos waiting to replace ads in Meta.
 var SWAP_ITEMS=[
- {n:"210",v:1,t:"כללי: העסק עובד 8 שעות. ואתה עוד 4 אחריו?",r:"sb-1811-general.mp4"},
- {n:"215",v:5,t:"מטפלת בקליניקה: בין מטופל למטופל, 12 הודעות על תורים",r:"sb-1811-clinic.mp4"},
- {n:"216",v:6,t:"משרד שיווק: 5 לקוחות, 20 פוסטים בשבוע",r:"sb-1811-marketing.mp4"},
+ // 21.11.2026: the four trade videos (version 5) of the new campaign, waiting for his approval and for Meta.
+ {n:"220",v:1,t:"קבלן שיפוצים: גמרת עבודה. והלקוח עוד לא שילם?",r:"trade-gypsum-v5.mp4"},
+ {n:"221",v:2,t:"קוסמטיקאית: נמאס לענות כל היום ליש לך מקום?",r:"trade-beauty-v5.mp4"},
+ {n:"222",v:3,t:"יועץ עסקי: עוד פגישה. ומי יכתוב את הסיכום?",r:"trade-consult-v5.mp4"},
+ {n:"223",v:4,t:"צלם אירועים: הזוג עוד לא חתם. ולא שילם מקדמה?",r:"trade-photo-v5.mp4"},
 ];
 var TOM_ITEMS=[
-// 18.11.2026, Itzik: "שים את כולם ברילים קמפיין. שים בנפרד סרטונים להחלפה". The monitor series (night mode, 27s,
-// a pain hook per service business), on standby until the campaign check in a day or two.
- {h:"📣 בקמפיין ובאישור"},
- {n:"201",t:"📣 קמפיין · 🆕 לאישורך · תור 15 שניות",r:"tor-1711-15s.mp4"},
- {n:"204",t:"📣 קמפיין · ✅ איליי 4: רוב בעלי העסקים משלמים על 7 מערכות · קמפיינים ותוכן",r:"ilay-1711-4-mefotzatz.mp4"},
- {n:"203",t:"📣 קמפיין · ✅ איליי 3: תסגור את כל החלוניות · מסך אחד ווואטסאפ",r:"ilay-1711-4-masachim.mp4"},
- {n:"202",t:"📣 קמפיין · ✅ איליי 2: כמה כסף בעלי עסקים מפסידים · הכסף",r:"ilay-1711-4-animatziot.mp4"},
- {n:"200",t:"📣 קמפיין · ✅ איליי 1: שבע מערכות בשביל חשבונית · מה הוא בונה לך",r:"ilay-1711-4-naki.mp4"},
-// 14.11.2026, Itzik: "תסדר לי באריח את כל הסרטונים של הקמפיין העדכניים". Exactly what is ACTIVE in Meta at 15:55 UTC:
-// Ilay's four monitor videos (14.11, to the free week), the three pain images (13.11, to the chat) and burning credits.
-// The 13.11 videos "מי לא שילם לך" and "עסקי ואישי" are no longer running and left the list. Newest first on screen (reversed).
- {n:"11",t:"📲 לרשתות · סטורי · מפחד ממה שאתה לא יודע?",r:"ads-pain3-story.png"},
- {n:"10",t:"📲 לרשתות · סטורי · המידע של הלקוחות. באמת מוגן?",r:"ads-pain2-story.png"},
- {n:"9",t:"📲 לרשתות · סטורי · יש לך אתר שעובד. ואין אפליקציה?",r:"ads-pain1-story.png"},
- {n:"8",t:"📣 קמפיין · ✅ באוויר מ 13.11 · 🖼️ מפחד ממה שאתה לא יודע? · לצ׳אט",r:"ads-pain3-feed.png"},
- {n:"7",t:"📣 קמפיין · ✅ באוויר מ 13.11 · 🖼️ המידע של הלקוחות. באמת מוגן? · לצ׳אט",r:"ads-pain2-feed.png"},
- {n:"6",t:"📣 קמפיין · ✅ באוויר מ 13.11 · 🖼️ יש לך אתר שעובד. ואין אפליקציה? · לצ׳אט",r:"ads-pain1-feed.png"},
- {n:"5",t:"📣 קמפיין · ✅ באוויר מ 2.11 · 🖼️ שרפת קרדיטים · Base44 · לצ׳אט",r:"ads-nov01-card9-story.mp4"},
- {n:"4",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · אנימציות קלות · לשבוע התנסות",r:"ilay-1411-animatziot.mp4"},
- {n:"3",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · מסכים · לשבוע התנסות",r:"ilay-1411-masachim.mp4"},
- {n:"2",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · מפוצץ · לשבוע התנסות",r:"ilay-1411-mefotzatz.mp4"},
- {n:"1",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · נקי · לשבוע התנסות",r:"ilay-1411-naki.mp4"},
-// 16.11.2026, Itzik: "אני צריך סרטונים לסטטוס ולסטורי. השינוי הוא בסוף בקישור ובהפנייה". Ilay's four campaign videos with
-// a new end card to it-solution.co.il/start (signup): the status one says the link is below, the story one says press the link.
- {n:"100",t:"📲 לסטטוס · 🎬 איליי, המוניטור · אנימציות קלות · להרשמה",r:"ilay-1411-animatziot-status.mp4"},
- {n:"101",t:"📲 לסטורי · 🎬 איליי, המוניטור · אנימציות קלות · להרשמה",r:"ilay-1411-animatziot-story.mp4"},
- {n:"102",t:"📲 לסטטוס · 🎬 איליי, המוניטור · מסכים · להרשמה",r:"ilay-1411-masachim-status.mp4"},
- {n:"103",t:"📲 לסטורי · 🎬 איליי, המוניטור · מסכים · להרשמה",r:"ilay-1411-masachim-story.mp4"},
- {n:"104",t:"📲 לסטטוס · 🎬 איליי, המוניטור · מפוצץ · להרשמה",r:"ilay-1411-mefotzatz-status.mp4"},
- {n:"105",t:"📲 לסטורי · 🎬 איליי, המוניטור · מפוצץ · להרשמה",r:"ilay-1411-mefotzatz-story.mp4"},
- {n:"106",t:"📲 לסטטוס · 🎬 איליי, המוניטור · נקי · להרשמה",r:"ilay-1411-naki-status.mp4"},
- {n:"107",t:"📲 לסטורי · 🎬 איליי, המוניטור · נקי · להרשמה",r:"ilay-1411-naki-story.mp4"}
+// 21.11.2026, Itzik: "תוודא שאייקון הקמפיין יהיה מעודכן". Checked in Meta (ads, effective_status ACTIVE) at 16:20 UTC:
+// the rescue campaign (27.10, 25/day, 5 ads) and the old monitor campaign (17.11, 25/day, 6 ads). The trade campaign is not in Meta.
+// Full page: form.it-solution.co.il/p/5100c3b8e29eea71ebb2.html
+ {h:"🆕 קמפיין המקצועות · מחכה לאישור שלך · עוד לא במטא"},
+ {n:"301",t:"📣 קמפיין · 🆕 לאישורך · קבלן שיפוצים · גמרת עבודה. והלקוח עוד לא שילם?",r:"trade-gypsum-v5.mp4"},
+ {n:"302",t:"📣 קמפיין · 🆕 לאישורך · קוסמטיקאית · נמאס לענות כל היום ל״יש לך מקום?״",r:"trade-beauty-v5.mp4"},
+ {n:"303",t:"📣 קמפיין · 🆕 לאישורך · יועץ עסקי · עוד פגישה. ומי יכתוב את הסיכום?",r:"trade-consult-v5.mp4"},
+ {n:"304",t:"📣 קמפיין · 🆕 לאישורך · צלם אירועים · הזוג עוד לא חתם. ולא שילם מקדמה?",r:"trade-photo-v5.mp4"},
+ {h:"✅ באוויר: קמפיין החילוץ · 25 ₪ ביום · לצ׳אט"},
+ {n:"25",t:"📣 קמפיין · ✅ באוויר מ 21.11 · 🖼️ יש לך פרימיום ואין איך לגבות",r:"camp-live-2111-pay.jpg"},
+ {n:"24",t:"📣 קמפיין · ✅ באוויר מ 19.11 · 🖼️ תיקנת באג, נשברו שלושה",r:"camp-live-1911-bug3.jpg"},
+ {n:"23",t:"📣 קמפיין · ✅ באוויר מ 13.11 · 🖼️ אתר בלי אפליקציה",r:"camp-live-1311-app.jpg"},
+ {n:"22",t:"📣 קמפיין · ✅ באוויר מ 12.11 · 🎬 נתקעת באמצע",r:"camp-live-1211-stuck.mp4"},
+ {n:"21",t:"📣 קמפיין · ✅ באוויר מ 2.11 · 🎬 שרפת קרדיטים · המודעה החזקה",r:"ads-nov01-card9-story.mp4"},
+ {h:"⏸️ נעצר 21.11: קמפיין המוניטור הישן"},
+ {n:"203",t:"📣 קמפיין · ⏸️ נעצר 21.11 · 🎬 איליי 3: מסך אחד",r:"ilay-1711-4-masachim.mp4"},
+ {n:"204",t:"📣 קמפיין · ⏸️ נעצר 21.11 · 🎬 איליי 4: קמפיינים",r:"ilay-1711-4-mefotzatz.mp4"},
+ {n:"205",t:"📣 קמפיין · ⏸️ נעצר 21.11 · 🎬 תור לרופא שיניים",r:"camp-live-1711-tor.jpg"},
+ {n:"200",t:"📣 קמפיין · ⏸️ נעצר 21.11 · 🎬 איליי 1: שבע מערכות",r:"ilay-1711-4-naki.mp4"},
+ {n:"202",t:"📣 קמפיין · ⏸️ נעצר 21.11 · 🎬 איליי 2: הכסף",r:"ilay-1711-4-animatziot.mp4"},
+ {n:"206",t:"📣 קמפיין · ⏸️ נעצר 21.11 · 🎬 מי לא שילם",r:"camp-live-1711-pay.jpg"},
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
@@ -18670,7 +18683,7 @@ function vidTabs(){
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
   {id:'sr',l:'📱 סטורי'+(srN?' ('+srN+')':''),upd:'20261117-story',h:'סטורי לאינסטגרם ולפייסבוק: סרטון קצר, ובסוף מסגרת להדבקת מדבקת הקישור להרשמה',L:vqRows('sr').concat([{h:'📂 הדף המלא'},{k:'go',t:'📱 פתיחת כל הסטורי המוכן',u:'story/index.html'}])},
   {id:'ads',l:'📣 קמפיין',upd:'20261117-ilay4b',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
-  {id:'swap',l:'🔄 סרטונים להחלפה',upd:'20261118-swap',h:'לקמפיין עתידי: סרטונים שמחכים להחלפה במטא',L:[{h:'6 סרטונים בסדרה · מוכנים: 1, 5, 6 · בהכנה: 2 יועץ עסקי, 3 סוכנת ביטוח, 4 מתווך'}].concat(SWAP_ITEMS.filter(function(it){return !it.h;}).map(function(it){return {k:'tom',it:it,lab:'🎬 סרטון '+it.v+' מתוך 6 · '+it.t};}))},
+  {id:'swap',l:'🔄 סרטונים להחלפה',upd:'20261121-swap',h:'קמפיין המקצועות: סרטונים שמחכים לאישור שלך ולהעלאה למטא',L:[{h:'4 סרטונים, גרסה 5 · קבלן, קוסמטיקאית, יועץ עסקי, צלם'}].concat(SWAP_ITEMS.filter(function(it){return !it.h;}).map(function(it){return {k:'tom',it:it,lab:'🎬 סרטון '+it.v+' מתוך 4 · '+it.t};}))},
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
   {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
   // 8.11, Itzik: the AI channel reels to upload, like the plate tab, split Hebrew and English, what went up and what did not.
@@ -19461,6 +19474,8 @@ function boardMore(){
  document.body.appendChild(w);
 }
 on('icSignup',function(){signupShare();});
+on('icPrices',function(){fileOpen('pricing-trades.html');});
+on('icCampForm',function(){window.open('https://form.it-solution.co.il/p/5100c3b8e29eea71ebb2.html','_blank','noopener');});
 // 19.11.2026: the campaign page (form.it-solution.co.il/p/..., private link), to open or to share.
 var CAMP_URL='https://form.it-solution.co.il/p/c851a7a3231353fa6107.html';
 function campShare(){
@@ -19514,7 +19529,9 @@ function lbWa(p){var d=String(p||'').replace(/[^0-9]/g,'');if(d.indexOf('0')===0
 function leadBoard(wk){
  if(typeof wk==='number')LB_WEEK=wk;
  // the leads travel sealed and load on demand, like in 💼 העסק שלי
- if(typeof ensure==='function'&&!(D.biz&&D.biz.length)&&!leadBoard._t){leadBoard._t=1;return ensure('biz',function(){leadBoard._t=0;leadBoard();});}
+ // 21.11.2026: asks for the file only while it is really not loaded yet. With no leads at all, ensure() has nothing to
+ // load and calls back at once, and the callback used to ask again forever (Maximum call stack, the lead board tile).
+ if(typeof ensure==='function'&&!(D.biz&&D.biz.length)&&LAZY.biz&&!lazyDone.biz&&!leadBoard._t){leadBoard._t=1;return ensure('biz',function(){leadBoard._t=0;leadBoard();});}
  leadBoard._t=0;
  var old=document.getElementById('bdGrid');if(old)old.remove();
  var L=(D.biz||[]).filter(function(r){return r&&r.kind==='lead'&&!r.test;});
@@ -24901,11 +24918,12 @@ on('resetBtn',function(){
 // Deleting everything is never done by this button. It only asks, and the
 // request waits in "מחכה לך" until he approves it there.
 on('wipeBtn',function(){
- if(!confirm('נשלחת בקשה למחיקה. מנהל IT Solution יאשר, ואחרי זה הכל יימחק ולא יחזור. לשלוח את הבקשה?'))return;
+ // 21.11.2026 (QA 14): in the demo nothing is sent, and the dialog says so
+ if(!confirm(window.PUBLIC_DEMO?'בהדגמה לא נשלחת בקשה ולא נמחק כלום. אצלך הבקשה מחכה לאישור של מנהל IT Solution, ורק אחריו הכל נמחק. להראות איך זה נראה?':'נשלחת בקשה למחיקה. מנהל IT Solution יאשר, ואחרי זה הכל יימחק ולא יחזור. לשלוח את הבקשה?'))return;
  var w=prompt('עוד לא נמחק כלום. כדי לשלוח את הבקשה כתוב כאן את המילה: למחוק','');
  if(w!=='למחוק'){toast('לא נשלח. כדי לשלוח את הבקשה צריך לכתוב בדיוק: למחוק');return;}
  sendText('מחיקת כל הנתונים','בקשה למחיקת כל הנתונים','הגדרה').then(function(){
-  toast('נשלחה הבקשה. היא מחכה לאישור.');
+  toast(window.PUBLIC_DEMO?'בהדגמה לא נשלחה בקשה ולא נמחק כלום.':'נשלחה הבקשה. היא מחכה לאישור.');
  }).catch(function(){toast('לא יצא, אין רשת. לנסות שוב.');});
 });
 /*ITZIK:BEGIN*/

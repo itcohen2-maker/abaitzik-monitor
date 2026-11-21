@@ -36,7 +36,7 @@ for (const id of IDS) {
   });
 }
 
-test('beauty speaks to her in the feminine and does not sell appointments', () => {
+test('beauty speaks to her in the feminine; no reminders or confirmations are promised yet (phase 2)', () => {
   const h = TC.html({ trade: 'beauty', dataPath: seeded('beauty'), publicDemo: true, gender: 'f' }, NOW); // demo-build.sh sets the demo's gender
   assert.match(h, /דברי/);
   assert.match(h, /כשתרצי\./);
@@ -72,4 +72,21 @@ test('the wording follows what the customer said, not the trade (Itzik 21.11: a 
   const woman = TC.html({ trade: 'gypsum', dataPath: g, gender: 'f' }, NOW);
   assert.match(woman, /<b>דברי<\/b>/);
   assert.match(woman, /כשתרצי\./);
+});
+
+// 21.11.2026: the monitor is the cosmetician's appointments diary (lib/bookings.js), the demo is built from it
+test('beauty: bookings, the ring and the events come from one store; the three who did not come back', () => {
+  const B = require('../lib/bookings.js');
+  const d = seeded('beauty');
+  const cfg = B.loadConfig(d);
+  assert.deepStrictEqual(cfg.services.map((x) => [x.name, x.minutes, x.price]), [['עיצוב גבות', 20, 80], ['טיפול פנים', 60, 320], ['אנטי אייג׳ינג', 75, 450], ['פילינג', 60, 380]]);
+  for (let d = 0; d < 7; d++) assert.deepStrictEqual(cfg.hours[d], [['09:00', '18:00']], 'the demo is open every day: ' + d);
+  const ev = read(d, 'biz-home/events.json');
+  assert.ok(ev.length >= 6 && ev.every((e) => e.src === 'booking'));
+  assert.ok(ev.some((e) => e.title === 'עיצוב גבות: דנה פרץ'));
+  assert.deepStrictEqual(B.lapsed(d, 8, NOW).map((x) => x.name).sort(), ['יעל שגיא', 'נועה ברק', 'שירן אוחיון'].sort());
+  assert.ok(B.list(d, { from: '2026-11-22', to: '2026-11-22' }).length >= 3);
+  assert.ok(trades.get('beauty').bookings === true);
+  for (const id of ['gypsum', 'consult', 'photo']) assert.ok(!trades.get(id).bookings, id);
+  assert.doesNotMatch(JSON.stringify(trades.get('beauty')) + require('../lib/demo-trades/beauty.js').context(NOW), /מערכת התורים שלך נשארת|מערכת תורים משלה|לא מחליף אותה/);
 });

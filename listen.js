@@ -919,6 +919,31 @@ function recordIncoming(m) {
       try { publishChat(); } catch (e) { /* the next build carries it */ }
       return true;
     }
+    /*
+      22.11.2026 (lib/bookings-handler.js): the fixed lines of 📅 התורים שלי (תור לקוחה חדש, הזזת תור לקוחה, ביטול תור לקוחה,
+      שעות פעילות, שירות חדש, מחיקת שירות) are applied here with no model, for a monitor whose trade has bookings. The raw line
+      leaves the chat, a short answer takes its place (the reason and up to three free times on a refusal), and the page is
+      rebuilt after a change. These lines never reach a worker session.
+    */
+    let bkLine = false;
+    try { bkLine = !!(codeOk && !inst.publicDemo && inst.bookings === true && require('./lib/bookings-handler.js').isLine(inst, text)); } catch (e) { if (!global.__bkWarned) { global.__bkWarned = 1; say('!! תורים כבויים, שגיאה: ' + e.message); } }
+    if (bkLine) {
+      // answered a moment later (the work waits for the diary's lock with timers, never with a sync wait); the line is closed now, so no
+      // worker session can pick it up
+      rec.status = 'done';
+      try { fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8'); } catch (e) { /* the unlink below removes it */ }
+      require('./lib/bookings-handler.js').handleAsync(inst, text).then((bkA) => {
+        const reply = bkA ? bkA.reply : 'לא הצלחתי לקרוא את השורה מהמסך.';
+        try {
+          fs.unlinkSync(path.join(CHAT, name));
+          fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-booking.json')),
+            JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: reply, status: 'done' }, null, 1), 'utf8');
+        } catch (e) { say('!! תורים: התשובה לא נכתבה: ' + e.message); }
+        say('תורים: ' + (bkA && bkA.ok ? 'בוצע' : 'נדחה')); // no name or phone in this log
+        try { publishChat(); } catch (e) { /* the next build carries it */ }
+      }, (e) => say('!! תורים: ' + e.message));
+      return true;
+    }
     // 18.11.2026: the board is every customer's now, so a customer's board actions are applied too (as build.js gives
     // every monitor its leads records: inst.biz or not Itzik's). Before, a customer with no biz flag had them fall through.
     const ldA = codeOk && (inst.biz || inst.name !== 'abaitzik') && require('./lib/leads.js').parse(text.replace(/\n\s*קוד[^\n]*$/, ''));
@@ -1871,6 +1896,10 @@ function recordFilePin(m) {
   publishChat();
 }
 
+// 22.11.2026: the fixed lines of the appointments screen carry a client's name and phone. They are applied here, but never
+// written to the listener's log or the pull log in the clear.
+const BOOKING_LINE = /^\s*(?:משימה\s+)?(?:מגבלות קישור|פתיחת קישור|אישור תור לקוחה|תור לקוחה|הזזת תור לקוחה|ביטול תור לקוחה|סימון תור לקוחה|הוספת לקוחה|שירות חדש|שעות פעילות|מחיקת שירות|הסרת שירות)/;
+const noBookingNames = (t) => (BOOKING_LINE.test(String(t || '')) ? 'תור לקוחה (הפרטים לא נרשמים כאן)' : t);
 async function handleOne(m) {
   const seen = mark();
   if (m.time === seen.time && seen.ids.includes(m.id)) return;
@@ -1884,7 +1913,7 @@ async function handleOne(m) {
   // 24.10.2026: a phone's push subscription is stored, never chatted or sent to Claude.
   const pushSub = m.attachment ? null : wp.fromMessage(m.message);
   if (pushSub) { recordPushSub(m, pushSub); remember(m); return; }
-  say('הודעה: ' + group.stripCode(String(m.message || '(צרופה)')).slice(0, 80));
+  say('הודעה: ' + noBookingNames(group.stripCode(String(m.message || '(צרופה)'))).slice(0, 80));
   // The notes and task ticks the page keeps on the server too. Not a message:
   // it never enters the chat, it only refreshes the copy a new phone fills from.
   if (m.attachment && m.title === 'notes-sync') {
@@ -1954,7 +1983,7 @@ async function handleOne(m) {
     const saved = await saveAttachment(m);
     if (saved && joinSlices(m) === 'waiting') { remember(m); await beat(); return; }
   }
-  if (m.message) logPull('text', m.message);
+  if (m.message) logPull('text', noBookingNames(m.message));
   // With the bridge off, a message that looks like a Codex request is an
   // ordinary message. Routing it anyway would swallow it: matched messages
   // never reach recordIncoming, so it would leave no trace in his chat.
@@ -2126,6 +2155,17 @@ if (require.main === module) (async () => {
   setInterval(pcWatch, 60000);
   setInterval(pollUploads, 3000);
   setInterval(pollTexts, 2000);
+  // 22.11.2026 (lib/book-agent.js): the public booking page of this business talks to this process over a unix socket, as this user.
+  // Only when the instance has bookings: true; whatever goes wrong here leaves the listener as it was.
+  // the agent gets a minimal explicit environment, not everything this listener holds (keys, tokens)
+  const bookEnv = () => { const e = {}; for (const k of ['HOME', 'PATH', 'TZ', 'NODE_ENV']) if (process.env[k] !== undefined) e[k] = process.env[k]; return e; };
+  // As its OWN process (lib/book-agent-proc.js), kept alive by lib/book-supervisor.js, so nothing this listener does synchronously can stall the page.
+  try {
+    if (inst.bookings === true && require('./lib/bookings-ui.js').enabled(inst)) {
+      const bookSup = require('./lib/book-supervisor.js').supervise({ log: say, spawn: () => require('child_process').spawn(process.execPath, [path.join(__dirname, 'lib', 'book-agent-proc.js')], { cwd: __dirname, stdio: ['ignore', 'inherit', 'inherit'], env: bookEnv() }) });
+      process.on('exit', () => bookSup.stop());
+    }
+  } catch (e) { say('!! תורים: הסוכן לא עלה: ' + e.message); }
   let wait = 2000;
   for (;;) {
     try {

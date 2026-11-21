@@ -126,6 +126,8 @@ HARD="NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
 ReadWritePaths=/home/$U
+# 22.11.2026: the booking agent's socket folder (setup/enable-bookings.sh makes it); the dash makes a missing folder harmless
+ReadWritePaths=-/var/lib/monitor-book/$U
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes
