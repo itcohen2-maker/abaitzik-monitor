@@ -2685,7 +2685,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 .bn button:active{transform:scale(.94)}
 .bn button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
 
-#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox):not(#leadAlert){display:none!important}
+#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox):not(#leadAlert):not(#tradeCards){display:none!important}
 #leadAlert{display:block;margin:6px 0 10px}
 #leadAlert>#gLeads{display:block!important;width:100%;box-sizing:border-box;text-align:right;position:relative;min-height:56px!important;height:auto!important;padding:10px 14px!important;border:0;border-radius:14px;color:#fff;font-family:Heebo,sans-serif;cursor:pointer}
 #leadAlert>#gLeads>b{display:block;font-size:18px!important}#leadAlert>#gLeads>small{display:block;font-size:14px!important;opacity:.95;white-space:normal!important}
@@ -3293,7 +3293,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-21T07:50:09.537Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-21T07:56:24.192Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3406,6 +3406,7 @@ try{
  <button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>
 
 <section id="pH">
+
 <div class="hm-greet" id="hmGreet" aria-live="off" hidden></div>
 <div id="sinceBox"></div>
 <section id="approvalsBox" class="apv" aria-live="polite" hidden></section>
@@ -5242,7 +5243,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='ad9139dcc5';
+var CODE_ID='cb807fa8b2';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -19270,7 +19271,7 @@ function pinTiles(grid){
   tileSheet(t);
  };
 }
-var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','homeBrief','homeKpis','homeMoney','bareBtn','newBlock','blkIcons','blkTiles'];
+var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','tradeCards','homeBrief','homeKpis','homeMoney','bareBtn','newBlock','blkIcons','blkTiles'];
 var HOME_TAIL=[];
 function pinHome(home){
  if(!home)return;
@@ -19906,7 +19907,7 @@ boot('hash',function(){
  if(k==='R')renderReminders();
 });
 
-var DW_HUES=['#4285F4','#EA4335','#f0a000','#34A853','#e8710a','#8e5cf7','#06b6d4','#e0418f'];
+function dwHues(){return ['#4285F4','#EA4335','#f0a000','#34A853','#e8710a','#8e5cf7','#06b6d4','#e0418f'];}
 function dwText(h){return String(h.textContent||'').replace(/\s+/g,' ').trim();}
 function dwIcon(t,icons){
  for(var k in icons){if(t.indexOf(k)===0)return icons[k];}
@@ -19932,7 +19933,7 @@ function drawerize(box,o){
  var D=[];
  heads.forEach(function(h,i){
   var d=document.createElement('details');d.className='dw';
-  var hue=DW_HUES[i%DW_HUES.length];d.style.setProperty('--h',hue);
+  var hue=dwHues()[i%8];d.style.setProperty('--h',hue);
   var t=dwText(h),ic=dwIcon(t,icons),title=t.replace(/^(\p{Extended_Pictographic}\uFE0F?)\s*/u,'');
   var hint='';for(var hk in hints){if(t.indexOf(hk)===0||title.indexOf(hk)===0)hint=hints[hk];}
   d.innerHTML='<summary><span class="dwI" aria-hidden="true"></span><span class="dwT"></span><span class="dwN" hidden></span><span class="dwC" aria-hidden="true">▼</span></summary><div class="dwIn"></div>';
