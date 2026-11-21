@@ -88,3 +88,14 @@ test('the ring moves like the monitor (Itzik 21.11: "פעימה עם מתאר ז
   assert.match(h, /\.trIn\{animation:trDrop/); // rows drop in when the view changes
   assert.match(h, /@media \(prefers-reduced-motion:reduce\)\{[^}]*#tradeRing::after[^}]*animation:none/);
 });
+
+test('a blocked microphone: WhatsApp or the keyboard, kept until the monitor is closed, a guide and a check (Itzik 21.11)', () => {
+  const h = TC.html({ trade: 'gypsum', dataPath: seeded(), publicDemo: true }, NOW);
+  for (const s of ['להקליט בוואטסאפ', 'להכתיב במקלדת', 'לתקן את המיקרופון', 'לבדוק עכשיו', 'המיקרופון עובד', 'האייפון לא נתן להקליט כאן']) assert.ok(h.includes(s), s);
+  assert.match(h, /sessionStorage/); // until the monitor is closed, then the ring tries the microphone again
+  assert.doesNotMatch(h, /localStorage[^;]*trMicWay/);
+  assert.match(h, /window\.micSheet\s*=/); // the trade home takes over the old "stuck microphone" sheet
+  assert.ok(h.includes('https://wa.me/' + require('../lib/wa-tenants.js').SHARED_PHONE)); // the demo is connected on the shared line
+  assert.doesNotMatch(h.replace(/<\/script>\s*$/, ''), /<\/script>[\s\S]*<\/script>/); // one script, not cut in the middle
+  assert.match(h, /#micBtn\{[^}]*opacity:0/); // one microphone: the ring
+});
