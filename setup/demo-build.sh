@@ -49,6 +49,8 @@ j.board=true;const t=process.argv[2];if(t){const T=require("./lib/trades.js").ge
 fs.writeFileSync(f,JSON.stringify(j,null,1));' "$APP/instance.json" "$TRADE"
 fi
 sudo -u demo -H node lib/demo-data.js data ${TRADE:+--trade "$TRADE"}
+# 21.11.2026: build.js writes the manifest only when it is missing, so a renamed demo kept its old install name
+rm -f "$APP/docs/manifest.webmanifest"
 sudo -u demo -H env MONITOR_NO_GATE=1 node build.js 2>&1 | tail -1
 # Shared code carries owner only links with private tokens (forms /f/, pages /p/, partner /r/). A customer's page is
 # sealed, this one is public, so every such token is cut from the built files.

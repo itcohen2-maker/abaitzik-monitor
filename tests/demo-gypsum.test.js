@@ -65,3 +65,9 @@ test('a trade demo opens folded, cards on top, without the manager card moved up
   const B = fs.readFileSync(path.join(__dirname, '..', 'build.js'), 'utf8');
   assert.ok(B.includes("'approvalsBox','tradeCards',"));
 });
+
+test('demo-build drops the old install name before it builds (build.js writes the manifest only when missing)', () => {
+  const S = fs.readFileSync(path.join(__dirname, '..', 'setup', 'demo-build.sh'), 'utf8');
+  const rm = S.indexOf('rm -f "$APP/docs/manifest.webmanifest"'), build = S.indexOf('MONITOR_NO_GATE=1 node build.js');
+  assert.ok(rm > -1 && rm < build);
+});
