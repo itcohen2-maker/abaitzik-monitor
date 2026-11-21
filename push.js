@@ -97,7 +97,23 @@ const git = (...a) => execFileSync('git', a, { cwd: HERE, encoding: 'utf8', maxB
   watchdog then called git stuck. On failure the rebase is aborted: the repo is back where it was,
   and the next build publishes again.
 */
+/*
+  21.11.2026, security: the public repository is restarted with a clean history (the old one held leads and
+  private addresses). A copy that still carries the old history must never push it back. A rebase onto a
+  history it shares nothing with would replay every old commit and push them all, so it stops here instead.
+*/
+const MAX_AHEAD = 300;
+function historyGuard() {
+  // A copy with no upstream (a customer's, say) pushes nowhere anyway; its old behaviour stays.
+  try { git('rev-parse', '-q', '--verify', '@{u}'); } catch (e) { return; }
+  try { git('merge-base', 'HEAD', '@{u}'); }
+  catch (e) { throw new Error('עצירה: ההיסטוריה כאן לא שייכת למאגר בגיטהאב (עותק ישן). לא דוחפים. צריך לעדכן את העותק לבסיס החדש.'); }
+  const ahead = Number(git('rev-list', '--count', '@{u}..HEAD').trim()) || 0;
+  if (ahead > MAX_AHEAD) throw new Error('עצירה: ' + ahead + ' קומיטים מקומיים שלא בגיטהאב, יותר מדי. לא דוחפים.');
+}
 const pullRebase = () => {
+  git('fetch', '-q');
+  historyGuard();
   try { git('pull', '--rebase', '--autostash', '-X', 'theirs'); }
   catch (e) { try { git('rebase', '--abort'); } catch (e2) { /* no rebase running */ } throw e; }
 };
@@ -153,8 +169,9 @@ async function main() {
       say('נשמר, יידחף יחד עם הבאים (פרסום קודם עוד רץ): ' + msg.split(String.fromCharCode(10))[0].slice(0, 60));
       return;
     }
-    try { git('push'); markPushed(); }
+    try { historyGuard(); git('push'); markPushed(); }
     catch (e) {
+      if (/^עצירה:/.test(e.message || '')) { say('!! ' + e.message); throw e; }
       try {
         say('הדחיפה נדחתה, מושך ומנסה שוב.');
         pullRebase();
@@ -185,6 +202,7 @@ async function flush() {
       let ahead = '';
       try { ahead = git('rev-list', '--count', '@{u}..HEAD').trim(); } catch (e) { ahead = '1'; }
       if (ahead === '0') { say('flush: אין מה לדחוף.'); return; }
+      historyGuard();
       try { git('push'); }
       catch (e) { say('flush: נדחה, מושך ומנסה שוב.'); pullRebase(); git('push'); }
       markPushed();

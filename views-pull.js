@@ -51,13 +51,22 @@ function source(e) {
   if (/it-solution\.co\.il/i.test(r)) return 'מתוך האתר';
   try { return new URL(r).hostname; } catch (x) { return r.slice(0, 40); }
 }
+// 21.11.2026, Itzik got eight pushes in a minute from San Jose, Forest City, Clonee, Boardman.
+// Meta's ad and link checkers run a real Chrome from its data centers (and AWS), so ua checks miss them.
+// A visit from one of these cities outside Israel is a crawler: no push and not in the report.
+const DC_CITIES = /^(prineville|forest city|altoona|fort worth|clonee|lule[aå]|odense|los lunas|papillion|henrico|sandston|new albany|huntsville|eagle mountain|dekalb|gallatin|stanton springs|social circle|mesa|kansas city|boardman|ashburn|hillsboro|council bluffs|the dalles|moncks corner|lenoir|st.? ghislain|santa clara|hamina)$/i;
+function dcBot(e) {
+  if (!e || e.country === 'IL') return false;
+  const c = String(e.city || '').trim();
+  return DC_CITIES.test(c) || (/^san jose$/i.test(c) && /linux/i.test(e.os || ''));
+}
 function dev(e) { return [e.model || e.os, e.app ? 'בתוך ' + e.app : e.br].filter(Boolean).join(', '); }
 
 // One row per visit (session): the open event plus the longest time and deepest scroll it reported.
 function visits(evs) {
   const by = {};
   evs.forEach(function (e) {
-    if (e.bot || !e.p || /^zz-/.test(e.p) || /^בדיקה/.test(e.r || "")) return; // tests never count
+    if (e.bot || dcBot(e) || !e.p || /^zz-/.test(e.p) || /^בדיקה/.test(e.r || "")) return; // tests never count
     const k = e.sid || (e.v + e.t);
     const s = by[k] || (by[k] = { sid: k, p: e.p, v: e.v, r: e.r, t: e.t, sec: 0, depth: 0, cta: [], n: e.n, open: null });
     if (e.e === 'open') { s.open = e; s.t = e.t; }
@@ -126,7 +135,7 @@ function report(vs) {
   // One push per new device on a page. The open event is what counts; bots and tests never.
   const today = new Date().toISOString().slice(0, 10);
   if (st.day !== today) { st.day = today; st.sent = 0; }
-  fresh.filter(function (e) { return e.e === "open" && !e.bot && PAGES[e.p] && !/^בדיקה/.test(e.r || ""); }).forEach(function (e) {
+  fresh.filter(function (e) { return e.e === "open" && !e.bot && !dcBot(e) && PAGES[e.p] && !/^בדיקה/.test(e.r || ""); }).forEach(function (e) {
     const k = e.p + ':' + e.v;
     if (st.seen[k]) return; st.seen[k] = e.t;
     if (st.sent >= DAY_CAP) return; st.sent++;
