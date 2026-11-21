@@ -3330,7 +3330,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-21T19:30:03.289Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-21T19:35:16.360Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5286,7 +5286,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='58c6958276';
+var CODE_ID='527b39c7a0';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -21778,7 +21778,7 @@ function dmoTrain(name){
  try{if(typeof fcSheet==='function'&&typeof fcSend==='function'){fcSheet();fcSend(name);return;}}catch(e){}
  window.scrollTo({top:0,behavior:'smooth'});dmoAsk(name);
 }
-var DMO_PK={name:'Small',price:700,meters:[['פעולות החודש',112,500],['חתימות דיגיטליות מהטלפון',2,5]],renew:'11.12'};
+var DMO_PK={name:'Small',price:700,meters:[['פעולות החודש',112,500]],renew:'11.12'};
 var DMO_ON=[['✉️','מייל וגוגל','ממוין לפי דחיפות, עם טיוטות תשובה'],['📅','יומן','פגישות, זימונים ותזכורות'],['💬','וואטסאפ','מדברים עם המוניטור ומקבלים עדכונים'],['🧾','הצעות מחיר','עד 20 בחודש'],['✍️','חתימה דיגיטלית מהטלפון','עד 5 בחודש'],['🎯','אימון מכירות, עסקי ואישי','פתוח תמיד, בלי הגבלה'],['📝','פתקים','פתוח תמיד']];
 var DMO_OFF=[['🏦','חיבור לבנק','תנועות, הוצאות קבועות וחריגות','149 ₪ לחודש'],['📒','הנהלת חשבונות','חשבוניות וקבלות, דוח לרואה החשבון','99 ₪ לחודש'],['📣','קמפיינים בפייסבוק ואינסטגרם','כמה הוצאנו, כמה לידים ומה לשפר','בחבילת Medium'],['🎬','סרטונים וקרוסלות','מעלים חומר ומקבלים פוסט מוכן','בחבילת Medium'],['💼','לינקדין','פוסטים שעולים בזמן שלהם','בחבילת Large']];
 function dmoConn(){
@@ -22007,15 +22007,12 @@ function bhQuoteShow(q,w){
   .then(function(j){
    sb.disabled=false;sb.textContent='✍️ לשלוח לחתימה';
    if(j.link){var msg='שלום '+(q.client||'')+', מצורפת הצעת המחיר לחתימה מהטלפון: '+j.link;
-    out.innerHTML='<div class="bh-card"><b>הקישור לחתימה מוכן</b><p><bdi dir="ltr">'+esc(j.link)+'</bdi></p>'+(j.left>=0?'<p>נשארו לך '+j.left+' חתימות החודש.</p>':'')
+    out.innerHTML='<div class="bh-card"><b>הקישור לחתימה מוכן</b><p><bdi dir="ltr">'+esc(j.link)+'</bdi></p>'+''
      +'<div class="bh-row"><button type="button" class="bh-b wa" id="bqSignWa">💬 לשלוח בוואטסאפ</button><button type="button" class="bh-b alt" id="bqSignCp">להעתיק</button></div><small>כשהלקוח פותח וכשהוא חותם, תקבל כאן הודעה עם העותק החתום.</small></div>';
     out.querySelector('#bqSignWa').onclick=function(){bhWa(msg);};
     out.querySelector('#bqSignCp').onclick=function(){try{navigator.clipboard.writeText(j.link);toast('הקישור הועתק');}catch(x){}};
     return;}
-   if(j.error==='limit'){out.innerHTML='<div class="bh-card"><b>נגמרו החתימות של החודש ('+j.limit+')</b><p>אפשר להוסיף 50 חתימות בכל חודש ב 49 ₪, או לשדרג לחבילה עם חתימות ללא הגבלה.</p>'
-     +(typeof pkPay==='function'&&D.addonMenu?'<div class="bh-row"><button type="button" class="bh-b" id="bqSignBuy">להוסיף 50 חתימות, 49 ₪ לחודש</button></div>':'')+'</div>';
-    var bb=out.querySelector('#bqSignBuy');if(bb)bb.onclick=function(){pkPay('sign50',{},bb);};return;}
-   toast('הקישור לא נוצר. תנסה שוב בעוד דקה.');
+   if(j.error==='limit'){out.innerHTML='<div class="bh-card"><b>הגעת למכסת הבטיחות של היום</b><p>יותר מ '+j.limit+' קישורי חתימה ביום. נסה מחר, או פנה אלינו.</p></div>';return;}
   });
  };
  o.querySelector('#bqPdf').onclick=function(){var p=document.getElementById('bhPrint');if(!p){p=document.createElement('div');p.id='bhPrint';document.body.appendChild(p);}p.innerHTML=html;document.body.classList.add('bh-print');setTimeout(function(){window.print();setTimeout(function(){document.body.classList.remove('bh-print');},500);},50);};
