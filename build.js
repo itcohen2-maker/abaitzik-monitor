@@ -4364,7 +4364,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   and nothing becomes unreachable: one button in the header brings the rest
   back, and the choice is remembered.
 */
-#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox):not(#leadAlert){display:none!important}
+#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox):not(#leadAlert):not(#tradeCards){display:none!important}
 #leadAlert{display:block;margin:6px 0 10px}
 #leadAlert>#gLeads{display:block!important;width:100%;box-sizing:border-box;text-align:right;position:relative;min-height:56px!important;height:auto!important;padding:10px 14px!important;border:0;border-radius:14px;color:#fff;font-family:Heebo,sans-serif;cursor:pointer}
 #leadAlert>#gLeads>b{display:block;font-size:18px!important}#leadAlert>#gLeads>small{display:block;font-size:14px!important;opacity:.95;white-space:normal!important}
@@ -4945,6 +4945,7 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
  <button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>
 
 <section id="pH">
+${require('./lib/trade-cards.js').html(inst)}
 ${require('./lib/home-ui.js').greet}
 ${require('./lib/approvals-ui.js').html}
 ${require('./lib/home-ui.js').html}
