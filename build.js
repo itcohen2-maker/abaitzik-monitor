@@ -19474,7 +19474,7 @@ function boardMore(){
  document.body.appendChild(w);
 }
 on('icSignup',function(){signupShare();});
-on('icPrices',function(){fileOpen('pricing-trades.html');});
+on('icPrices',function(){window.open('https://form.it-solution.co.il/p/e9e946f35a0bea1868a5.html','_blank','noopener');});
 on('icCampForm',function(){window.open('https://form.it-solution.co.il/p/5100c3b8e29eea71ebb2.html','_blank','noopener');});
 // 19.11.2026: the campaign page (form.it-solution.co.il/p/..., private link), to open or to share.
 var CAMP_URL='https://form.it-solution.co.il/p/c851a7a3231353fa6107.html';
