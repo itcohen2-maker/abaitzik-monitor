@@ -238,5 +238,53 @@
   "caption": "Tomorrow is Erev Shabbat. Check your candle lighting time by your exact location.\nFree for every Jew.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: public domain.",
   "approved": true,
   "approvedBy": "itzik-20.11-auto"
+ },
+ {
+  "name": "story-he-fri-2711",
+  "date": "2026-11-27",
+  "time": "09:00",
+  "kind": "story",
+  "lang": "he",
+  "city": "טבריה",
+  "file": "media/story-he-fri-2711.mp4",
+  "caption": "",
+  "approved": true,
+  "approvedBy": "itzik-21.11-auto"
+ },
+ {
+  "name": "story-en-fri-2711",
+  "date": "2026-11-27",
+  "time": "09:00",
+  "kind": "story",
+  "lang": "en",
+  "city": "Amsterdam",
+  "file": "media/story-en-fri-2711.mp4",
+  "caption": "",
+  "approved": true,
+  "approvedBy": "itzik-21.11-auto"
+ },
+ {
+  "name": "post-he-fri-2711",
+  "date": "2026-11-27",
+  "time": "09:00",
+  "kind": "post",
+  "lang": "he",
+  "city": "עכו",
+  "file": "media/post-he-fri-2711.mp4",
+  "caption": "היום ערב שבת. מה השעה המדויקת להדלקת נרות אצלכם?\nבחינם, מתנה ממני. שבת שלום.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Clean Soul, Kevin MacLeod (incompetech.com), CC BY 3.0.",
+  "approved": true,
+  "approvedBy": "itzik-21.11-auto"
+ },
+ {
+  "name": "post-en-fri-2711",
+  "date": "2026-11-27",
+  "time": "09:00",
+  "kind": "post",
+  "lang": "en",
+  "city": "Vienna",
+  "file": "media/post-en-fri-2711.mp4",
+  "caption": "Today is Erev Shabbat. What is the exact candle lighting time where you are?\nFree for every Jew. Shabbat Shalom.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Parisian\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
+  "approved": true,
+  "approvedBy": "itzik-21.11-auto"
  }
 ]
