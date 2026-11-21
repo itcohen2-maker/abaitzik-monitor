@@ -24,7 +24,7 @@ test('each of the four trades gets the style and the script', () => {
     assert.ok(trades.get(id), id);
     const h = TD.html(inst(id));
     assert.ok(h.includes('@media ' + MQ + '{'), id + ': the media query');
-    assert.match(h, /<script>\(function page\(MQ\)/);
+    assert.match(h, /<script>\(function page\(MQ, DATA\)/);
     assert.ok(h.includes(JSON.stringify(MQ)), id + ': the script asks the same query');
     assert.ok(!/<\/script>[\s\S]*<\/script>/.test(h.replace(/<script>[\s\S]*?<\/script>/, '')), 'one script only');
   });
