@@ -10,12 +10,21 @@ set -euo pipefail
 # 18.11.2026: the security check (monitor-security) flagged /var/log/monitor-demo.log as readable by all (644). systemd appends to it, so it keeps its mode; this makes it 640 on every run.
 [ -f /var/log/monitor-demo.log ] && chmod 640 /var/log/monitor-demo.log || true
 SRC=/home/monitor/abaitzik-monitor
-APP=/home/demo/app
+# 21.11.2026: a trade demo (lib/trades.js), "demo-build.sh gypsum": its own folder /home/demo/app-<trade>, instance demo-<trade>,
+# host demo-<trade>.m.it-solution.co.il. Without an argument, the barbershop as before. REF=<ref> builds another branch (a preview).
+TRADE="${1:-}"
+if [ -n "$TRADE" ] && ! [[ "$TRADE" =~ ^[a-z]{2,20}$ ]]; then echo "bad trade"; exit 1; fi
+REF="${REF:-origin/stable}"
+NAME="demo${TRADE:+-$TRADE}"
+HOST="$NAME.m.it-solution.co.il"
+APP=/home/demo/app${TRADE:+-$TRADE}
+mkdir -p "$APP"
+[ -n "$TRADE" ] && [ ! -f "$APP/instance.json" ] && cp /home/demo/app/instance.json "$APP/instance.json"
 NEW=$(mktemp -d /home/demo/.app-new-XXXX)
 cd "$SRC"
 # 19.11.2026: the timer runs as root and the log showed git "dubious ownership" errors on every run of the code copy
 runuser -u monitor -- git -c safe.directory=/home/monitor/abaitzik-monitor fetch -q origin stable
-runuser -u monitor -- git -c safe.directory=/home/monitor/abaitzik-monitor archive origin/stable | tar -x -C "$NEW" --exclude=docs --exclude=promo --exclude=tests --exclude=instance.json --exclude=data
+runuser -u monitor -- git -c safe.directory=/home/monitor/abaitzik-monitor archive "$REF" | tar -x -C "$NEW" --exclude=docs --exclude=promo --exclude=tests --exclude=instance.json --exclude=data
 # the code is replaced, instance.json and data stay
 find "$APP" -mindepth 1 -maxdepth 1 ! -name instance.json ! -name data ! -name docs -exec rm -rf {} +
 cp -a "$NEW"/. "$APP"/
@@ -30,15 +39,16 @@ cd "$APP"
 # Written here as root from this repo, never by the demo's own code.
 # Only once the code copied from stable has the demo of 19.11 (lib/demo-acts.js): older code would show these screens empty.
 if [ -f "$APP/lib/demo-acts.js" ]; then
-PLAN=/srv/monitor-changes/demo.plan.json
+PLAN=/srv/monitor-changes/$NAME.plan.json
 printf '{"plan":"medium","month":"%s","extra":0,"applied":[],"history":[],"addons":{"accounting":{"on":true,"at":"2026-11-01T08:00:00.000Z","software":"morning"},"bank":{"on":true,"at":"2026-11-01T08:00:00.000Z","bank":"demo","kind":"business"},"sign50":{"on":true,"at":"2026-11-01T08:00:00.000Z"}}}\n' \
   "$(TZ=Asia/Jerusalem date +%Y-%m)" > "$PLAN.tmp" && chown monitor:monitor "$PLAN.tmp" && chmod 644 "$PLAN.tmp" && mv "$PLAN.tmp" "$PLAN"
 # and every screen a customer can have that the invented data fills (instance.json stays between runs; this keeps it right)
 node -e 'const fs=require("fs"),f=process.argv[1],j=JSON.parse(fs.readFileSync(f,"utf8"));
 j.screens=["gMyBoard","gBhCal","gBhMeet","gBhClients","gBhMail","gBhQuote","gRemind","gTasks","gCamp","gCIdeas","gShopList","gUpgrade"];
-j.board=true;fs.writeFileSync(f,JSON.stringify(j,null,1));' "$APP/instance.json"
+j.board=true;const t=process.argv[2];if(t){const T=require("./lib/trades.js").get(t);j.name="demo-"+t;j.trade=t;j.screens=T.screens.slice();j.board=false;}
+fs.writeFileSync(f,JSON.stringify(j,null,1));' "$APP/instance.json" "$TRADE"
 fi
-sudo -u demo -H node lib/demo-data.js data
+sudo -u demo -H node lib/demo-data.js data ${TRADE:+--trade "$TRADE"}
 sudo -u demo -H env MONITOR_NO_GATE=1 node build.js 2>&1 | tail -1
 # Shared code carries owner only links with private tokens (forms /f/, pages /p/, partner /r/). A customer's page is
 # sealed, this one is public, so every such token is cut from the built files.
@@ -62,12 +72,12 @@ if [ -n "$HIT" ]; then
 fi
 # The page as a visitor gets it. 17.11: a permissions slip served nothing and no one knew. One alert per failed run
 # (at most two a day, the timer runs twice).
-CODE=$(curl -s -o /tmp/demo-check.html -w '%{http_code}' https://demo.m.it-solution.co.il/ || true)
+CODE=$(curl -s -o /tmp/demo-check.html -w '%{http_code}' https://$HOST/ || true)
 if [ "$CODE" != 200 ] || ! grep -q PUBLIC_DEMO /tmp/demo-check.html; then
   echo "!! live check failed: $CODE"
-  cd "$SRC" && sudo -u monitor -H node notify.js "מוניטור ההדגמה לא עולה" "demo.m.it-solution.co.il החזיר $CODE אחרי הבנייה. יומן: /var/log/monitor-demo.log" || true
+  cd "$SRC" && sudo -u monitor -H node notify.js "מוניטור ההדגמה לא עולה" "$HOST החזיר $CODE אחרי הבנייה. יומן: /var/log/monitor-demo.log" || true
   exit 1
 fi
 # 17.11: the day's numbers to Itzik's 📄 דוחות (lib/demo-stats.js), as user monitor, from his own copy
-cd "$SRC" && runuser -u monitor -- node lib/demo-stats.js >/dev/null 2>&1 || echo "!! demo-stats failed"
+if [ -z "$TRADE" ]; then cd "$SRC" && runuser -u monitor -- node lib/demo-stats.js >/dev/null 2>&1 || echo "!! demo-stats failed"; fi
 echo "$(date -Is) built"

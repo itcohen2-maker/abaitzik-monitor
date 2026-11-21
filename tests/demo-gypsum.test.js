@@ -47,3 +47,11 @@ test('the demo-data CLI seeds the trade with --trade', () => {
   require('child_process').execFileSync(process.execPath, [path.join(__dirname, '..', 'lib', 'demo-data.js'), d, '--trade', 'gypsum']);
   assert.strictEqual(read(d, 'conn/partner.json').pageName, 'דוד גבס ושיפוצים');
 });
+
+test('the ribbon names the trade, the barbershop keeps its own', () => {
+  const PD = require('../lib/public-demo.js');
+  const g = PD.tail({ publicDemo: true, trade: 'gypsum' });
+  assert.ok(g.includes('הדגמה: קבלן גבס ושיפוצים'));
+  assert.ok(!g.includes('מספרה לדוגמה'));
+  assert.ok(PD.tail({ publicDemo: true }).includes('הדגמה: מספרה לדוגמה'));
+});
