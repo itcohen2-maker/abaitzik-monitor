@@ -24595,7 +24595,7 @@ function pinTiles(grid){
  };
 }
 // 13.11.2026, Itzik: the answers card goes under "עוד כלים", not above it, so the button does not jump down when the tools open.
-var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','homeBrief','homeKpis','homeMoney','bareBtn','newBlock','blkIcons','blkTiles'];
+var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','tradeCards','homeBrief','homeKpis','homeMoney','bareBtn','newBlock','blkIcons','blkTiles'];
 // "איך אני משתפר" is the one block he wants out of the way rather than gone.
 // It is a log of my own mistakes and fixes: worth keeping, never worth the top
 // of his screen.

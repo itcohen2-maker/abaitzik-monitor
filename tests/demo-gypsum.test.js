@@ -55,3 +55,13 @@ test('the ribbon names the trade, the barbershop keeps its own', () => {
   assert.ok(!g.includes('מספרה לדוגמה'));
   assert.ok(PD.tail({ publicDemo: true }).includes('הדגמה: מספרה לדוגמה'));
 });
+
+test('a trade demo opens folded, cards on top, without the manager card moved up', () => {
+  const PD = require('../lib/public-demo.js');
+  assert.ok(PD.head({ publicDemo: true, trade: 'gypsum' }).includes('window.DEMO_TRADE=true'));
+  assert.ok(!PD.head({ publicDemo: true }).includes('window.DEMO_TRADE=true'));
+  assert.match(require('../lib/demo-acts.js').client.toString(), /window\.DEMO_TRADE \? '1' : '0'/);
+  assert.match(PD.tail({ publicDemo: true, trade: 'gypsum' }), /if\(!window\.DEMO_TRADE\)\{mgrUp\(\)/);
+  const B = fs.readFileSync(path.join(__dirname, '..', 'build.js'), 'utf8');
+  assert.ok(B.includes("'approvalsBox','tradeCards',"));
+});
