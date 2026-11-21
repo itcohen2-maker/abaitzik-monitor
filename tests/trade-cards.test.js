@@ -14,11 +14,11 @@ function seeded() { const d = fs.mkdtempSync(path.join(os.tmpdir(), 'tc-')); req
 
 test('the day: today\'s jobs and reminders, by time, in Israel minutes', () => {
   const items = TC.dayItems(seeded(), NOW);
-  assert.deepStrictEqual(items.map((x) => x.m), [450, 780, 1080]); // 07:30, 13:00, 18:00
+  assert.deepStrictEqual(items.map((x) => x.m), [450, 780, 960]); // 07:30, 13:00, 16:00
   assert.deepStrictEqual(items.map((x) => x.c), ['g', 'b', 'y']);
   assert.match(items[0].t, /^07:30 תקרת גבס$/);
   assert.match(items[0].s, /משפחת גולן/);
-  assert.match(items[2].t, /^18:00 /);
+  assert.match(items[2].t, /^16:00 לחזור לרונית כהן$/);
   assert.ok(items[0].len === 300 && items[2].len === 15);
 });
 
