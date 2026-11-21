@@ -171,6 +171,8 @@ function absFiles(text) {
   return String(text || '').replace(/(^|[\s(])files\/([^\s)\]]+)/g, function (m, pre, name) {
     const tail = (name.match(/[.,;:!?]+$/) || [''])[0], clean = tail ? name.slice(0, -tail.length) : name;
     let priv = false; try { priv = clean.indexOf('..') < 0 && fs.statSync(path.join(DATA, 'files-private', clean)).isFile(); } catch (e) {}
+    // 21.11.2026, Itzik ("1"): a private video goes as a direct link (WhatsApp opens links in its own browser, without the password)
+    if (priv) { const vl = require('./lib/video-link.js').linkFor(DATA, clean); if (vl) return pre + vl + tail; }
     return pre + base + (priv ? '#file=' + encodeURIComponent(clean) : 'files/' + clean) + tail;
   });
 }
