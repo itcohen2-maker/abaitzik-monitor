@@ -54,7 +54,7 @@ function source(e) {
 // 21.11.2026, Itzik got eight pushes in a minute from San Jose, Forest City, Clonee, Boardman.
 // Meta's ad and link checkers run a real Chrome from its data centers (and AWS), so ua checks miss them.
 // A visit from one of these cities outside Israel is a crawler: no push and not in the report.
-const DC_CITIES = /^(prineville|forest city|altoona|fort worth|clonee|lule[aå]|odense|los lunas|papillion|henrico|sandston|new albany|huntsville|eagle mountain|dekalb|gallatin|stanton springs|social circle|mesa|kansas city|boardman|ashburn|hillsboro|council bluffs|the dalles|moncks corner|lenoir|st.? ghislain|santa clara)$/i;
+const DC_CITIES = /^(prineville|forest city|altoona|fort worth|clonee|lule[aå]|odense|los lunas|papillion|henrico|sandston|new albany|huntsville|eagle mountain|dekalb|gallatin|stanton springs|social circle|mesa|kansas city|boardman|ashburn|hillsboro|council bluffs|the dalles|moncks corner|lenoir|st.? ghislain|santa clara|hamina)$/i;
 function dcBot(e) {
   if (!e || e.country === 'IL') return false;
   const c = String(e.city || '').trim();
