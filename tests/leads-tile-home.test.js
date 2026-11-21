@@ -47,7 +47,7 @@ test('the key is the newest open lead by arrival, whatever its status and source
 });
 
 test('the folded home keeps the tile, and the tile has its own place', () => {
-  assert.ok(SRC.includes('#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox):not(#leadAlert){display:none!important}'));
+  assert.ok(SRC.includes('#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox):not(#leadAlert):not(#tradeCards){display:none!important}'));
   assert.ok(SRC.includes('#leadAlert>#gLeads{display:block!important'));
 });
 

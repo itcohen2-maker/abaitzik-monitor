@@ -667,7 +667,8 @@ test('the home screen is the microphone and nothing else', () => {
   // reaching me, and nothing more.
   // 24.10.2026: the approval card stays on the bare home, a decision waiting for him is not a tool.
   // 19.11.2026: a new lead (#leadAlert) stays on the bare home too, he has to see it the minute it lands.
-  assert.ok(html.includes('#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox):not(#leadAlert){display:none!important}'));
+  // 21.11.2026: the trade cards (lib/trade-cards.js) stay on the bare home too, they are the first screen of a service provider.
+  assert.ok(html.includes('#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox):not(#leadAlert):not(#tradeCards){display:none!important}'));
   // Hidden, never removed: every render on this page still writes to the
   // element it always wrote to, and nothing becomes unreachable.
   assert.ok(html.includes('id="bareBtn"'));
