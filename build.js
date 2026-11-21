@@ -5227,6 +5227,8 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <!-- 19.11.2026, Itzik: "תעשה לי אייקון במוניטור, תרשום עליו קמפיין ותיתן לי אופציה לשתף אותו" (round, not a tile). Opens campShare():
        the page of every active ad per campaign plus the videos waiting to replace them, built by /root/campaign-page.js. -->
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icCamp" data-new="1"><span class="c c-camp">📣</span>קמפיין</button>' : ''}
+  <!-- 21.11.2026, Itzik: "תשים בכפתור אחד אייקון את כל הכפתורים שהם אתרים שלי". One circle; sitesSheet() lists the six sites, the six circles are hidden on his page. -->
+  ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="proj" id="icSites" data-new="1" data-upd="20261121-sites"><span class="c c-its"><em class="icN' + (siteLeads().today ? ' hot' : '') + '">' + siteLeads().n + '</em>🌐</span>האתרים שלי</button>' : ''}
   <!-- 7.11.2026, Itzik: the trainings sit in round icons beside the calendar. Shown only when the chat is allowed (fcBoot). -->
   <button type="button" class="ic icNew" data-grp="day" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>
   <button type="button" class="ic icNew" data-grp="day" id="icFcCoach" data-new="1" style="display:none"><span class="c c-fcc">🧭</span>אימון עסקי</button>
@@ -5234,13 +5236,13 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <a class="ic" data-grp="net" data-net="all" id="icNet" href="#"><span class="c c-nt">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M10 20V5M15 20v-6M20 20V8"/></svg></span>ניטור רשתות</a>
   <!-- 4.11, Itzik: "באתר של אבא איציק תרשום אבא איציק, כל הזמן. אני מתבלבל בין האתר לאתר שלי". This is the abaitzik.com icon, so its label is the name, always. -->
-  <a class="ic" data-grp="proj" href="https://abaitzik.com/" target="_blank" rel="noopener" data-upd="20261104-abaname"><span class="c c-st">
+  <a class="ic" data-grp="proj" id="icAba" href="https://abaitzik.com/" target="_blank" rel="noopener" data-upd="20261104-abaname"><span class="c c-st">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/></svg></span>אבא איציק</a>
   <!-- 4.11, Itzik (voice): "שים לי אייקון של שחר". A round circle that opens the Shachar page, same as the tile in the grid. -->
   <button type="button" class="ic icNew" data-grp="proj" id="icShachar" data-new="1"><span class="c c-sh"><img src="icons/shachar.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover"></span>שחר</button>
   <button type="button" class="ic" data-grp="proj" id="icLand"><span class="c c-vd">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg></span>דפי נחיתה</button>
-  <a class="ic" data-grp="proj" href="https://salinda-mobile.vercel.app/" target="_blank" rel="noopener"><span class="c c-sl">
+  <a class="ic" data-grp="proj" id="icSalinda" href="https://salinda-mobile.vercel.app/" target="_blank" rel="noopener"><span class="c c-sl">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg></span>סלינדה</a>
   <!--
     נר. Two candles in the round, same as the site they open.
@@ -5251,7 +5253,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
     do. It goes straight to the site now. The hub is still at ner/ for when
     the PDFs are wanted.
   -->
-  <a class="ic" data-grp="net" href="https://candletimes.com/?me=1" target="_blank" rel="noopener"><span class="c c-nr">
+  <a class="ic" data-grp="net" id="icNer" href="https://candletimes.com/?me=1" target="_blank" rel="noopener"><span class="c c-nr">
    <svg viewBox="0 0 24 24">
     <path fill="#F4EFE6" d="M8.4 11.6h2.2v8.8H8.4zM13.4 11.6h2.2v8.8h-2.2z"/>
     <path fill="#F5A623" d="M9.5 10.9c2.6-1.9 2-4.3 0-6.2-2 1.9-2.6 4.3 0 6.2z"/>
@@ -5273,7 +5275,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <a class="ic" data-grp="work" href="#" id="icAl" data-new="1"><span class="c c-al" id="icAlC">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-2 9a6 6 0 0 1-12 0z"/><circle cx="9" cy="9.5" r="1"/><circle cx="15" cy="9.5" r="1"/><path d="M9.5 13c1.5 1.3 3.5 1.3 5 0"/></svg></span>מוניטורים</a>
   <!-- 9.11.2026, Itzik: "תעשה לו אייקון כמו האייקון של אלון. כשאני לוחץ אני רואה את כל המוניטורים, פלוס הקוד שלהם של הכניסה". Same as Alon's: the colour of his monitor's health check, and the click opens the monitors screen (link and entry code of each), scrolled to Dr. Shulman's. -->
-  ${inst.name === 'abaitzik' ? '<style>/* 13.11.2026, Itzik: off his home screen. 16.11: ⏰ gRemind back, "אני לא רואה במוניטור אותו" */#icFcSales,#icFcCoach,#icFcPersonal,#icPb,#gAlarm,#icShachar,#gShachar,#gWin{display:none!important}</style>' : ''}
+  ${inst.name === 'abaitzik' ? '<style>/* 13.11.2026, Itzik: off his home screen. 16.11: ⏰ gRemind back, "אני לא רואה במוניטור אותו" */#icFcSales,#icFcCoach,#icFcPersonal,#icPb,#gAlarm,#icShachar,#gShachar,#gWin,#icAba,#icSalinda,#icNer,#icSite,#icSiteChat,#icPeg{display:none!important}</style>' : ''}
   <!-- 8.11.2026, Itzik: the Shai icon is gone. He is not paying and his access was cancelled. -->
   <button type="button" class="ic" data-grp="work" id="icHealth"><span class="c c-hl" id="icHealthC">🩺</span>תקלות</button>
   <!-- 7.11.2026: 🔌 חיבורים, shown only when D.features.conn (applyFeatures). -->
@@ -5302,7 +5304,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
       <path d="M9.5 8h5M9.5 12h5"/>
      </svg></span>קבלות</a>
   -->
-  <a class="ic" data-grp="proj" href="https://pegasusgame.vercel.app" target="_blank" rel="noopener"><span class="c c-pg">
+  <a class="ic" data-grp="proj" id="icPeg" href="https://pegasusgame.vercel.app" target="_blank" rel="noopener"><span class="c c-pg">
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M4 14c2-5 6-8 11-8l5-2-2 5c0 5-3 9-8 11l-1-3-3-1z"/><circle cx="14" cy="10" r="1.3" fill="#6d28d9"/></svg></span>פגסוס</a>
   <button type="button" class="ic" data-grp="home" id="icDrive"><span class="c c-dr">
    <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M9.4 3h5.2l6 10.4h-5.2z"/><path fill="#34A853" d="M3 18.6 5.6 14h12.8l-2.6 4.6z"/><path fill="#FBBC05" d="M9.4 3 3 14l2.6 4.6L12 7.6z"/></svg></span>דרייב</button>
@@ -19334,6 +19336,17 @@ function campShare(){
  document.body.appendChild(w);
 }
 on('icCamp',function(){campShare();});
+// 21.11.2026, Itzik: all his own sites behind one circle (icSites). Each row opens the site in a new tab.
+function sitesSheet(){
+ var S=[['🌍','אבא איציק','https://abaitzik.com/'],['💻','האתר שלי, IT Solution','https://it-solution.co.il'],['💬','צ׳אט באתר','https://it-solution.co.il/#chat'],['🕯️','נרות','https://candletimes.com/?me=1'],['📱','סלינדה','https://salinda-mobile.vercel.app/'],['🐎','פגסוס','https://pegasusgame.vercel.app']];
+ var w=document.createElement('div');w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','האתרים שלי');
+ w.innerHTML='<div class="ycard"><b>🌐 האתרים שלי</b><small>לחיצה פותחת את האתר</small>'
+  +S.map(function(s,i){return '<a class="yb'+(i?'':' yb1')+'" style="display:block;text-align:center;text-decoration:none" href="'+s[2]+'" target="_blank" rel="noopener">'+s[0]+' '+s[1]+'</a>';}).join('')
+  +'<button type="button" class="yb yx" data-k="x">סגירה</button></div>';
+ w.onclick=function(e){var k=e.target.closest&&e.target.closest('[data-k]');if(e.target===w||(k&&k.getAttribute('data-k')==='x'))return w.remove();};
+ document.body.appendChild(w);
+}
+on('icSites',function(){sitesSheet();});
 // 14.11.2026, Itzik: "אני רוצה כמו הלוח בקרה אבל של הלידים". The same week tiles as 🎛️ לוח בקרה (bdCss, bdTiles):
 // a row per place a lead comes from, a column per day, each tile the leads that came in that day and the hour of the
 // first one, coloured by where they stand (⚠️ waiting for you, ⏳ in talk, ✅ closed, ❌ lost). Under it: is the scanner
