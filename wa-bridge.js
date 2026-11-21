@@ -1027,42 +1027,76 @@ async function payDone(u, s) {
   const dir = path.join(DATA, 'pay'); fs.mkdirSync(dir, { recursive: true });
   const rec = path.join(dir, pid + '.json');
   const who = payWho(ext);
-  // 21.11.2026 (security review): a payment id is one tenant's, for good. The browser's tenant is only a hint.
+  const pf = '/srv/monitor-changes/' + ext + '.plan.json';
+  const writePlanFile = (t, st) => { const f = '/srv/monitor-changes/' + t + '.plan.json'; fs.writeFileSync(f + '.tmp', JSON.stringify(st, null, 1)); fs.renameSync(f + '.tmp', f); };
+  const oid = String(u.searchParams.get('o') || '');
+  // 21.11.2026 (security review): a payment id is one tenant's, for good; the browser's tenant is only a hint.
   const done = (() => { try { return JSON.parse(fs.readFileSync(rec, 'utf8')); } catch (e) { return null; } })();
   if (done && done.tenant !== ext) throw new Error('payment ' + pid + ' belongs to another tenant');
   // Reserved on disk before the first await: a double click or a second return cannot start a second standing order.
   const lock = done ? null : PG.reserve(DATA, pid);
-  if (!done && !lock) { s.writeHead(302, { Location: who.home ? who.home + '?paid=1' : 'https://it-solution.co.il/trial/?paid=1' }); return s.end(); }
+  // 3rd review: the payment is being recorded by another request: a neutral page, never the paid redirect.
+  if (!done && !lock) { s.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' }); return s.end('התשלום בבדיקה. אפשר לחזור למוניטור בעוד דקה.'); }
   try {
-    if (!done) {
-      const p = await P.getPayment(pid);
-      const chk = await PG.checkPayment(DATA, p, ext, Date.now(), { lookup: (cid) => require('./lib/sumit.js').getCustomer(cid).then((c) => (c && c.ExternalIdentifier) || ''), owner: (t) => { try { require('./lib/handle.js').complete({ key: 'pay-unverified-' + pid, kind: 'lead', who: ext, title: t, link: 'biz' }); } catch (e) { log('pay owner: ' + e.message); } } });
-      if (!chk.ok) throw new Error('payment ' + pid + ' ' + chk.why);
-      // Entry (no order): a payment page this tenant opened within 24 hours, always.
-      if (!PG.startRecent(DATA, ext, Date.now())) throw new Error('payment ' + pid + ' without a recent start');
-      const bound = PG.bindCustomer(DATA, ext, p.CustomerID);
-      if (!bound.ok) throw new Error('payment ' + pid + ' customer ' + bound.why);
-      const PO = require('./lib/pay-offer.js'), of = PO.live(ext);
-      if (!P.paymentOk(p, of ? PO.total(of) : 0)) throw new Error('payment ' + pid + ' not valid');
-      const out = { at: new Date().toISOString(), tenant: ext, paymentId: Number(pid), customerId: p.CustomerID, amount: p.Amount, recurring: null };
-      PG.recordWrite(DATA, pid, out);
-      // The package: entry from now on (the plan file is read by the customer's worker and page).
-      const pf = '/srv/monitor-changes/' + ext + '.plan.json';
-      let st = {}; try { st = JSON.parse(fs.readFileSync(pf, 'utf8')); } catch (e) {}
-      const month = require('./lib/plan.js').monthOf();
-      const newPlan = (of && of.plan) || 'entry';
-      st = Object.assign({}, st, { plan: newPlan, month, extra: 0, applied: st.applied || [], history: (st.history || []).concat([{ at: out.at, kind: 'paid', plan: newPlan, paymentId: Number(pid) }]) });
-      delete st.start;
-      fs.writeFileSync(pf + '.tmp', JSON.stringify(st, null, 1)); fs.renameSync(pf + '.tmp', pf);
-      if (of) { try { PO.markPaid(ext, Number(pid)); } catch (e) { log('pay offer: ' + e.message); } }
-      try { out.recurring = await P.startRecurring(p.CustomerID, undefined, undefined, of ? of.monthly : null); } catch (e) { out.recurringError = e.message; log('pay recurring: ' + e.message); }
-      PG.recordWrite(DATA, pid, out);
-      try { require('./lib/handle.js').complete({ key: 'paid-' + pid, kind: 'lead', who: who.name, title: (of ? 'שילם: ' + of.items.map(function (x) { return x.name; }).join(' + ') + ' (' : 'שילם על חבילת הכניסה (') + p.Amount + ' ₪).' + (out.recurringError ? ' החיוב החודשי לא נפתח, לפתוח בסאמיט.' : ' החיוב החודשי נפתח מהחודש הבא.'), link: 'biz' }); } catch (e) { log('pay handle: ' + e.message); }
-      log('paid ' + ext + ' ' + pid);
+    // 4th review: the record is checked again under the lock; a payment recorded meanwhile is not processed twice.
+    if (!done && lock && !fs.existsSync(rec)) {
+      if (oid) {
+        // A trade package (lib/pay-day.js finish): the order decides the plan and the price, checked with SUMIT.
+        const PL = require('./lib/plan.js'), A = require('./lib/addons.js'), PD = require('./lib/pay-day.js');
+        let st = {}; try { st = JSON.parse(fs.readFileSync(pf, 'utf8')); } catch (e) {}
+        const r = await PD.finish({ DATA, P, PL, A, now: Date.now(), writePlan: writePlanFile, lookup: (cid) => P.getCustomer(cid).then((c) => (c && c.ExternalIdentifier) || ''), owner: (t) => { try { require('./lib/handle.js').complete({ key: 'pay-unverified-' + pid, kind: 'lead', who: ext, title: t, link: 'biz' }); } catch (e) { log('pay owner: ' + e.message); } } }, { tenant: ext, pid, oid, state: st, who });
+        const out = { at: new Date().toISOString(), tenant: ext, paymentId: Number(pid), customerId: r.out.customerId, amount: r.out.amount, plan: r.out.plan, price: r.out.price, recurring: r.out.recurring };
+        if (r.out.recurringError) { out.recurringError = r.out.recurringError; log('pay recurring: ' + r.out.recurringError); }
+        PG.recordWrite(DATA, pid, out);
+        try { require('./lib/handle.js').complete({ key: 'paid-' + pid, kind: 'lead', who: who.name, title: 'שילם על חבילת ' + PL.PACKAGES[r.out.plan].label + ' (' + r.out.amount + ' ₪).' + (out.recurringError ? ' החיוב החודשי לא נפתח, לפתוח בסאמיט.' : ' החיוב החודשי נפתח מהחודש הבא.'), link: 'biz' }); } catch (e) { log('pay handle: ' + e.message); }
+        log('paid ' + ext + ' ' + pid + ' ' + r.out.plan);
+      } else {
+        const p = await P.getPayment(pid);
+        PG.touch(lock);
+        const chk = await PG.checkPayment(DATA, p, ext, Date.now(), { lookup: (cid) => require('./lib/sumit.js').getCustomer(cid).then((c) => (c && c.ExternalIdentifier) || ''), owner: (t) => { try { require('./lib/handle.js').complete({ key: 'pay-unverified-' + pid, kind: 'lead', who: ext, title: t, link: 'biz' }); } catch (e) { log('pay owner: ' + e.message); } } });
+        if (!chk.ok) throw new Error('payment ' + pid + ' ' + chk.why);
+        // Entry (no order): a payment page this tenant opened within 24 hours, always.
+        if (!PG.startRecent(DATA, ext, Date.now())) throw new Error('payment ' + pid + ' without a recent start');
+        const bound = PG.bindCustomer(DATA, ext, p.CustomerID);
+        if (!bound.ok) throw new Error('payment ' + pid + ' customer ' + bound.why);
+        const PO = require('./lib/pay-offer.js'), of = PO.live(ext);
+        if (!P.paymentOk(p, of ? PO.total(of) : 0)) throw new Error('payment ' + pid + ' not valid');
+        const out = { at: new Date().toISOString(), tenant: ext, paymentId: Number(pid), customerId: p.CustomerID, amount: p.Amount, recurring: null };
+        PG.assertOwned(lock);
+        PG.recordWrite(DATA, pid, out);
+        // The package: entry from now on (the plan file is read by the customer's worker and page).
+        let st = {}; try { st = JSON.parse(fs.readFileSync(pf, 'utf8')); } catch (e) {}
+        // 21.11.2026 security review: one helper writes the plan AND its price, and clears a stop (lib/plan.js applyEntryPayment).
+        const priorState = st; // before the entry payment changes it: a paid customer already has a standing order
+        const newPlan = (of && of.plan) || 'entry';
+        st = require('./lib/plan.js').applyEntryPayment(st, newPlan, pid, Date.now());
+        writePlanFile(ext, st);
+        if (of) { try { PO.markPaid(ext, Number(pid)); } catch (e) { log('pay offer: ' + e.message); } }
+        try {
+          // 5th review (1, 4): the entry standing order is decided by the customer's Sumit orders (skip only when a healthy one exists;
+          // a failing one is cancelled first; an offer replaces the package's order). The id is recorded on the plan file.
+          const er = await require('./lib/plan.js').entryRecurring(P, p.CustomerID, priorState, of, { touch: () => PG.touch(lock) });
+          out.recurring = er.res;
+          if (er.id) writePlanFile(ext, Object.assign({}, st, { packageOrder: { id: er.id } }));
+        } catch (e) { out.recurringError = e.message; log('pay recurring: ' + e.message); }
+        PG.recordWrite(DATA, pid, out);
+        try { require('./lib/handle.js').complete({ key: 'paid-' + pid, kind: 'lead', who: who.name, title: (of ? 'שילם: ' + of.items.map(function (x) { return x.name; }).join(' + ') + ' (' : 'שילם על חבילת הכניסה (') + p.Amount + ' ₪).' + (out.recurringError ? ' החיוב החודשי לא נפתח, לפתוח בסאמיט.' : ' החיוב החודשי נפתח מהחודש הבא.'), link: 'biz' }); } catch (e) { log('pay handle: ' + e.message); }
+        log('paid ' + ext + ' ' + pid);
+      }
     }
   } finally { PG.release(lock); }
   s.writeHead(302, { Location: who.home ? who.home + '?paid=1' : 'https://it-solution.co.il/trial/?paid=1' });
   s.end();
+}
+// 21.11.2026: the renewal pay link (chat, WhatsApp; lib/renew-link.js). Starts his renewal order and goes to SUMIT.
+async function renewGet(tok, s) {
+  const RL = require('./lib/renew-link.js'), PD = require('./lib/pay-day.js'), P = require('./lib/sumit.js');
+  const tenant = RL.verify(DATA, tok, Date.now());
+  if (!tenant) { s.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' }); return s.end('הקישור פג או לא תקין. בקשו קישור חדש ממני.'); }
+  const r = await PD.renewStart({ DATA, P, PL: require('./lib/plan.js'), A: require('./lib/addons.js'), now: Date.now(), tenant,
+    state: require('./lib/plan-io.js').stateOf(tenant), who: payWho(tenant) });
+  if (r.status !== 200) { s.writeHead(409, { 'Content-Type': 'text/plain; charset=utf-8' }); return s.end('אין חיוב פתוח לחידוש. אם חושבים שזו טעות, כתבו לנו.'); }
+  s.writeHead(302, { Location: r.body.url }); s.end();
 }
 /*
   14.11.2026: back from SUMIT after an add-on or upgrade (lib/addons.js). Checked with SUMIT itself, once per
@@ -1219,6 +1253,25 @@ async function api(q, s, u) {
   }
   // 11.11.2026: the entry package payment. The customer's page sends its visit key in the body (never the URL); we open a
   // SUMIT payment page for that monitor. Without SUMIT credentials: 503, and the page sends a request to Itzik instead.
+  // 21.11.2026 security review: the launch token for the /day/ page (lib/day-token.js). Only the it-solution.co.il origin gets one.
+  if (u.pathname === '/api/day/token') {
+    const og = String((q.headers && q.headers.origin) || '');
+    if (og !== 'https://it-solution.co.il' && og !== 'https://www.it-solution.co.il') { s.writeHead(403, h); return s.end('{"error":"origin"}'); }
+    let tok = '';
+    try { tok = require('./lib/day-token.js').issue(DATA); } catch (e) { log('day token: ' + e.message); s.writeHead(503, h); return s.end('{"error":"key"}'); }
+    s.writeHead(200, Object.assign({}, h, { 'Access-Control-Allow-Origin': og })); return s.end(JSON.stringify({ tok }));
+  }
+  // 21.11.2026: the 📦 sheet's renewal button (a paid customer with a failed charge or a stop): his own package, his price.
+  if (u.pathname === '/api/pay/renew') {
+    const vn = require('./lib/visits.js').nameByKey(DATA, b.key);
+    if (!vn) { s.writeHead(403, h); return s.end('{"error":"key"}'); }
+    const P = require('./lib/sumit.js');
+    if (!P.ready()) { s.writeHead(503, h); return s.end('{"error":"pay"}'); }
+    try {
+      const r = await require('./lib/pay-day.js').renewStart({ DATA, P, PL: require('./lib/plan.js'), A: require('./lib/addons.js'), now: Date.now(), tenant: vn, state: require('./lib/plan-io.js').stateOf(vn), who: payWho(vn) });
+      s.writeHead(r.status, h); return s.end(JSON.stringify(r.body || {}));
+    } catch (e) { log('renew start: ' + e.message); s.writeHead(502, h); return s.end('{"error":"pay"}'); }
+  }
   if (u.pathname === '/api/pay/start') {
     const vn = require('./lib/visits.js').nameByKey(DATA, b.key);
     if (!vn) { s.writeHead(403, h); return s.end('{"error":"key"}'); }
@@ -1228,6 +1281,16 @@ async function api(q, s, u) {
       const who = payWho(vn);
       // 12.11.2026: a customer with an offer that Itzik turned on pays its own lines (lib/pay-offer.js).
       const of = require('./lib/pay-offer.js').live(vn);
+      // 21.11.2026: a trade customer (lib/plan.js isDaySource, from /day/) pays the package he chose, solo or pro, at the
+      // server's own price. He never gets the 390 entry from this route, and a plan he did not choose is refused.
+      const PL = require('./lib/plan.js'), st = require('./lib/plan-io.js').stateOf(vn);
+      // 21.11.2026 security review: a stopped paid customer who is not a trade one is not sent to the 390 entry (it would downgrade him).
+      if (st && st.suspended && st.plan !== 'trial' && !PL.isDaySource(st)) { s.writeHead(409, h); return s.end('{"error":"renew"}'); }
+      // 21.11.2026: the trade packages (lib/pay-day.js start): solo or pro at the server's price, only for a trade trial.
+      if (!of) {
+        const r = await require('./lib/pay-day.js').start({ DATA, P, PL, A: require('./lib/addons.js'), now: Date.now(), tenant: vn, state: st, who, plan: String(b.plan || '') });
+        if (r.status) { s.writeHead(r.status, h); return s.end(JSON.stringify(r.body || {})); }
+      }
       // 21.11.2026: the start record the entry payment checks (lib/pay-guard.js startRecent, 24 hours).
       require('./lib/pay-guard.js').startWrite(DATA, vn, Date.now());
       const url = await P.beginEntry({ tenant: vn, name: (of && of.name) || who.name, email: (of && of.email) || who.email, phone: who.phone, items: of ? of.items : null, redirect: 'https://wa.abaitzik.com/api/pay/done', cancel: who.home });
@@ -1291,6 +1354,9 @@ async function api(q, s, u) {
   if (/^\/api\/chat(\/thread|\/todo)?$/.test(u.pathname) && !codeOk(b.code)) {
     const tn = tenantByKey(b.code);
     if (!tn) { codeFail(q, b.code); s.writeHead(403, h); return s.end('{"error":"code"}'); }
+    // 21.11.2026 security review: every message the bridge accepts for a tenant is counted (lib/meter.js), in the bridge's own data.
+    // 2nd review (7): counted for every accepted message, and never for a free tile message.
+    if (u.pathname === '/api/chat' && require('./lib/meter.js').countable(String(b.text || ''))) { try { require('./lib/meter.js').bump(DATA, require('./lib/plan-io.js').SPOOL, tn.name, Date.now()); } catch (e) { log('meter: ' + e.message); } }
     // 11.11.2026: a customer's chat and trainings run on the customers' API key, never on Itzik's subscription.
     let cst; try { cst = require('./lib/sales-train.js').forCustomer(); } catch (e) { log('customer chat: ' + e.message); s.writeHead(503, h); return s.end('{"error":"key"}'); }
     const r = await require('./lib/fast-chat.js').chatApi(u.pathname, b, { llm: cst.llm, salesTrain: cst, dataPath: path.join(DATA, 'fastchat', 't', tn.name),
@@ -1702,6 +1768,7 @@ const server = http.createServer(function (q, s) {
   }
   // 11.11.2026: SUMIT sends the customer back here after paying (lib/sumit.js). GET, so it is handled before api().
   // 14.11.2026: back from SUMIT after an add-on or upgrade (addonDone).
+  if (/^\/api\/pay\/renew\/[a-z0-9.-]+$/.test(u.pathname) && q.method === 'GET') { renewGet(u.pathname.split('/').pop(), s).catch(function (e) { log('renew get: ' + e.message); try { s.writeHead(502, { 'Content-Type': 'text/plain; charset=utf-8' }); s.end('החיוב לא נפתח כרגע. נסו שוב בעוד דקה.'); } catch (x) {} }); return; }
   if (/^\/api\/pay\/addon-done\/[a-f0-9]{18}$/.test(u.pathname) && q.method === 'GET') { addonDone(u, s).catch(function (e) { log('addon done: ' + e.message); try { s.writeHead(302, { Location: 'https://it-solution.co.il/offer/?pay=error' }); s.end(); } catch (x) {} }); return; }
   if (u.pathname === '/api/pay/done' && q.method === 'GET') { payDone(u, s).catch(function (e) { log('pay done: ' + e.message); try { s.writeHead(302, { Location: 'https://it-solution.co.il/trial/?pay=error' }); s.end(); } catch (x) {} }); return; }
   if (u.pathname.indexOf('/api/') === 0) { api(q, s, u).catch(function (e) {

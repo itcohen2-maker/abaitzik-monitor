@@ -1,0 +1,10 @@
+[Unit]
+Description=IT Solution monitor: daily renewal check (failed charges, month summary)
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=monitor
+WorkingDirectory=/home/monitor/abaitzik-monitor
+EnvironmentFile=/etc/monitor.env
+ExecStart=/usr/bin/node /home/monitor/abaitzik-monitor/setup/renewal-check.js

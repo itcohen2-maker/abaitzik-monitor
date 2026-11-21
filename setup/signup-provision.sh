@@ -48,8 +48,11 @@ for f in "$Q"/t*.json; do
     [ "$WASI" = 1 ] && chattr +i "$IJ"
   fi
   # The trial package, counted from now.
-  printf '{"plan":"trial","start":"%s","month":"%s","extra":0,"applied":[],"history":[{"at":"%s","kind":"start","plan":"trial","note":"self signup"}]}\n' \
-    "$(date -u +%FT%TZ)" "$(TZ=Asia/Jerusalem date +%Y-%m)" "$(date -u +%FT%TZ)" > "/srv/monitor-changes/$ID.plan.json"
+  # 21.11.2026: a trade signup from /day/ (ref m-gypsum, m-beauty, m-consult, m-photo) is source "day": it gets the solo and pro offer.
+  # 21.11.2026 security review: the source is the server's token (queue field src, lib/day-token.js), never the ref.
+  REF=$(field "$f" ref); SRC=""; [ "$(field "$f" src)" = day ] && SRC=day
+  node -e 'const o={plan:"trial",start:process.argv[1],month:process.argv[2],extra:0,applied:[],history:[{at:process.argv[3],kind:"start",plan:"trial",note:"self signup"}]};if(process.argv[4]){o.source=process.argv[4];o.ref=process.argv[5];}process.stdout.write(JSON.stringify(o)+"\n")' \
+    "$(date -u +%FT%TZ)" "$(TZ=Asia/Jerusalem date +%Y-%m)" "$(date -u +%FT%TZ)" "$SRC" "$REF" > "/srv/monitor-changes/$ID.plan.json"
   chown monitor:monitor "/srv/monitor-changes/$ID.plan.json"; chmod 644 "/srv/monitor-changes/$ID.plan.json"
   CODE=$(cut -d' ' -f1 "/root/tenant-codes/$ID.txt")
   # The ready mail, from info@ (SMTP settings in /etc/monitor.env). The code goes only into the mail, never the log.

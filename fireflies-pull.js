@@ -97,7 +97,7 @@ async function main() {
   bh.writeList(inst.dataPath, 'client', clients);
   saveState(st);
   // 14.11.2026 (lib/meet-push.js): the summary to his WhatsApp, his tasks into his Google Calendar.
-  for (const m of fresh2) { try { const r = require('./lib/meet-push.js').write(inst.dataPath, m); log('push ' + r.chat + ', ' + r.adds.length + ' tasks to the calendar'); } catch (e) { log('!! meet push: ' + e.message); } }
+  for (const m of fresh2) { try { const r = require('./lib/meet-push.js').write(inst.dataPath, m, undefined, require('./lib/plan-io.js').stateOf(inst.name)); log('push ' + r.chat + ', ' + r.adds.length + ' tasks to the calendar'); } catch (e) { log('!! meet push: ' + e.message); } }
   const msg = titles.length === 1 ? 'סיכום חדש: ' + titles[0] : titles.length + ' סיכומי פגישות חדשים';
   try { execFileSync(process.execPath, ['push.js', 'פיירפליס: ' + msg], { cwd: __dirname, stdio: 'inherit', timeout: 180000 }); } catch (e) { log('!! push: ' + e.message); }
   try { execFileSync(process.execPath, ['notify.js', '🎙️ סיכומי פגישות', msg + '. במסך הבית, באריח סיכומי פגישות.'], { cwd: __dirname, stdio: 'inherit', timeout: 60000 }); } catch (e) { log('!! notify: ' + e.message); }

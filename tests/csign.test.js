@@ -13,12 +13,12 @@ const st = (plan, more) => Object.assign({ plan, month: P.monthOf(NOW), extra: 0
 const Q = { no: '1001', client: 'דנה <b>', items: [['ייעוץ <script>', 2, 500, 'שעתיים', 'שעות'], ['ריק', 0, 0]], disc: 10, valid: 30, notes: 'שורה א\nשורה ב' };
 function tmp() { return fs.mkdtempSync(path.join(os.tmpdir(), 'csign-')); }
 
-test('csign: the month limit follows the package and the add-on', () => {
-  assert.equal(C.limitFor(null), 5);
-  assert.equal(C.limitFor(st('entry')), 5);
-  assert.equal(C.limitFor(st('small', { addons: { sign50: { on: true } } })), 55);
-  assert.equal(C.limitFor(st('medium')), Infinity);
-  assert.equal(C.limitFor(st('large')), Infinity);
+test('csign: signatures are unlimited in every package (21.11.2026), only the daily safety cap is left', () => {
+  const D = tmp();
+  for (const p of [null, 'trial', 'entry', 'solo', 'pro', 'small', 'medium', 'large']) {
+    const r = C.create(D, 'ten' + (p || 'x'), { q: Q }, p ? st(p) : null, NOW);
+    assert.equal(r.ok, true); assert.equal(r.left, undefined);
+  }
 });
 
 test('csign: a quote is cleaned, empty lines dropped, nothing without a client or items', () => {
@@ -35,12 +35,14 @@ test('csign: the drawn quote escapes every value', () => {
   assert.ok(h.includes('עסק &quot;שלי&quot;'));
 });
 
-test('csign: links count to the limit, then stop', () => {
+test('csign: the daily safety cap stops a runaway tenant, the next day starts again', () => {
   const D = tmp();
-  for (let i = 0; i < 5; i++) { const r = C.create(D, 'ten1', { q: Q }, st('entry'), NOW); assert.equal(r.ok, true); assert.equal(r.left, 4 - i); assert.ok(/^https:\/\/form\.it-solution\.co\.il\/c\/[a-f0-9]{24}$/.test(r.link)); }
+  const day = P.ilDate(NOW);
+  fs.mkdirSync(path.join(D, 'csign', 'count'), { recursive: true });
+  fs.writeFileSync(path.join(D, 'csign', 'count', 'ten1-day-' + day + '.json'), JSON.stringify({ n: C.SAFETY_PER_DAY }));
   const no = C.create(D, 'ten1', { q: Q }, st('entry'), NOW);
-  assert.equal(no.ok, false); assert.equal(no.why, 'limit'); assert.equal(no.limit, 5);
-  assert.equal(C.create(D, 'ten2', { q: Q }, st('large'), NOW).left, -1);
+  assert.equal(no.ok, false); assert.equal(no.why, 'limit'); assert.equal(no.limit, C.SAFETY_PER_DAY);
+  assert.equal(C.create(D, 'ten1', { q: Q }, st('entry'), NOW + 864e5).ok, true);
   assert.equal(C.create(D, 'ten1', { q: {} }, st('entry'), NOW).why, 'bad');
 });
 

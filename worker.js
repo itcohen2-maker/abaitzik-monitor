@@ -695,7 +695,7 @@ function logUsage(raw, list, planner) {
       models[m] = { in: u.inputTokens || 0, out: u.outputTokens || 0, cr: u.cacheReadInputTokens || 0, cw: u.cacheCreationInputTokens || 0, usd: +(u.costUSD || 0).toFixed(4) };
     }
     const line = { at: new Date().toISOString(), who: inst.name, usd: +(d.total_cost_usd || 0).toFixed(4), turns: d.num_turns || 0,
-      ms: d.duration_ms || 0, msgs: planner ? 0 : list.filter(billable).length, free: planner ? undefined : (list.length - list.filter(billable).length) || undefined, planner: planner ? 1 : undefined, sub: (d.subagent_stats && d.subagent_stats.spawned) || 0, models };
+      ms: d.duration_ms || 0, msgs: planner ? 0 : list.filter(billable).length, chat: planner || (d.num_turns || 0) > 1 ? undefined : list.filter(billable).length || undefined, free: planner ? undefined : (list.length - list.filter(billable).length) || undefined, planner: planner ? 1 : undefined, sub: (d.subagent_stats && d.subagent_stats.spawned) || 0, models };
     fs.appendFileSync(path.join(STATUS, 'usage.jsonl'), JSON.stringify(line) + '\n');
     return d;
   } catch (e) { return null; }
@@ -1253,8 +1253,13 @@ function planChat(tag, text) {
   } catch (e) { say('!! הודעת חבילה, לא הצלחתי לרשום: ' + e.message); }
 }
 function planHold() {
-  const st = planStatus();
-  if (!st || st.level === 'ok') return false;
+  // 21.11.2026 security review: a broken, empty or unreadable plan holds the session (lib/plan-hold.js). It never exempts.
+  let st = null, threw = false;
+  if (inst.name !== 'abaitzik') { try { st = require('./lib/plan-io.js').statusOf(inst.name, STATUS, Date.now()); } catch (e) { threw = true; } }
+  const fileExists = inst.name !== 'abaitzik' && fs.existsSync(require('./lib/plan-io.js').file(inst.name));
+  const d = require('./lib/plan-hold.js').decide({ name: inst.name, fileExists, status: st, threw });
+  if (d === 'hold') { say('התוכנית לא תקינה או לא נקראה. לא מפעיל סשן עד שתתוקן.'); return true; }
+  if (d === 'exempt' || !st || st.level === 'ok') return false;
   const P = require('./lib/plan.js');
   const flag = path.join(STATUS, 'plan-told.json');
   const told = readJson(flag, {}) || {};
@@ -1274,6 +1279,9 @@ function planHold() {
     }
     return true;
   }
+  // 21.11.2026: a paid plan suspended after 7 days of a failed monthly charge (lib/renewal.js) stops like a trial does.
+  // The customer was told once by the renewal check; the session does not start until the charge is paid.
+  if (st.level === 'ended') { say('החבילה עומדת: חיוב חודשי שלא עבר. לא מפעיל סשן.'); return true; }
   if (st.level === 'warn') {
     if (!DRY && told.warn !== st.month) {
       told.warn = st.month; save();

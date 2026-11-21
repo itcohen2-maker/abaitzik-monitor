@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily renewal check of the monitor customers at 08:30 Israel time
+
+[Timer]
+OnCalendar=*-*-* 08:30:00 Asia/Jerusalem
+Persistent=true
+Unit=monitor-renewal.service
+
+[Install]
+WantedBy=timers.target

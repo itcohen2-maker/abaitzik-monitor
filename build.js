@@ -1645,7 +1645,7 @@ function tenantTiles(inst) {
   try { if (require('./lib/features.js').leadsOff(inst.dataPath || 'data', inst.name)) { const k = ids.indexOf('gLeads'); if (k >= 0) ids.splice(k, 1); } } catch (e) { /* lifted alone by a test: as before */ }
   // 17.11.2026, the audit Itzik approved: a customer does not see what does not work for him yet.
   // 📣 is not in the entry package or the trial; 🎙️ meeting summaries only once Fireflies has a key.
-  try { const st = require('./lib/plan-io.js').stateOf(inst.name); if (st && (st.plan === 'entry' || st.plan === 'trial')) { const k = ids.indexOf('gCamp'); if (k >= 0) ids.splice(k, 1); } } catch (e) { /* no plan file: as before */ }
+  try { const st = require('./lib/plan-io.js').stateOf(inst.name); if (st && (st.plan === 'entry' || st.plan === 'trial' || st.plan === 'solo' || st.plan === 'pro')) { const k = ids.indexOf('gCamp'); if (k >= 0) ids.splice(k, 1); } } catch (e) { /* no plan file: as before */ }
   try { if (!require('./lib/fireflies-key.js').hasKey(inst.dataPath || 'data')) { const k = ids.indexOf('gBhMeet'); if (k >= 0) ids.splice(k, 1); } } catch (e) { /* as before */ }
   ids.push('gConn');
   ids.push('gAdminReq');

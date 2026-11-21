@@ -27,7 +27,7 @@ test('addons: upgrade costs the difference now and replaces the package standing
 });
 
 test('addons: monthly add-ons, questions and honesty about banks', () => {
-  assert.equal(A.total(A.quote(st('entry'), 'sign50', {}, BANKS)), 49);
+  assert.equal(A.quote(st('entry'), 'sign50', {}, BANKS).why, 'unknown');
   assert.equal(A.quote(st('entry'), 'accounting', {}, BANKS).why, 'answer');
   const ac = A.quote(st('entry'), 'accounting', { software: 'morning' }, BANKS);
   assert.equal(ac.ok, true); assert.deepEqual(ac.answers, { software: 'morning' }); assert.equal(ac.monthly.price, 99);
@@ -58,7 +58,7 @@ test('addons: only the package standing order is cancelled on an upgrade', () =>
 
 test('addons: the menu shows what is on and the upgrades above', () => {
   const m = A.menu(st('small', { addons: { sign50: { on: true } } }), BANKS);
-  assert.equal(m.addons.find((x) => x.key === 'sign50').on, true);
+  assert.equal(m.addons.find((x) => x.key === 'sign50'), undefined);
   assert.deepEqual(m.upgrades.map((x) => x.key), ['upgrade:medium', 'upgrade:large']);
   assert.equal(A.menu(null, BANKS), null);
 });
