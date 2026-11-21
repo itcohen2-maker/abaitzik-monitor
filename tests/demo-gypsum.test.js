@@ -71,3 +71,26 @@ test('demo-build drops the old install name before it builds (build.js writes th
   const rm = S.indexOf('rm -f "$APP/docs/manifest.webmanifest"'), build = S.indexOf('MONITOR_NO_GATE=1 node build.js');
   assert.ok(rm > -1 && rm < build);
 });
+
+test('the demo chat answers as the trade of the page it came from', async () => {
+  const C = require('../lib/demo-chat.js');
+  const dp = fs.mkdtempSync(path.join(os.tmpdir(), 'gypchat-'));
+  const seen = [];
+  const llm = async (m, sys) => { seen.push(sys); return 'בסדר'; };
+  await C.api('/api/demo/chat', { text: 'מי חייב לי כסף?', vid: 'abcdefgh12' }, { dataPath: dp, ip: '1.1.1.1', llm, origin: 'https://demo-gypsum.m.it-solution.co.il' });
+  await C.api('/api/demo/chat', { text: 'מי חייב לי כסף?', vid: 'abcdefgh13' }, { dataPath: dp, ip: '1.1.1.2', llm, origin: 'https://evil.example' });
+  assert.match(seen[0], /קבלן גבס ושיפוצים/);
+  assert.match(seen[0], /משפחת לוי/);
+  assert.doesNotMatch(seen[0], /מספר[הת]/);
+  assert.match(seen[1], /מספרה/);
+});
+
+test('the bridge lets the trade demo hosts in', () => {
+  const W = fs.readFileSync(path.join(__dirname, '..', 'wa-bridge.js'), 'utf8');
+  assert.match(W, /require\('\.\/lib\/trades\.js'\)\.isDemoOrigin\(o\)/);
+  assert.match(W, /origin: q\.headers\.origin/);
+  const T = require('../lib/trades.js');
+  assert.strictEqual(T.isDemoOrigin('https://demo-gypsum.m.it-solution.co.il'), true);
+  assert.strictEqual(T.isDemoOrigin('https://demo-gypsum.m.it-solution.co.il.evil.com'), false);
+  assert.strictEqual(T.isDemoOrigin(undefined), false);
+});

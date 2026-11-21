@@ -42,3 +42,14 @@ test('names are escaped', () => {
   const q = JSON.parse(fs.readFileSync(f, 'utf8')); q[0].client = '<img src=x>'; fs.writeFileSync(f, JSON.stringify(q));
   assert.doesNotMatch(TC.html({ trade: 'gypsum', dataPath: d }, NOW), /<img src=x>/);
 });
+
+test('the demo opens with a WhatsApp conversation of the trade (Itzik 21.11: "זה חובה")', () => {
+  const d = seeded();
+  const h = TC.html({ trade: 'gypsum', dataPath: d, publicDemo: true }, NOW);
+  assert.match(h, /id="tradeWa"/);
+  assert.ok(h.indexOf('id="tradeWa"') < h.indexOf('class="tcCard"'));
+  assert.match(h, /לשלוח\?/);
+  assert.doesNotMatch(h, /[‐–—]/);
+  // a real customer's monitor never shows the invented conversation
+  assert.doesNotMatch(TC.html({ trade: 'gypsum', dataPath: d }, NOW), /tradeWa/);
+});

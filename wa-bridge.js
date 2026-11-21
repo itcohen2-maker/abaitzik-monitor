@@ -48,7 +48,8 @@ const DEMO_FLAG = path.join(ROOT, 'data', 'demo', 'active.json');
 const ORIGINS = ['https://itcohen2-maker.github.io', 'https://shai.it-solution.co.il', 'https://alon.abaitzik.com', 'https://rinat.abaitzik.com', 'https://pablo.it-solution.co.il', 'https://ilay.abaitzik.com', 'https://it-solution.co.il', 'https://www.it-solution.co.il'];
 // 11.11.2026: every self signup trial monitor lives at https://<id>.m.it-solution.co.il, so those are allowed by pattern.
 // 17.11.2026: the public demo monitor too (lib/public-demo.js); it holds no code, so it reaches only the public /api/demo/*.
-function originOk(o) { return ORIGINS.indexOf(o) > -1 || o === 'https://demo.m.it-solution.co.il' || /^https:\/\/t[a-f0-9]{6}\.m\.it-solution\.co\.il$/.test(String(o || '')); }
+// 21.11.2026: and the trade demos (lib/trades.js), exact hosts only.
+function originOk(o) { return ORIGINS.indexOf(o) > -1 || o === 'https://demo.m.it-solution.co.il' || require('./lib/trades.js').isDemoOrigin(o) || /^https:\/\/t[a-f0-9]{6}\.m\.it-solution\.co\.il$/.test(String(o || '')); }
 /*
   1.11.2026: the client demo (lib/demo-mode.js). While it is on, every question,
   from the page or from WhatsApp, goes to the worker with this frame first, so
@@ -1128,7 +1129,7 @@ async function api(q, s, u) {
   // 17.11.2026: the public demo monitor (lib/demo-chat.js). Public, no code, the owner instance only. Never his queue or thread.
   if (/^\/api\/demo\/(chat|hit|wa|camp)$/.test(u.pathname)) {
     if (!isOwnerInstance()) { s.writeHead(404, h); return s.end('{}'); }
-    const r = await require('./lib/demo-chat.js').api(u.pathname, b, { dataPath: DATA, ip: realIp(q) });
+    const r = await require('./lib/demo-chat.js').api(u.pathname, b, { dataPath: DATA, ip: realIp(q), origin: q.headers.origin || '' });
     s.writeHead(r.status, h); return s.end(JSON.stringify(r.json));
   }
   // 11.11.2026: the self signup (lib/signup.js). Public, no code: the email code is the check. A verified signup waits in
