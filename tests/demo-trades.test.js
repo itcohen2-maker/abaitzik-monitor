@@ -37,7 +37,7 @@ for (const id of IDS) {
 }
 
 test('beauty speaks to her in the feminine and does not sell appointments', () => {
-  const h = TC.html({ trade: 'beauty', dataPath: seeded('beauty'), publicDemo: true }, NOW);
+  const h = TC.html({ trade: 'beauty', dataPath: seeded('beauty'), publicDemo: true, gender: 'f' }, NOW); // demo-build.sh sets the demo's gender
   assert.match(h, /דברי/);
   assert.match(h, /כשתרצי\./);
   assert.match(h, /תשלומים: /);
@@ -61,4 +61,15 @@ test('the gypsum home is unchanged by the feminine and the labels', () => {
   const h = TC.html({ trade: 'gypsum', dataPath: d, publicDemo: true }, NOW);
   assert.match(h, /גבייה: <u[^>]*>3 תזכורות מוכנות<\/u>, כשתרצה\./);
   assert.match(h, /<b>דבר<\/b>/);
+});
+
+test('the wording follows what the customer said, not the trade (Itzik 21.11: a man can be a cosmetician)', () => {
+  const d = seeded('beauty');
+  const man = TC.html({ trade: 'beauty', dataPath: d, gender: '' }, NOW);
+  assert.match(man, /<b>דבר<\/b>/);
+  assert.match(man, /כשתרצה\./);
+  const g = fs.mkdtempSync(path.join(os.tmpdir(), 'tr-gf-')); require('../lib/demo-trades/gypsum.js').seed(g, NOW);
+  const woman = TC.html({ trade: 'gypsum', dataPath: g, gender: 'f' }, NOW);
+  assert.match(woman, /<b>דברי<\/b>/);
+  assert.match(woman, /כשתרצי\./);
 });
