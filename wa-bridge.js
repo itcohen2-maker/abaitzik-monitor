@@ -1044,7 +1044,7 @@ async function payDone(u, s) {
         // A trade package (lib/pay-day.js finish): the order decides the plan and the price, checked with SUMIT.
         const PL = require('./lib/plan.js'), A = require('./lib/addons.js'), PD = require('./lib/pay-day.js');
         let st = {}; try { st = JSON.parse(fs.readFileSync(pf, 'utf8')); } catch (e) {}
-        const r = await PD.finish({ DATA, P, PL, A, now: Date.now(), writePlan: writePlanFile, lookup: (cid) => P.getCustomer(cid).then((c) => (c && c.ExternalIdentifier) || ''), owner: (t) => { try { require('./lib/handle.js').complete({ key: 'pay-unverified-' + pid, kind: 'lead', who: ext, title: t, link: 'biz' }); } catch (e) { log('pay owner: ' + e.message); } } }, { tenant: ext, pid, oid, state: st, who });
+        const r = await PD.finish({ DATA, P, PL, A, now: Date.now(), writePlan: writePlanFile, readPlan: (t) => { try { return JSON.parse(fs.readFileSync('/srv/monitor-changes/' + t + '.plan.json', 'utf8')); } catch (e) { return null; } }, lookup: (cid) => P.getCustomer(cid).then((c) => (c && c.ExternalIdentifier) || ''), owner: (t) => { try { require('./lib/handle.js').complete({ key: 'pay-unverified-' + pid, kind: 'lead', who: ext, title: t, link: 'biz' }); } catch (e) { log('pay owner: ' + e.message); } } }, { tenant: ext, pid, oid, state: st, who });
         const out = { at: new Date().toISOString(), tenant: ext, paymentId: Number(pid), customerId: r.out.customerId, amount: r.out.amount, plan: r.out.plan, price: r.out.price, recurring: r.out.recurring };
         if (r.out.recurringError) { out.recurringError = r.out.recurringError; log('pay recurring: ' + r.out.recurringError); }
         PG.recordWrite(DATA, pid, out);
@@ -1077,7 +1077,8 @@ async function payDone(u, s) {
           // a failing one is cancelled first; an offer replaces the package's order). The id is recorded on the plan file.
           const er = await require('./lib/plan.js').entryRecurring(P, p.CustomerID, priorState, of, { touch: () => PG.touch(lock) });
           out.recurring = er.res;
-          if (er.id) writePlanFile(ext, Object.assign({}, st, { packageOrder: { id: er.id } }));
+          // fix6: read again before writing (the usage counter may have written it during the SUMIT calls).
+          if (er.id) { let cur = st; try { cur = JSON.parse(fs.readFileSync(pf, 'utf8')) || st; } catch (e) {} writePlanFile(ext, Object.assign({}, cur, { packageOrder: { id: er.id } })); }
         } catch (e) { out.recurringError = e.message; log('pay recurring: ' + e.message); }
         PG.recordWrite(DATA, pid, out);
         try { require('./lib/handle.js').complete({ key: 'paid-' + pid, kind: 'lead', who: who.name, title: (of ? 'שילם: ' + of.items.map(function (x) { return x.name; }).join(' + ') + ' (' : 'שילם על חבילת הכניסה (') + p.Amount + ' ₪).' + (out.recurringError ? ' החיוב החודשי לא נפתח, לפתוח בסאמיט.' : ' החיוב החודשי נפתח מהחודש הבא.'), link: 'biz' }); } catch (e) { log('pay handle: ' + e.message); }
