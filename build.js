@@ -4949,6 +4949,7 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
 
 <section id="pH">
 ${require('./lib/trade-cards.js').html(inst)}
+${require('./lib/trade-desk.js').html(inst)}
 ${require('./lib/home-ui.js').greet}
 ${require('./lib/approvals-ui.js').html}
 ${require('./lib/home-ui.js').html}
