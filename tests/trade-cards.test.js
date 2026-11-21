@@ -72,3 +72,9 @@ test('names are escaped', () => {
   const e = JSON.parse(fs.readFileSync(f, 'utf8')); e[0].title = '<img src=x>: x'; fs.writeFileSync(f, JSON.stringify(e));
   assert.doesNotMatch(TC.html({ trade: 'gypsum', dataPath: d, publicDemo: true }, NOW), /<img src=x>/);
 });
+
+test('the row dots do not borrow the monitor\'s own .dot (absolute, a notification badge)', () => {
+  const h = TC.html({ trade: 'gypsum', dataPath: seeded(), publicDemo: true }, NOW);
+  assert.doesNotMatch(h, /class="dot"/);
+  assert.match(h, /class="trDot"/);
+});
