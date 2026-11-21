@@ -83,6 +83,19 @@ function personalize(q, qf) {
         if (r.ok) { q.morningRoutine = r.rec.id; execFileSync('chown', ['-R', q.id + ':' + q.id, path.join(dataDir, 'routines')]); }
       }
     } catch (e) { log(q.id + ' personal/morning: ' + e.message.slice(0, 80)); }
+    // 21.11.2026: how to address him and his trade go into his instance.json, before the rebuild below draws them
+    try {
+      const add = P.instanceFields(p), ij = path.join(dir, 'instance.json');
+      if (Object.keys(add).length && fs.existsSync(ij)) {
+        let lk = false;
+        try { lk = /i/.test(execFileSync('lsattr', ['-d', ij], { encoding: 'utf8' }).split(' ')[0]); } catch (e) {}
+        try {
+          if (lk) execFileSync('chattr', ['-i', ij]);
+          const j = JSON.parse(fs.readFileSync(ij, 'utf8'));
+          fs.writeFileSync(ij, JSON.stringify(Object.assign(j, add), null, 1));
+        } finally { if (lk) try { execFileSync('chattr', ['+i', ij]); } catch (e) {} }
+      }
+    } catch (e) { log(q.id + ' instance: ' + e.message.slice(0, 80)); }
     try { execFileSync('sudo', ['-u', q.id, '-H', 'node', 'build.js'], { cwd: dir, stdio: 'ignore', timeout: 180000 }); } catch (e) { log(q.id + ' build: ' + e.message.slice(0, 80)); }
     try { execFileSync('sudo', ['-u', 'monitor', 'node', '-e', 'require("./lib/handle.js").complete({key:"signup-profile-"+process.argv[1],kind:"lead",who:process.argv[2],title:process.argv[3],link:"biz"})', q.id, q.name, P.summaryLine(q.name, p)], { cwd: REPO, stdio: 'ignore' }); } catch (e) {}
   }
