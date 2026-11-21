@@ -78,3 +78,13 @@ test('the row dots do not borrow the monitor\'s own .dot (absolute, a notificati
   assert.doesNotMatch(h, /class="dot"/);
   assert.match(h, /class="trDot"/);
 });
+
+test('the ring moves like the monitor (Itzik 21.11: "פעימה עם מתאר זה מעולה"), and stops for less motion', () => {
+  const h = TC.html({ trade: 'gypsum', dataPath: seeded(), publicDemo: true }, NOW);
+  assert.match(h, /#tradeRing::after\{[^}]*animation:trHalo/); // a shimmering outline that turns, always
+  assert.match(h, /#tradeRing\.listen\{[^}]*trBreath/); // listening: colours run and the ring breathes
+  assert.match(h, /@keyframes trPing/); // a pulse on every tap
+  assert.match(h, /trSpark/); // sparks in the four colours when it sends
+  assert.match(h, /\.trIn\{animation:trDrop/); // rows drop in when the view changes
+  assert.match(h, /@media \(prefers-reduced-motion:reduce\)\{[^}]*#tradeRing::after[^}]*animation:none/);
+});
