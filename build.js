@@ -22853,7 +22853,7 @@ var knIc=document.getElementById('icKanabis');if(knIc)knIc.onclick=kanabisSheet;
 // 22.11.2026, Itzik: "את כל מה שביררנו היום בנוגע למרצדס, תשמור, שים לי במסך אישי את כל הפרטים". From D.car (data/personal/car.json).
 function carSheet(){
  var C=D.car;if(!C)return;var old=document.getElementById('carSheet');if(old)old.remove();
- var box='background:var(--sunk);color:var(--ink);border-radius:12px;padding:10px;margin:8px 0;text-align:right;font:500 14px/1.55 Heebo,sans-serif';
+ var box='background:#f1f4f9;color:#1f2430;border-radius:12px;padding:10px;margin:8px 0;text-align:right;font:500 14px/1.55 Heebo,sans-serif';
  var w=document.createElement('div');w.id='carSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','המרצדס שלי');
  w.innerHTML='<div class="ycard"><b>'+esc(C.title||'🚐 המרצדס שלי')+'</b>'
   +(C.badges||[]).map(function(t){return '<div style="background:#e6f4ea;color:#14532d;border-radius:12px;padding:8px 10px;margin:6px 0;text-align:right;font:800 14px/1.5 Heebo,sans-serif">'+esc(t)+'</div>';}).join('')
