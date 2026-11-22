@@ -37,6 +37,32 @@ function home(id) { return '/home/' + id + '/' + id + '-monitor'; }
     const ses = (rd(path.join(DATA, 'visits', id + '.json'), {}).sessions || []);
     const lastVisit = ses.reduce((m, s) => Math.max(m, s.last || s.start || 0), 0);
     const my = sent[id] || {};
+    // 22.11.2026: no WhatsApp yet, one line with the quick connect link in his answers screen (lib/trial-nudge.js waDecide)
+    try {
+      const d = path.join(home(id), 'data');
+      const QK = require('./lib/wa-quick.js');
+      const conn = rd(path.join(d, 'conn', 'wa.json'), {}) || {};
+      const own = rd(path.join(d, 'wa.json'), {}) || {};
+      const map = rd(path.join(DATA, 'wa-tenants.json'), {}) || {};
+      const connected = !!(conn.phone || (own.phoneId && own.kapsoKey) || Object.keys(map).some((p) => map[p] && map[p].tenant === id));
+      const wk = N.waDecide({ start, connected, sent: my }, NOW);
+      let key = ''; try { key = fs.readFileSync(path.join(d, 'fc-key.txt'), 'utf8').trim(); } catch (e) { key = ''; }
+      const link = wk ? QK.link(QK.code(key, id)) : '';
+      if (wk && link) {
+        const text = N.waText(wk, link, ((q.profile || {}).gender) === 'f');
+        if (DRY) say(id + ' ' + wk + ' ' + text);
+        else {
+          const at = new Date(NOW), pad = (x) => String(x).padStart(2, '0');
+          const name = at.getUTCFullYear() + pad(at.getUTCMonth() + 1) + pad(at.getUTCDate()) + '-' + pad(at.getUTCHours()) + pad(at.getUTCMinutes()) + pad(at.getUTCSeconds()) + '-claude-wa-nudge.json';
+          const dir = path.join(d, 'chat', 'chat'), f = path.join(dir, name);
+          fs.writeFileSync(f + '.tmp', JSON.stringify({ at: at.toISOString(), from: 'claude', text, kind: 'wa-nudge' }, null, 1));
+          fs.renameSync(f + '.tmp', f);
+          try { const o = fs.statSync(dir); fs.chownSync(f, o.uid, o.gid); } catch (e) {}
+          my[wk] = at.toISOString(); sent[id] = my; changed = true;
+          say(id + ' ' + wk + ' written');
+        }
+      }
+    } catch (e) { say(id + ' wa nudge: ' + e.message.slice(0, 80)); }
     const k = N.decide({ start, days: 7, lastVisit, sent: my }, NOW);
     if (!k) continue;
     const src = sources.find((x) => x && x.name === id) || {};

@@ -46,3 +46,24 @@ test('the texts have no dashes and no name when the name is a mail', () => {
   assert.match(N.mail('lastDay', Object.assign({}, c, { endText: 'ביום ראשון ב 10:00' })).subject, /נגמר ביום ראשון ב 10:00/);
   assert.match(N.mail('idle', Object.assign({}, c, { google: false })).text, /עוד לא חיברת/);
 });
+
+// 22.11.2026: the WhatsApp connect nudge, once after 24 hours and once from day four, never when connected
+test('waDecide: 24 hours, day four, then nothing; never when connected or on Saturday', () => {
+  const start = Date.parse('2026-11-22T01:00:00Z'); // Sunday
+  const at = (iso) => Date.parse(iso);
+  assert.equal(N.waDecide({ start, connected: false, sent: {} }, at('2026-11-22T10:00:00Z')), '');
+  assert.equal(N.waDecide({ start, connected: false, sent: {} }, at('2026-11-23T07:00:00Z')), 'wa1');
+  assert.equal(N.waDecide({ start, connected: true, sent: {} }, at('2026-11-23T07:00:00Z')), '');
+  assert.equal(N.waDecide({ start, connected: false, sent: { wa1: 'x' } }, at('2026-11-24T07:00:00Z')), '');
+  assert.equal(N.waDecide({ start, connected: false, sent: { wa1: 'x' } }, at('2026-11-25T07:00:00Z')), 'wa2');
+  assert.equal(N.waDecide({ start, connected: false, sent: { wa1: 'x', wa2: 'y' } }, at('2026-11-26T07:00:00Z')), '');
+  assert.equal(N.waDecide({ start, connected: false, sent: { wa1: 'x' } }, at('2026-11-28T08:00:00Z')), ''); // Saturday
+  assert.equal(N.waDecide({ start, connected: false, sent: {} }, at('2026-11-23T21:00:00Z')), ''); // 23:00 Israel
+});
+test('waText: the link, no dashes, the female form', () => {
+  const l = 'https://wa.me/972500000000?text=x';
+  const m = N.waText('wa1', l, false), w = N.waText('wa2', l, true);
+  assert.ok(m.endsWith(l) && w.endsWith(l));
+  assert.ok(m.indexOf('אתה כותב') > -1 && w.indexOf('את כותבת') > -1);
+  assert.ok(!/[-–—]/.test(m.replace(l, '')) && !/[-–—]/.test(w.replace(l, '')));
+});
