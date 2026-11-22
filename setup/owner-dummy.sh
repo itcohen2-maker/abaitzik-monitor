@@ -38,5 +38,7 @@ sudo -u monitor -H node build.js 2>&1 | tail -2
 ( cd "$SRC/docs" && find . -type f ) | while read -r f; do
   [ -e "$APP/docs/$f" ] || { mkdir -p "$(dirname "$APP/docs/$f")" && cp -al "$SRC/docs/$f" "$APP/docs/$f"; }
 done
+# and what is no longer on his page goes from the dummy too (old plate media stayed after he replaced them), so it is 1 to 1
+( cd "$APP/docs" && find . -type f ) | while read -r f; do [ -e "$SRC/docs/$f" ] || rm -f "$APP/docs/$f"; done
 chmod -R o+rX "$APP/docs"
 du -sh "$APP" | cut -f1
