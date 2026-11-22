@@ -67,7 +67,7 @@ function answer(it) {
       kind = 'ok';
       edited = lines.slice(i + 1).filter((x) => !/^\s*קוד\s/.test(x)).join('\n').trim();
     } else if (/^\s*אישור:/.test(l)) kind = 'ok';
-    else if (/^\s*לא עכשיו:/.test(l)) kind = 'later';
+    else if (/^\s*(?:לא עכשיו\s*)+:/.test(l)) kind = 'later';
     if (kind && (!best || r.at > best.at)) best = { kind, edited, at: r.at };
   }
   return best;
