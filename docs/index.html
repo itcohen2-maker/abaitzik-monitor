@@ -1954,6 +1954,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ap img{display:block;width:100%;max-width:240px;border-radius:10px;margin-top:8px}
 .tk{display:flex;align-items:center;gap:12px;padding:12px;margin:8px 0;border-radius:12px;background:rgba(127,127,127,.12);cursor:pointer;font-size:1.05em}
 .tk input{width:24px;height:24px;flex:0 0 24px}
+.tkSearch{width:100%;box-sizing:border-box;padding:10px 12px;margin:4px 0 6px;border-radius:12px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);color:inherit;font:inherit;font-size:16px}
 .tk.done span{text-decoration:line-through;opacity:.55}
 .tk.tnc{cursor:default}.tk.tnc span{flex:1}
 .tkDel{margin-inline-start:auto;border:0;background:none;font-size:18px;padding:4px 6px;cursor:pointer}
@@ -3351,7 +3352,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-22T21:59:01.972Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-22T21:59:27.208Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4317,6 +4318,7 @@ try{
 <section id="pTk" hidden>
  <h2>משימות</h2>
  <div class="rephint">לחיצה על משימה מסמנת שבוצעה. הסימון נשמר בטלפון שלך.</div>
+ <input type="search" id="tkSearch" class="tkSearch" placeholder="🔍 חיפוש במשימות" autocomplete="off" aria-label="חיפוש במשימות">
  <div id="tkBox"></div>
  <div class="tdSec">להוסיף משימה</div>
  <form class="tdAdd" id="tkForm"><select id="tkDay" aria-label="לאיזה יום"></select><input id="tkText" placeholder="למשל: להתקשר לבנק" autocomplete="off"><button type="submit">שליחה</button><button type="button" id="tkCancel" hidden>ביטול</button></form>
@@ -5314,7 +5316,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='006b064f3e';
+var CODE_ID='141935e3e2';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10031,6 +10033,7 @@ function renderAppts(){
  if(!host)return;
  var now=Date.now();
  var A=(D.appts||[]).filter(function(a){var t=Date.parse(a.when);return isNaN(t)||t>now-3*3600e3;});
+ var P=(D.appts||[]).filter(function(a){var t=Date.parse(a.when);return !isNaN(t)&&t<=now-3*3600e3;}).sort(function(a,b){return a.when<b.when?1:-1;});
  host.innerHTML=A.length?A.map(function(a){
   var d=a.when||'עוד בלי תאריך',h='',t0=Date.parse(a.when);
   var rm=remLive().filter(function(r){var u=Date.parse(r.due);return !r.sentAt&&u<t0&&t0-u<3*864e5;})[0];
@@ -10048,6 +10051,13 @@ function renderAppts(){
    +'<button type="button" class="apEdit" data-edit="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">✏️ לשנות</button>'
    +'<button type="button" class="apDel" data-del="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">🗑️ למחוק</button></div>';
  }).join(''):'<div class="empty">אין תור עתידי. מוסיפים תור בטופס כאן למטה.</div>';
+ if(P.length)host.innerHTML+='<details class="apPast" style="margin-top:12px"><summary style="cursor:pointer;font-size:15px">🗂 תורים שעברו ('+P.length+')</summary>'+P.map(function(a){
+  var d=a.when,x=new Date(a.when);
+  try{d=x.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Asia/Jerusalem'});}catch(e){}
+  return '<div class="ap" style="opacity:.75"><div class="d">'+esc(d)+'</div><b>'+esc(a.what)+'</b>'
+   +(a.where?'<div class="w">📍 '+esc(a.where)+'</div>':'')
+   +(a.note?'<div class="n">'+esc(a.note)+'</div>':'')+'</div>';
+ }).join('')+'</details>';
  host.onclick=async function(e){
   var cal=e.target.closest&&e.target.closest('[data-cal]');
   if(cal){var a2=(D.appts||[]).filter(function(a){return a.id===cal.getAttribute('data-cal');})[0];if(a2)apCalDownload(a2);return;}
@@ -10533,7 +10543,10 @@ function renderTasks(){
  var D2=T.filter(function(t){return done[t.id];});
  if(D2.length)h+='<button type="button" class="gclear" id="tkClear">עשיתי הכל · '+D2.length
   +'<small>מנקה רק את מה שסימנת. מה שלא סומן נשאר.</small></button>';
- T.forEach(function(t){
+ var sq=document.getElementById('tkSearch'),q=sq?sq.value.trim().toLowerCase():'';
+ if(sq&&!sq.dataset.on){sq.dataset.on='1';sq.oninput=renderTasks;}
+ var TV=q?T.filter(function(t){return String(t.text||'').toLowerCase().indexOf(q)>=0;}):T;
+ TV.forEach(function(t){
   if(t.day!==last){
    last=t.day;
    var lbl=t.day;
@@ -10543,7 +10556,7 @@ function renderTasks(){
   h+='<label class="tk'+(done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'
    +(done[t.id]?' checked':'')+'><span>'+esc(t.text)+'</span>'+tkActs(t)+'</label>';
  });
- host.innerHTML=h||'<div class="empty">אין משימות. כל משימה שתשלח למוניטור תופיע כאן לפי היום שלה.</div>';
+ host.innerHTML=h||(q?'<div class="empty">אין משימה עם "'+esc(q)+'".</div>':'<div class="empty">אין משימות. כל משימה שתשלח למוניטור תופיע כאן לפי היום שלה.</div>');
  host.onclick=function(e){var d=e.target.closest&&e.target.closest('[data-tkdel]');if(d){e.preventDefault();tkDelete(d);return;}
   var ed=e.target.closest&&e.target.closest('[data-tkedit]');if(ed){e.preventDefault();tkEditStart(ed);}};
  var b=document.getElementById('tkClear');
