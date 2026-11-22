@@ -14034,6 +14034,7 @@ function renderTenants(){
    +(!ok&&t.problems&&t.problems.length?'<br><small>'+t.problems.map(esc).join(' · ')+'</small>':'')
    // 11.10, Itzik: the code alone is not something he can send, so the link sits beside it, with copy and share.
    +(t.host?'<br><small>קישור: <b dir="ltr" class="tncode">https://'+esc(t.host)+'/</b></small> <button type="button" class="tncopy" data-code="https://'+esc(t.host)+'/">העתקה</button>':'')
+   +(t.host&&t.code?'<br><a class="tncopy" style="display:inline-block;text-decoration:none" target="_blank" rel="noopener" href="https://'+esc(t.host)+'/#k='+encodeURIComponent(t.code)+'">🔓 לפתוח בלחיצה, בלי קוד</a>':'')
    +(t.code?'<br><small>קוד כניסה: <b dir="ltr" class="tncode">'+esc(t.code)+'</b></small> <button type="button" class="tncopy" data-code="'+esc(t.code)+'">העתקה</button>':'')
    +(t.host?'<br><button type="button" class="tncopy tnshare" data-title="'+esc(t.title)+'" data-code="'+esc('הקישור למוניטור שלך: https://'+t.host+'/'+(t.code?'\\nקוד כניסה: '+t.code:''))+'">📤 לשלוח קישור וקוד</button>':'')
    +'</span>'+(t.host?'<a class="tnopen" href="https://'+esc(t.host)+'/" target="_blank" rel="noopener">פתיחה</a>':'')+'</div>';
@@ -14747,7 +14748,7 @@ if(locked()&&!INSTANCE.openPin){
  document.getElementById('lockUseCode').onclick=function(){
   document.getElementById('lockRow').hidden=false;
   document.getElementById('lockCode').focus();
-  lockSay(oneLock()?'תקליד את הסיסמה, אותן חמש מילים מהפעם הראשונה.':'תקליד את הקוד האישי.');
+  lockSay(oneLock()?'תקליד את הקוד שקיבלת כשהמוניטור הוקם, במייל "המוניטור שלך מוכן".':'תקליד את הקוד האישי.');
  };
  var lockGo=function(){
   var v=document.getElementById('lockCode').value.trim();
@@ -14757,7 +14758,7 @@ if(locked()&&!INSTANCE.openPin){
    gateKeyIs(v).then(function(ok){
     if(ok){unlock();return;}
     document.getElementById('lockCode').value='';
-    lockSay('הסיסמה לא מתאימה. אלה אותן חמש מילים שהקלדת בפעם הראשונה.');
+    lockSay('הקוד לא מתאים. זה הקוד מהמייל "המוניטור שלך מוכן", לא הסיסמה של מוניטור אחר.');
    });
    return;
   }
@@ -25183,6 +25184,8 @@ function gateBoot(){
  */
  function hint(v){
   if(!GATE.words)return bad;
+  // 22.11.2026, Itzik: a customer's page said "five words" about a 14 digit code, and he thought it wanted his own passphrase
+  if(INSTANCE&&INSTANCE.name!=='abaitzik')return 'הקוד לא מתאים. מעתיקים שוב את קוד הכניסה של המוניטור הזה, מהמייל "המוניטור שלך מוכן" או ממסך המוניטורים.';
   var t=gnorm(v),n=t?t.split(' ').length:0;
   if(/[A-Za-z]/.test(t))return 'יש כאן אותיות באנגלית. כנראה המקלדת לא על עברית. מחליפים לעברית ומקלידים שוב.';
   if(n!==5)return 'הקלדת '+(n===1?'מילה אחת':n+' מילים')+'. הסיסמה היא חמש מילים, עם רווח בין מילה למילה.';
@@ -25266,6 +25269,9 @@ function gateBoot(){
   e.preventDefault();
   var code=gnorm(box.value);
   if(!code)return;
+  // 22.11.2026: a pasted "קוד כניסה: 857..." or the whole shared message opens too, by its long run of digits
+  var dm=(INSTANCE&&INSTANCE.name!=='abaitzik')?code.match(/[0-9]{10,}/):null;
+  if(dm&&dm[0]!==code)code=dm[0];
   said.textContent='רגע, פותח.';
   gderive(code).then(function(k){
    GKEY=k;
