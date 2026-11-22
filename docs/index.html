@@ -3349,7 +3349,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-22T09:10:09.551Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-22T09:14:29.098Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5312,7 +5312,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='535b067943';
+var CODE_ID='52d8273941';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12120,6 +12120,7 @@ function adminReqSheet(){
   if(a!=='send')return;
   var t=(document.getElementById('arText').value||'').trim();
   if(!t){toast('כתוב מה תרצה לשנות');return;}
+  if(!t.split('בעיגול הריק במסך הבית הייתי רוצה').join('').split('').filter(function(c){return c.trim()&&':：.,·-–—!?'.indexOf(c)<0;}).length){toast('כתוב אחרי המשפט מה תרצה שיהיה בעיגול, ואז שלח');var x=document.getElementById('arText');if(x)x.focus();return;}
   if(w.arKind)t+=' (בתור '+w.arKind+')';
   e.target.disabled=true;
   sendText('בקשה ממנהל','בקשה ממנהל: '+t,'משימה').then(function(){

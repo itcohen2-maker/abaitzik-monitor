@@ -874,6 +874,16 @@ function recordIncoming(m) {
     if (codeOk && inst.name !== 'abaitzik' && /^\s*(?:משימה)?\s*בקשה ממנהל\s*[:：]/.test(text)) {
       try {
         const cr = require('./lib/change-requests.js');
+        const ask = text.replace(/^\s*(?:משימה)?\s*בקשה ממנהל\s*[:：]\s*/, '');
+        if (cr.isEmptyAsk(ask)) {
+          rec.status = 'done';
+          fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+          fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-admin-ack.json')),
+            JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id,
+              text: 'הבקשה לא נשלחה כי לא נכתב בה מה תרצה. לחץ שוב על העיגול, כתוב אחרי המשפט מה תרצה שיהיה בו, ושלח.', status: 'done' }, null, 1), 'utf8');
+          say('בקשה ממנהל ריקה, לא נרשמה');
+          throw null;
+        }
         const crId = cr.add(text.replace(/^\s*(?:משימה)?\s*בקשה ממנהל\s*[:：]\s*/, ''), rec.id);
         rec.status = 'done';
         fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
@@ -881,7 +891,7 @@ function recordIncoming(m) {
           JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id,
             text: inst.adminFull ? 'הבקשה עברה לבנייה. כשהיא מוכנה, תקבל כאן תשובה.' : 'בקשתך התקבלה, תודה. נחזור אליך בהקדם.', status: 'done' }, null, 1), 'utf8');
         say('בקשה ממנהל נרשמה: ' + crId);
-      } catch (e) { say('!! בקשה ממנהל לא נרשמה: ' + e.message); }
+      } catch (e) { if (e) say('!! בקשה ממנהל לא נרשמה: ' + e.message); }
     }
     /*
       10.11.2026, Itzik: "🧑‍💼 מנהלת IT Solution" (build.js myMgrSheet). The sheet sends the routine as JSON, a pause, a resume or a

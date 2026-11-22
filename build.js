@@ -16180,6 +16180,8 @@ function adminReqSheet(){
   if(a!=='send')return;
   var t=(document.getElementById('arText').value||'').trim();
   if(!t){toast('כתוב מה תרצה לשנות');return;}
+  // 22.11.2026: only the empty circle's opening words is an empty request, never sent (lib/change-requests.js isEmptyAsk).
+  if(!t.split('בעיגול הריק במסך הבית הייתי רוצה').join('').split('').filter(function(c){return c.trim()&&':：.,·-–—!?'.indexOf(c)<0;}).length){toast('כתוב אחרי המשפט מה תרצה שיהיה בעיגול, ואז שלח');var x=document.getElementById('arText');if(x)x.focus();return;}
   if(w.arKind)t+=' (בתור '+w.arKind+')';
   e.target.disabled=true;
   sendText('בקשה ממנהל','בקשה ממנהל: '+t,'משימה').then(function(){
