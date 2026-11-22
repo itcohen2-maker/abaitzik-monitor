@@ -588,6 +588,8 @@ function build() {
     never anything from inside the other instance.
   */
   const tenants = loadDocs('tenants')
+    // 22.11.2026, Itzik: "I don't know why you opened it". A monitor kept only for the automatic checks (tb0dec1) is not on his monitors screen.
+    .filter(x => x.ownerHidden !== true)
     .map(x => ({ id: x.id, title: x.title || x.id, state: x.state || 'unknown', paused: x.paused === true,
                  problems: Array.isArray(x.problems) ? x.problems : [], checkedAt: x.checkedAt || '', downSince: x.downSince || '', beatAt: x.beatAt || '',
                  host: /^[a-z0-9.-]+$/.test(x.host || '') ? x.host : '',
