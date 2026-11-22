@@ -24882,6 +24882,9 @@ function mergeBiz(g){
  var bz=document.getElementById('blkBiz');if(!bz)return;
  var list=Array.prototype.filter.call(bz.children,function(c){return c.classList&&c.classList.contains('gt')&&c.id!=='gLeads';});
  for(var i=list.length-1;i>=0;i--)g.insertBefore(list[i],g.firstChild);
+ // 22.11.2026, Itzik: "מחיקת האריחים לא עובדת במוניטור דמה". applyHidden ran before these business tiles joined the grid,
+ // so a deleted one came back after every reload. Hide them here, as they move in.
+ var hid=tileStore("tilesHidden",[]);list.forEach(function(c){if(hid.indexOf(c.id)>=0)c.hidden=true;});
 }
 (function(){
  var grid=document.querySelector('.grid');
