@@ -119,7 +119,7 @@ test('board: the DOM hooks of Task 4 are there on every row', () => {
 
 test('board: a test lead is not counted, the history is newest first', () => {
   const h = itzik(L).board();
-  assert.ok(h.includes('כל הלידים (4, חדש אחד)'), 'the counter: the signup is not one to call back');
+  assert.ok(h.includes('כל הלידים (4)</span><b class="lbCallPill">📞 אחד לחזור אליו</b>'), 'the counter and the red pill: the signup is not one to call back');
   const g = groups(h);
   assert.ok(g['חדש'].slice(0, g['חדש'].indexOf('</summary>')).includes('(1)'), 'חדש counts 1 (biz-4, not the test, not the signup)');
   assert.ok(g['נרשמו'].slice(0, g['נרשמו'].indexOf('</summary>')).includes('(1)'), 'נרשמו counts biz-1');
@@ -440,7 +440,7 @@ test('board: a failed or silent send turns the field red, a tap sends it again, 
 
 test('board: a stage moves the row to its group and fixes every counter; נסגר also drops the reminder and ⏰ היום', async () => {
   const M = mount(fx());
-  assert.ok(M.root.querySelector('.bzSec').textContent.includes('(4, חדש אחד)'));
+  assert.equal(M.root.querySelector('.bzSec').textContent, '📋 כל הלידים (4)📞 אחד לחזור אליו');
   // biz-4 (xyz, shown as חדש) is due, so it is in ⏰ היום too. The stage is picked in the ⏰ היום copy.
   const tr = M.rows('biz-4').find((r) => r.parentNode.classList.contains('lbToday'));
   M.tap(tr.querySelector('[data-bz="ldst"][data-s="הצעה"]'));
@@ -451,7 +451,7 @@ test('board: a stage moves the row to its group and fixes every counter; נסג�
   assert.ok(M.grp('הצעה').querySelector('.lbHd'), 'the moved row gets the column header');
   assert.equal(M.gcount('חדש'), '(0)');
   assert.equal(M.gcount('הצעה'), '(1)');
-  assert.ok(M.root.querySelector('.bzSec').textContent.includes('כל הלידים (4)'));
+  assert.equal(M.root.querySelector('.bzSec').textContent, '📋 כל הלידים (4)', 'no one to call back, no pill');
   M.rows('biz-4').forEach((r) => {
     assert.equal(r.getAttribute('data-s'), 'הצעה');
     assert.equal(r.querySelector('.lbSt').getAttribute('data-s'), 'הצעה');
@@ -640,7 +640,7 @@ test('board: delete removes every row of the lead and fixes the counters', () =>
   assert.equal(M.rows('biz-1').length, 0);
   assert.equal(M.gcount('חדש'), '(1)');
   assert.equal(M.today().querySelector('.lbTh').textContent, '⏰ היום (1)');
-  assert.ok(M.root.querySelector('.bzSec').textContent.includes('(3, חדש אחד)'));
+  assert.equal(M.root.querySelector('.bzSec').textContent, '📋 כל הלידים (3)📞 אחד לחזור אליו');
 });
 
 test('the board handlers are wired in every copy', () => {
@@ -765,7 +765,8 @@ test('board 22.11: a signup gets its own group and comes back to ⏰ היום a 
   const t = todayPart(h);
   assert.ok(t.includes('data-id="n-old"'), 'signed up 15.11, due 22.11 09:00');
   assert.ok(!t.includes('data-id="n-sign"'));
-  assert.ok(h.includes('כל הלידים (6, 3 חדשים)'), 'חדש is who to call back: n-call, n-late, n-yest');
+  assert.ok(h.includes('כל הלידים (6)</span><b class="lbCallPill">📞 3 לחזור אליהם</b>'), 'who to call back: n-call, n-late, n-yest');
+  assert.ok(h.includes('📞 פניות <i>4</i>') && h.includes('✅ נרשמו למוניטור <i>2</i>') && h.includes('הכל <i>6</i>'), 'the tabs count');
 });
 
 test('board 22.11: a signup that is talked to leaves נרשמו and its week reminder, and comes back in חדש', async () => {
@@ -790,4 +791,13 @@ test('board 22.11: the call back tag and the signup tag are on the rows, the CSS
   assert.ok(html.includes('.lbBoard .lbRow.ldRow[data-src="other"][data-s="חדש"]:not(.ldTest){border:2px solid #e2445c'));
   const h = mount(JSON.parse(JSON.stringify(T22)), { Date: at(NOW) }).B.board();
   assert.ok(h.includes('📞 לחזור אליו') && h.includes('✅ נרשם למוניטור'));
+});
+
+test('board 22.11: a delete fixes the tab counts and the red pill', () => {
+  const M = mount(JSON.parse(JSON.stringify(T22)), { Date: at(NOW) });
+  const r = M.rows('n-call').find((x) => x.parentNode.classList.contains('lbGrp'));
+  M.tap(r.querySelector('[data-bz="lddel"]'));
+  assert.equal(M.root.querySelector('.lbCallPill').textContent, '📞 2 לחזור אליהם');
+  assert.equal(M.root.querySelector('.lbFlt [data-f="other"] i').textContent, '3');
+  assert.equal(M.root.querySelector('.lbFlt [data-f="all"] i').textContent, '5');
 });

@@ -3701,8 +3701,19 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .lbBoard{font:500 14px/1.4 Heebo,sans-serif;container-type:inline-size;min-width:0;max-width:100%}
 .lbBar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 10px}
 .lbFlt{display:flex;flex-wrap:wrap;gap:4px;background:rgba(128,128,128,.12);border-radius:10px;padding:3px}
-.lbFlt button{border:0;background:none;color:inherit;font:600 13px Heebo,sans-serif;padding:6px 10px;border-radius:8px;cursor:pointer}
+.lbFlt button{border:0;background:none;color:inherit;font:700 15px Heebo,sans-serif;padding:9px 14px;min-height:44px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .lbFlt button.on{background:#0073ea;color:#fff}
+/* 22.11.2026, Itzik on the head of the board: "את זה צריך להדגיש". The tabs are big, each with its count and colour,
+   and who to call back is a red pill in the title, not "חדש אחד" in grey. */
+.lbFlt button[data-f="other"].on{background:#e2445c}
+.lbFlt button[data-f="signup"].on{background:#00c875}
+.lbFlt button i{font-style:normal;font-size:13px;min-width:22px;padding:1px 7px;border-radius:999px;background:rgba(128,128,128,.22);text-align:center}
+.lbFlt button.on i{background:rgba(255,255,255,.3)}
+.lbBoard>.bzSec{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.lbCallPill{display:inline-block;background:#e2445c;color:#fff;font:800 15px Heebo,sans-serif;border-radius:999px;padding:4px 12px;animation:lbPulse 2.4s ease-in-out infinite}
+.lbCallPill:empty{display:none}
+@keyframes lbPulse{0%,100%{box-shadow:0 0 0 0 rgba(226,68,92,.45)}50%{box-shadow:0 0 0 7px rgba(226,68,92,0)}}
+@media (prefers-reduced-motion:reduce){.lbCallPill{animation:none}}
 .lbQ{flex:1 1 160px;min-width:0;border:1px solid rgba(128,128,128,.4);border-radius:10px;padding:8px 10px;font:15px Heebo,sans-serif;background:transparent;color:inherit}
 .lbToday{border:1px solid rgba(226,68,92,.45);border-radius:12px;padding:6px 8px;margin-bottom:12px;background:rgba(226,68,92,.06)}
 .lbToday.lbNone{border-color:rgba(128,128,128,.3);background:none}
@@ -20853,6 +20864,7 @@ function bizSheet(t0){
   // 22.11.2026: a signup that nobody talked to yet (חדש) needs no call now. It sits in its own group (LB_SG) and, with no
   // reminder of its own, its reminder is a week after it signed up, 09:00 Israel time (days on the calendar).
   var LB_SG='נרשמו';
+  var lbCallTxt=function(n){return n?(n===1?'📞 אחד לחזור אליו':'📞 '+n+' לחזור אליהם'):'';};
   var lbSign=function(r){return r.source==='signup'&&lbStage(r)==='חדש';};
   var lbWeek=function(r){if(!lbSign(r)||String(r.nextAt||'').trim())return '';var t=ldT(r.at);if(!t)return '';var k=lbKey(t),y=+k.slice(0,4),m=+k.slice(5,7),d=+k.slice(8,10);return new Date(Date.UTC(y,m-1,d+7)).toISOString().slice(0,10)+' 09:00';};
   var lbRemOf=function(r){return lbRemKey(r.nextAt)||lbWeek(r);};
@@ -20881,7 +20893,7 @@ function bizSheet(t0){
    var nowK=lbKey(Date.now()),todayK=nowK.slice(0,10);
    var A=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return ldT(b.at)-ldT(a.at);});
    var LC=A.filter(function(r){return !r.test;}),nNew=LC.filter(function(r){return lbStage(r)==='חדש'&&!lbSign(r);}).length;
-   var h='<div class="lbBoard"><div class="bzSec">📋 כל הלידים ('+LC.length+(nNew?', '+(nNew===1?'חדש אחד':nNew+' חדשים'):'')+')</div>'+ldScanHtml();
+   var h='<div class="lbBoard"><div class="bzSec"><span class="lbAllN">📋 כל הלידים ('+LC.length+')</span><b class="lbCallPill">'+lbCallTxt(nNew)+'</b></div>'+ldScanHtml();
    if(!LC.length)h+=LB_HI;
    if(!A.length)return h+LB_ASK+'</div>';
    function row(r){
@@ -20901,7 +20913,7 @@ function bizSheet(t0){
      +'</summary>'+ldBodyHtml(r,hist,st,1)+'</details>';
    }
    // the filter is for trial week signups (IT Solution's); a board with none has only the search
-   h+='<div class="lbBar">'+(A.some(function(r){return r.source==='signup';})?'<div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל</button><button type="button" data-bz="lbflt" data-f="signup">נרשמו לשבוע ניסיון</button><button type="button" data-bz="lbflt" data-f="other">פניות</button></div>':'')
+   h+='<div class="lbBar">'+(A.some(function(r){return r.source==='signup';})?'<div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל <i>'+LC.length+'</i></button><button type="button" data-bz="lbflt" data-f="other">📞 פניות <i>'+LC.filter(function(r){return r.source!=='signup';}).length+'</i></button><button type="button" data-bz="lbflt" data-f="signup">✅ נרשמו למוניטור <i>'+LC.filter(function(r){return r.source==='signup';}).length+'</i></button></div>':'')
     +'<input class="lbQ" type="search" placeholder="🔎 חיפוש לפי שם או טלפון" enterkeyhint="search"></div>';
    var N=A.filter(function(r){return lbKey(ldT(r.at)).slice(0,10)===todayK;});
    if(N.length){
@@ -21003,7 +21015,9 @@ function bizSheet(t0){
    var B=el.querySelector('.lbBoard');if(!B)return;
    var real=function(p){return lbKids(p).filter(function(r){return !r.classList.contains('ldTest');}).length;},tot=0,nw=0;
    lbAll(B,'.lbGrp').forEach(function(g){var n=real(g),c=g.querySelector('.lbGh small');tot+=n;if(g.getAttribute('data-g')==='חדש')nw=n;if(c)c.textContent='('+n+')';});
-   var m=B.querySelector('.bzSec');if(m)m.textContent='📋 כל הלידים ('+tot+(nw?', '+(nw===1?'חדש אחד':nw+' חדשים'):'')+')';
+   var an=B.querySelector('.lbAllN'),cp=B.querySelector('.lbCallPill');if(an)an.textContent='📋 כל הלידים ('+tot+')';if(cp)cp.textContent=lbCallTxt(nw);
+   var gr=[];lbAll(B,'.lbGrp').forEach(function(g){gr=gr.concat(lbKids(g).filter(function(r){return !r.classList.contains('ldTest');}));});
+   lbAll(B,'.lbFlt [data-f]').forEach(function(b){var f=b.getAttribute('data-f'),i=b.querySelector('i');if(i)i.textContent=gr.filter(function(r){return f==='all'||r.getAttribute('data-src')===f;}).length;});
    var W=B.querySelector('.lbNow');
    if(W){
     var wr=lbKids(W).filter(function(r){return !r.classList.contains('ldTest');}),wh=W.querySelector('.lbTh'),ws=W.querySelector('.lbNs');
