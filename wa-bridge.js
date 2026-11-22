@@ -619,7 +619,7 @@ async function strangerMessage(m, contactName) {
   const d = strangerDeps || {
     handle: function (o) { return H.add(DATA, o); },
     publish: function () { H.publishSoon(); },
-    notify: function (title, text) { require('child_process').execFile(process.execPath, [path.join(__dirname, 'notify.js'), '--urgent', title, text], { cwd: __dirname, timeout: 60000 }, function (e) { if (e) log('stranger push failed: ' + e.message); }); },
+    notify: function (title, text) { require('child_process').execFile(process.execPath, [path.join(__dirname, 'notify.js'), '--lead', title, text], { cwd: __dirname, timeout: 60000 }, function (e) { if (e) log('stranger push failed: ' + e.message); }); },
     voice: voiceText,
   };
   try {

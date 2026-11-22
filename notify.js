@@ -51,10 +51,13 @@ function line(b) {
 
   // A session tells about its answer through here, so a line of no other kind counts as an answer
   // for the switches in Settings (lib/alert-kinds.js). --urgent stays unmuted, --kind=<k> says it outright.
-  const urgent = args.includes('--urgent');
+  // 22.11.2026, Itzik: "אם זה ליד שמבקש עזרה, לא שבוע ניסיון, אני חייב לקבל התראה בוואטסאפ". --lead is urgent at priority 5,
+  // which is what lib/notify-channels.js waCopy needs to copy the alert to his WhatsApp. A trial signup does not pass it.
+  const lead = args.includes('--lead');
+  const urgent = lead || args.includes('--urgent');
   const k = (args.find(a => a.startsWith('--kind=')) || '').slice(7);
   const kind = k || require('./lib/alert-kinds.js').guess(title) || (urgent ? null : 'answers');
-  const r = await ch.notify(title, body, { urgent: urgent, kind: kind });
+  const r = await ch.notify(title, body, lead ? { urgent: true, kind: kind, priority: 5 } : { urgent: urgent, kind: kind });
   if (r.muted) {
     console.log('סוג ההתראה הזה כבוי בהגדרות: לא צלצל. התשובה כבר בשיחה.');
   } else if (r.held) {

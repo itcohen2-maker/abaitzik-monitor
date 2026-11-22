@@ -85,7 +85,7 @@ const clean = (s) => String(s || '').replace(/[-‐‑‒–—]/g, ' ').replace
     const where = leads.SOURCES[n.source] || n.source;
     try { require('./lib/handle.js').add(inst.dataPath, { key: 'lead:' + n.id, kind: 'lead', who: n.name, title: 'ליד חדש (' + where + '), לחזור אליו', link: 'biz', at: n.at, bizId: n.id }); }
     catch (e) { console.log('!! handle: ' + e.message); }
-    try { execFileSync(process.execPath, ['notify.js', '--urgent', '🔔 ליד חדש: ' + n.name, where + ': "' + String(n.last || '').slice(0, 120) + '". באריח 🔔 לידים.'], { cwd: __dirname, stdio: 'ignore', timeout: 60000 }); }
+    try { execFileSync(process.execPath, ['notify.js', '--lead', '🔔 ליד חדש: ' + n.name, where + ': "' + String(n.last || '').slice(0, 120) + '". באריח 🔔 לידים.'], { cwd: __dirname, stdio: 'ignore', timeout: 60000 }); }
     catch (e) { console.log('!! notify: ' + e.message); }
   });
   try { execFileSync(process.execPath, ['push.js', 'leads: comments ' + added.length + ' new'], { cwd: __dirname, stdio: 'inherit', timeout: 300000 }); }

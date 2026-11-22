@@ -146,7 +146,7 @@ async function pageToken(tk) {
       const where = leads.SOURCES[n.source] || n.source;
       try { require('./lib/handle.js').add(inst.dataPath, { key: 'lead:' + n.id, kind: 'lead', who: n.name, title: 'ליד חדש (' + where + '), לחזור אליו', link: 'biz', at: n.at, bizId: n.id }); }
       catch (e) { console.log('!! handle: ' + e.message); }
-      try { console.log(execFileSync(process.execPath, ['notify.js', '--urgent', '🔔 ליד חדש: ' + n.name, where + (n.last ? ': "' + n.last.slice(0, 120) + '"' : '') + '. בעסק שלי, IT Solution, כל הלידים.'], { cwd: __dirname, encoding: 'utf8', timeout: 60000 }).trim()); }
+      try { console.log(execFileSync(process.execPath, ['notify.js', '--lead', '🔔 ליד חדש: ' + n.name, where + (n.last ? ': "' + n.last.slice(0, 120) + '"' : '') + '. בעסק שלי, IT Solution, כל הלידים.'], { cwd: __dirname, encoding: 'utf8', timeout: 60000 }).trim()); }
       catch (e) { console.log('!! notify: ' + e.message); }
     });
   }
@@ -154,7 +154,7 @@ async function pageToken(tk) {
     const where = leads.SOURCES[lead.source] || lead.source;
     try { require('./lib/handle.js').add(inst.dataPath, { key: 'lead-msg:' + lead.id + ':' + Date.now(), kind: 'lead', who: lead.name, title: 'הודעה חדשה (' + where + '): "' + line.slice(0, 160) + '"', link: 'biz', at: new Date().toISOString(), bizId: lead.id }); }
     catch (e) { console.log('!! handle: ' + e.message); }
-    try { console.log(execFileSync(process.execPath, ['notify.js', '--urgent', '💬 הודעה חדשה מ' + lead.name, where + ': "' + line.slice(0, 160) + '". בעסק שלי, IT Solution, לידים.'], { cwd: __dirname, encoding: 'utf8', timeout: 60000 }).trim()); }
+    try { console.log(execFileSync(process.execPath, ['notify.js', '--lead', '💬 הודעה חדשה מ' + lead.name, where + ': "' + line.slice(0, 160) + '". בעסק שלי, IT Solution, לידים.'], { cwd: __dirname, encoding: 'utf8', timeout: 60000 }).trim()); }
     catch (e) { console.log('!! notify: ' + e.message); }
   });
   const changed = added.length || replied.length || !prev || prev.ok !== st.ok || String(prev.need) !== String(st.need);
