@@ -71,15 +71,15 @@ const L = [
   { id: 'biz-5', kind: 'lead', name: 'איציק בדיקה', status: 'חדש', at: '2026-11-14T08:00:00.000Z', source: 'site', test: true },
 ];
 
-test('board: five groups by stage, an unknown status sits in חדש, נסגר and אבד are shut', () => {
+test('board: five groups by stage and the signups group before נסגר, an unknown status sits in חדש, נסגר and אבד are shut', () => {
   const B = itzik(L);
   assert.equal(typeof B.board, 'function');
   const h = B.board();
-  assert.equal(h.split('<details class="lbGrp').length - 1, 5);
+  assert.equal(h.split('<details class="lbGrp').length - 1, 6);
   const g = groups(h);
-  assert.deepEqual(Object.keys(g), ORDER);
+  assert.deepEqual(Object.keys(g), ['חדש', 'בשיחה', 'הצעה', 'נרשמו', 'נסגר', 'אבד']);
   assert.ok(g['חדש'].includes('data-id="biz-4"'), 'xyz is in חדש');
-  assert.ok(g['חדש'].includes('data-id="biz-1"'));
+  assert.ok(!g['חדש'].includes('data-id="biz-1"') && g['נרשמו'].includes('data-id="biz-1"'), 'a חדש signup is in נרשמו, not in חדש');
   assert.ok(g['בשיחה'].includes('data-id="biz-2"'));
   assert.ok(g['נסגר'].includes('data-id="biz-3"'));
   assert.ok(/^ lbShut"/.test(g['נסגר']) && /^ lbShut"/.test(g['אבד']), 'נסגר and אבד are marked lbShut');
@@ -119,9 +119,10 @@ test('board: the DOM hooks of Task 4 are there on every row', () => {
 
 test('board: a test lead is not counted, the history is newest first', () => {
   const h = itzik(L).board();
-  assert.ok(h.includes('כל הלידים (4, 2 חדשים)'), 'the counter');
+  assert.ok(h.includes('כל הלידים (4, חדש אחד)'), 'the counter: the signup is not one to call back');
   const g = groups(h);
-  assert.ok(g['חדש'].slice(0, g['חדש'].indexOf('</summary>')).includes('(2)'), 'חדש counts 2 (biz-1 and biz-4, not the test)');
+  assert.ok(g['חדש'].slice(0, g['חדש'].indexOf('</summary>')).includes('(1)'), 'חדש counts 1 (biz-4, not the test, not the signup)');
+  assert.ok(g['נרשמו'].slice(0, g['נרשמו'].indexOf('</summary>')).includes('(1)'), 'נרשמו counts biz-1');
   const r = h.slice(h.indexOf('data-id="biz-1"', h.indexOf('<details class="lbGrp')));
   assert.ok(r.indexOf('18.11: שלחתי הצעה') < r.indexOf('17.11: דיברנו קצת'), 'newest note first');
   assert.ok(r.slice(0, r.indexOf('</summary>')).includes('18.11: שלחתי הצעה'), 'the last note is on the row');
@@ -159,7 +160,7 @@ test('board: a customer copy has the board, and the old table is gone from both 
   const B = ily(L);
   assert.equal(B.table, null);
   const h = B.board();
-  assert.equal(h.split('<details class="lbGrp').length - 1, 5, 'five groups in a customer copy');
+  assert.equal(h.split('<details class="lbGrp').length - 1, 6, 'five groups and נרשמו (L has a signup) in a customer copy');
   assert.equal(h.split('<details class="lbRow ldRow').length - 1, 5 + 2);
 });
 
@@ -439,7 +440,7 @@ test('board: a failed or silent send turns the field red, a tap sends it again, 
 
 test('board: a stage moves the row to its group and fixes every counter; נסגר also drops the reminder and ⏰ היום', async () => {
   const M = mount(fx());
-  assert.ok(M.root.querySelector('.bzSec').textContent.includes('(4, 2 חדשים)'));
+  assert.ok(M.root.querySelector('.bzSec').textContent.includes('(4, חדש אחד)'));
   // biz-4 (xyz, shown as חדש) is due, so it is in ⏰ היום too. The stage is picked in the ⏰ היום copy.
   const tr = M.rows('biz-4').find((r) => r.parentNode.classList.contains('lbToday'));
   M.tap(tr.querySelector('[data-bz="ldst"][data-s="הצעה"]'));
@@ -448,9 +449,9 @@ test('board: a stage moves the row to its group and fixes every counter; נסג�
   assert.ok(inToday(M, 'biz-4'), 'and the ⏰ היום copy stays');
   assert.equal(M.grp('הצעה').querySelector('.lbEmpty'), null);
   assert.ok(M.grp('הצעה').querySelector('.lbHd'), 'the moved row gets the column header');
-  assert.equal(M.gcount('חדש'), '(1)');
+  assert.equal(M.gcount('חדש'), '(0)');
   assert.equal(M.gcount('הצעה'), '(1)');
-  assert.ok(M.root.querySelector('.bzSec').textContent.includes('(4, חדש אחד)'));
+  assert.ok(M.root.querySelector('.bzSec').textContent.includes('כל הלידים (4)'));
   M.rows('biz-4').forEach((r) => {
     assert.equal(r.getAttribute('data-s'), 'הצעה');
     assert.equal(r.querySelector('.lbSt').getAttribute('data-s'), 'הצעה');
@@ -470,6 +471,7 @@ test('board: a stage moves the row to its group and fixes every counter; נסג�
   assert.ok(rem.classList.contains('lbNone') && !rem.classList.contains('lbDue') && rem.textContent === '⏰', 'its reminder is cleared');
   assert.equal(M.today().querySelector('.lbTh').textContent, '⏰ היום (1)');
   assert.equal(M.gcount('חדש'), '(0)');
+  assert.equal(M.gcount('נרשמו'), '(0)', 'biz-1 left נרשמו');
   assert.equal(M.grp('חדש').querySelector('.lbEmpty'), null, 'the test lead is still a row in חדש');
   assert.ok(M.grp('נסגר').querySelector('.lbHd'));
   assert.equal(M.gcount('נסגר'), '(2)');
@@ -722,4 +724,70 @@ test('review 7: the leads sheet counts a full ISO nextAt by its Israel day', () 
   assert.equal(f('2026-11-14T22:30:00.000Z'), '2026-11-15');
   assert.equal(f('2026-11-14'), '2026-11-14');
   assert.ok(!/String\(r\.nextAt\)\.slice\(0,10\)/.test(own), 'no UTC day slice of nextAt left');
+});
+
+/*
+  22.11.2026, Itzik: "צריך לעשות לידים שנכנסו היום וגם למיין אותם. אם זה ליד שצריך לחזור אליו, אז זה צריך להיות מודגש,
+  ואם זה ליד שנרשם למוניטור, אין מה לחזור אליו ... אפשר לחזור אליו אחרי שבוע".
+*/
+const NOW = '2026-11-22T10:00:00.000Z';
+const T22 = [
+  { id: 'n-sign', kind: 'lead', name: 'הרשי', status: 'חדש', at: '2026-11-22T01:04:26.271Z', source: 'signup' },
+  { id: 'n-call', kind: 'lead', name: 'תומר', phone: '0501234567', status: 'חדש', at: '2026-11-22T06:45:01.265Z', source: 'whatsapp' },
+  { id: 'n-talk', kind: 'lead', name: 'בשיחה מהבוקר', status: 'בשיחה', at: '2026-11-22T08:00:00.000Z', source: 'site' },
+  { id: 'n-late', kind: 'lead', name: 'מאתמול בלילה', status: 'חדש', at: '2026-11-21T22:30:00.000Z', source: 'site' },
+  { id: 'n-yest', kind: 'lead', name: 'מאתמול', status: 'חדש', at: '2026-11-21T10:00:00.000Z', source: 'site' },
+  { id: 'n-old', kind: 'lead', name: 'נרשמה לפני שבוע', status: 'חדש', at: '2026-11-15T08:00:00.000Z', source: 'signup' },
+];
+const nowPart = (h) => { const i = h.indexOf('<div class="lbNow"'); return i < 0 ? '' : h.slice(i, h.indexOf('class="lbToday', i)); };
+
+test('board 22.11: 🆕 נכנסו היום by the Israel day, who to call back first and the signup last', () => {
+  const M = mount(JSON.parse(JSON.stringify(T22)), { Date: at(NOW) });
+  const w = nowPart(M.B.board());
+  assert.ok(w.includes('🆕 נכנסו היום (4)'), 'four today: 22:30Z on 21.11 is 00:30 on 22.11 in Israel');
+  const ids = [...w.matchAll(/data-id="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(ids, ['n-call', 'n-late', 'n-talk', 'n-sign'], 'call back first (newest first), then the rest, the signup last');
+  assert.ok(w.includes('📞 2 לחזור אליהם') && w.includes('✅ אחד נרשם למוניטור, לא צריך לחזור אליו עכשיו'));
+  assert.ok(!w.includes('data-id="n-yest"') && !w.includes('data-id="n-old"'));
+});
+
+test('board 22.11: no 🆕 נכנסו היום on a day with no lead', () => {
+  assert.equal(nowPart(mount(fx(), { Date: at(NOW) }).B.board()), '');
+});
+
+test('board 22.11: a signup gets its own group and comes back to ⏰ היום a week after it signed up', () => {
+  const h = mount(JSON.parse(JSON.stringify(T22)), { Date: at(NOW) }).B.board();
+  const g = groups(h);
+  assert.ok(g['נרשמו'].includes('data-id="n-sign"') && g['נרשמו'].includes('data-id="n-old"'));
+  assert.ok(!g['חדש'].includes('data-id="n-sign"'));
+  assert.ok(g['נרשמו'].includes('✅ נרשמו למוניטור') && g['נרשמו'].includes('לחזור אחרי שבוע'));
+  assert.ok(g['נרשמו'].includes('⏰ 29.11 09:00'), 'n-sign: a week after 22.11');
+  const t = todayPart(h);
+  assert.ok(t.includes('data-id="n-old"'), 'signed up 15.11, due 22.11 09:00');
+  assert.ok(!t.includes('data-id="n-sign"'));
+  assert.ok(h.includes('כל הלידים (6, 3 חדשים)'), 'חדש is who to call back: n-call, n-late, n-yest');
+});
+
+test('board 22.11: a signup that is talked to leaves נרשמו and its week reminder, and comes back in חדש', async () => {
+  const M = mount(JSON.parse(JSON.stringify(T22)), { Date: at(NOW) });
+  assert.ok(inToday(M, 'n-old'));
+  const r = M.rows('n-old').find((x) => x.parentNode.classList.contains('lbGrp'));
+  M.tap(r.querySelector('[data-bz="ldst"][data-s="בשיחה"]'));
+  assert.equal(inGrp(M, 'n-old'), 'בשיחה');
+  assert.ok(!inToday(M, 'n-old'), 'no week reminder once he talks to it');
+  assert.equal(M.gcount('נרשמו'), '(1)');
+  const r2 = M.rows('n-old').find((x) => x.parentNode.classList.contains('lbGrp'));
+  M.tap(r2.querySelector('[data-bz="ldst"][data-s="חדש"]'));
+  assert.equal(inGrp(M, 'n-old'), 'נרשמו', 'a signup back in חדש goes to its group');
+  assert.ok(inToday(M, 'n-old'));
+  assert.equal(M.recs.find((x) => x.id === 'n-old').nextAt, '', 'the week reminder is never written as a reminder of its own');
+  const s = M.root.querySelector('.lbNow .lbNs').textContent;
+  assert.ok(s.includes('📞 2 לחזור אליהם'), s);
+});
+
+test('board 22.11: the call back tag and the signup tag are on the rows, the CSS marks them', () => {
+  const html = cut({ name: 'abaitzik' }, page(T22));
+  assert.ok(html.includes('.lbBoard .lbRow.ldRow[data-src="other"][data-s="חדש"]:not(.ldTest){border:2px solid #e2445c'));
+  const h = mount(JSON.parse(JSON.stringify(T22)), { Date: at(NOW) }).B.board();
+  assert.ok(h.includes('📞 לחזור אליו') && h.includes('✅ נרשם למוניטור'));
 });

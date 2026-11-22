@@ -3709,6 +3709,19 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .lbToday>small{display:block;opacity:.7;padding:2px 4px 4px}
 .lbTh{font:800 15px Heebo,sans-serif;color:#e2445c;margin:2px 2px 6px}
 .lbToday.lbNone .lbTh{color:inherit;opacity:.75}
+/* 22.11.2026, Itzik: "צריך לעשות לידים שנכנסו היום וגם למיין אותם. אם זה ליד שצריך לחזור אליו, אז זה צריך להיות מודגש,
+   ואם זה ליד שנרשם למוניטור, אין מה לחזור אליו ... אפשר לחזור אליו אחרי שבוע". 🆕 נכנסו היום on top: who to call back
+   first, red and thick; a signup is green, in a group of its own, and comes back to ⏰ היום a week after it signed up. */
+.lbNow{border:1px solid rgba(0,115,234,.35);border-radius:12px;padding:6px 8px;margin-bottom:12px;background:rgba(0,115,234,.05)}
+.lbNow .lbTh{color:#0073ea}
+.lbNow>small{display:block;font:600 13px Heebo,sans-serif;padding:0 4px 6px}
+.lbNow>small:empty{display:none}
+.lbBoard .lbTag{display:none;font:700 12px Heebo,sans-serif;font-style:normal;border-radius:6px;padding:2px 8px;margin-top:4px;align-self:flex-start}
+.lbBoard .lbRow[data-src="other"][data-s="חדש"]:not(.ldTest) .lbTagCall{display:inline-block;background:#e2445c;color:#fff}
+.lbBoard .lbNow .lbRow[data-src="signup"] .lbTagSign{display:inline-block;background:#00c875;color:#fff}
+.lbBoard .lbRow.ldRow[data-src="other"][data-s="חדש"]:not(.ldTest){border:2px solid #e2445c;border-inline-start:7px solid #e2445c;background:rgba(226,68,92,.08)}
+.lbGrp[data-g="נרשמו"],.lbRow[data-src="signup"][data-s="חדש"]{--c:#00c875}
+.lbSgHint{display:block;opacity:.75;padding:0 8px 6px}
 .lbGrp,.lbRow,.lbSt{--c:#e2445c}
 .lbGrp[data-g="בשיחה"],.lbRow[data-s="בשיחה"],.lbSt[data-s="בשיחה"]{--c:#fdab3d}
 .lbGrp[data-g="הצעה"],.lbRow[data-s="הצעה"],.lbSt[data-s="הצעה"]{--c:#a25ddc}
@@ -20837,6 +20850,14 @@ function bizSheet(t0){
   var lbRemKey=function(x){x=String(x||'').trim();if(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(x))return x+' 09:00';if(/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$/.test(x))return x;var n=ldT(x);return n?lbKey(n):'';};
   var lbStage=function(r){return BZ_ORDER.indexOf(r.status)>-1?r.status:'חדש';};
   var lbShut=function(s){return s==='נסגר'||s==='אבד';};
+  // 22.11.2026: a signup that nobody talked to yet (חדש) needs no call now. It sits in its own group (LB_SG) and, with no
+  // reminder of its own, its reminder is a week after it signed up, 09:00 Israel time (days on the calendar).
+  var LB_SG='נרשמו';
+  var lbSign=function(r){return r.source==='signup'&&lbStage(r)==='חדש';};
+  var lbWeek=function(r){if(!lbSign(r)||String(r.nextAt||'').trim())return '';var t=ldT(r.at);if(!t)return '';var k=lbKey(t),y=+k.slice(0,4),m=+k.slice(5,7),d=+k.slice(8,10);return new Date(Date.UTC(y,m-1,d+7)).toISOString().slice(0,10)+' 09:00';};
+  var lbRemOf=function(r){return lbRemKey(r.nextAt)||lbWeek(r);};
+  var LB_TAGS='<em class="lbTag lbTagCall">📞 לחזור אליו</em><em class="lbTag lbTagSign">✅ נרשם למוניטור</em>';
+  var lbNowSub=function(nC,nS){var p=[];if(nC)p.push(nC===1?'📞 אחד לחזור אליו':'📞 '+nC+' לחזור אליהם');if(nS)p.push(nS===1?'✅ אחד נרשם למוניטור, לא צריך לחזור אליו עכשיו':'✅ '+nS+' נרשמו למוניטור, לא צריך לחזור אליהם עכשיו');return p.join(' · ');};
   var lbRemTxt=function(k){return '⏰'+(k?' '+(+k.slice(8,10))+'.'+(+k.slice(5,7))+' '+k.slice(11):'');};
   // A site is a link only when it is a clean http(s) address; anything else (an old "eran.co.il", a bad value) is plain text.
   var lbSiteIn=function(x){x=String(x||'');if(/^https?:[/][/][^ "'<>]+$/i.test(x))return '<a href="'+esc(x)+'" target="_blank" rel="noopener">🌐 '+esc(x.replace(/^https?:[/][/](www[.])?/i,'').split('/')[0])+'</a>';return x?'🌐 <bdi>'+esc(x)+'</bdi>':'🌐';};
@@ -20859,20 +20880,20 @@ function bizSheet(t0){
   function ldBoardHtml(){
    var nowK=lbKey(Date.now()),todayK=nowK.slice(0,10);
    var A=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return ldT(b.at)-ldT(a.at);});
-   var LC=A.filter(function(r){return !r.test;}),nNew=LC.filter(function(r){return lbStage(r)==='חדש';}).length;
+   var LC=A.filter(function(r){return !r.test;}),nNew=LC.filter(function(r){return lbStage(r)==='חדש'&&!lbSign(r);}).length;
    var h='<div class="lbBoard"><div class="bzSec">📋 כל הלידים ('+LC.length+(nNew?', '+(nNew===1?'חדש אחד':nNew+' חדשים'):'')+')</div>'+ldScanHtml();
    if(!LC.length)h+=LB_HI;
    if(!A.length)return h+LB_ASK+'</div>';
    function row(r){
-    var st=lbStage(r),i=ldInfo(r),k=lbRemKey(r.nextAt),due=!!k&&k<=nowK&&!lbShut(st);
+    var st=lbStage(r),i=ldInfo(r),k=lbRemOf(r),due=!!k&&k<=nowK&&!lbShut(st);
     var mk=function(f){var m=LBS.mk[r.id+'|'+f];return m?' data-mk="'+m+'"':'';};
     var site=String(r.site||'').trim();
     var hist=r.note?ldNote(r.note).split(String.fromCharCode(10)).filter(Boolean).reverse():[];
     var tel=String(r.phone||'').replace(/[^0-9]/g,'');
     return '<details class="lbRow ldRow'+(r.test?' ldTest':(st==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'" data-at="'+esc(r.at||'')+'" data-s="'+esc(st)+'" data-src="'+(r.source==='signup'?'signup':'other')+'" data-q="'+esc((String(r.name||'')+' '+String(r.email||'')).toLowerCase()+' '+tel)+'"><summary>'
-     +'<span class="lbName"><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+'</b><small><bdi>'+esc(r.phone||i.em||'אין טלפון')+'</bdi></small></span>'
+     +'<span class="lbName"><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+'</b><small><bdi>'+esc(r.phone||i.em||'אין טלפון')+'</bdi></small>'+LB_TAGS+'</span>'
      +'<span data-bz="lbed" data-k="st"'+mk('st')+' class="lbSt ldSt" data-s="'+esc(st)+'">'+esc(st)+'</span>'
-     +'<span data-bz="lbed" data-k="next"'+mk('next')+' class="lbNext'+(r.next?'':' lbNone')+'" data-v="'+esc(r.next||'')+'">'+esc(r.next||'צעד הבא')+'</span>'
+     +'<span data-bz="lbed" data-k="next"'+mk('next')+' class="lbNext'+(r.next?'':' lbNone')+'" data-v="'+esc(r.next||'')+'">'+esc(r.next||(lbSign(r)?'לחזור אחרי שבוע':'צעד הבא'))+'</span>'
      +'<span data-bz="lbed" data-k="rem"'+mk('rem')+' class="lbRem'+(due?' lbDue':'')+(k?'':' lbNone')+'" data-at="'+esc(r.nextAt||'')+'">'+lbRemTxt(k)+'</span>'
      +'<span data-bz="lbed" data-k="site"'+mk('site')+' class="lbSite'+(site?'':' lbNone')+'" data-v="'+esc(site)+'">'+lbSiteIn(site)+'</span>'
      +'<span class="lbSrc">'+esc(i.src)+'</span>'
@@ -20882,12 +20903,22 @@ function bizSheet(t0){
    // the filter is for trial week signups (IT Solution's); a board with none has only the search
    h+='<div class="lbBar">'+(A.some(function(r){return r.source==='signup';})?'<div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל</button><button type="button" data-bz="lbflt" data-f="signup">נרשמו לשבוע ניסיון</button><button type="button" data-bz="lbflt" data-f="other">פניות</button></div>':'')
     +'<input class="lbQ" type="search" placeholder="🔎 חיפוש לפי שם או טלפון" enterkeyhint="search"></div>';
-   var T=A.filter(function(r){var k=lbRemKey(r.nextAt);return k&&k.slice(0,10)<=todayK&&!lbShut(lbStage(r));}).sort(function(a,b){return lbRemKey(a.nextAt)<lbRemKey(b.nextAt)?-1:1;});
+   var N=A.filter(function(r){return lbKey(ldT(r.at)).slice(0,10)===todayK;});
+   if(N.length){
+    var rk=function(r){return r.source==='signup'?2:(lbStage(r)==='חדש'?0:1);};
+    var nC=N.filter(function(r){return !r.test&&rk(r)===0;}).length,nS=N.filter(function(r){return !r.test&&r.source==='signup';}).length;
+    h+='<div class="lbNow"><div class="lbTh">🆕 נכנסו היום ('+N.filter(function(r){return !r.test;}).length+')</div><small class="lbNs">'+lbNowSub(nC,nS)+'</small>'
+     +N.slice().sort(function(a,b){return rk(a)-rk(b)||ldT(b.at)-ldT(a.at);}).map(row).join('')+'</div>';
+   }
+   var T=A.filter(function(r){var k=lbRemOf(r);return k&&k.slice(0,10)<=todayK&&!lbShut(lbStage(r));}).sort(function(a,b){return lbRemOf(a)<lbRemOf(b)?-1:1;});
    var nT=T.filter(function(r){return !r.test;}).length;
    h+='<div class="lbToday'+(T.length?'':' lbNone')+'"><div class="lbTh">⏰ היום'+(nT?' ('+nT+')':'')+'</div>'+(T.length?T.map(row).join(''):'<small class="lbTNo">אין תזכורות להיום.</small>')+'</div>';
-   BZ_ORDER.forEach(function(g){
-    var rs=A.filter(function(r){return lbStage(r)===g;}),n=rs.filter(function(r){return !r.test;}).length;
-    h+='<details class="lbGrp'+(lbShut(g)?' lbShut"':'"')+' data-g="'+g+'"'+(lbShut(g)?'':' open')+'><summary class="lbGh"><b>'+g+'</b><small>('+n+')</small></summary>'
+   var GS=BZ_ORDER.slice();
+   if(A.some(function(r){return r.source==='signup';})){var gi=GS.indexOf('נסגר');GS.splice(gi<0?GS.length:gi,0,LB_SG);}
+   GS.forEach(function(g){
+    var sg=g===LB_SG,rs=A.filter(function(r){return sg?lbSign(r):(lbStage(r)===g&&!lbSign(r));}),n=rs.filter(function(r){return !r.test;}).length;
+    h+='<details class="lbGrp'+(lbShut(g)?' lbShut"':'"')+' data-g="'+g+'"'+(lbShut(g)?'':' open')+'><summary class="lbGh"><b>'+(sg?'✅ נרשמו למוניטור':g)+'</b><small>('+n+')</small></summary>'
+     +(sg?'<small class="lbSgHint">לא צריך לחזור אליהם מיד. שבוע אחרי ההרשמה כל אחד עולה לבד ל ⏰ היום.</small>':'')
      +(rs.length?LB_HD+rs.map(row).join(''):'<small class="lbEmpty">אין כאן לידים.</small>')+'</details>';
    });
    return h+LB_ASK+'</div>';
@@ -20959,7 +20990,8 @@ function bizSheet(t0){
   // A group left with no row shows "אין כאן לידים." again.
   function lbTidy(g){if(!g||!g.classList.contains('lbGrp')||lbKids(g).length)return;var hd=g.querySelector('.lbHd');if(hd)hd.parentNode.removeChild(hd);if(!g.querySelector('.lbEmpty'))g.insertAdjacentHTML('beforeend','<small class="lbEmpty">אין כאן לידים.</small>');}
   function lbIntoGrp(el,r,s){
-   var g=el.querySelector('.lbGrp[data-g="'+s+'"]'),old=r.parentNode;if(!g||g===old)return;
+   var sg=r.getAttribute('data-src')==='signup'&&s==='חדש'&&el.querySelector('.lbGrp[data-g="'+LB_SG+'"]');
+   var g=el.querySelector('.lbGrp[data-g="'+(sg?LB_SG:s)+'"]'),old=r.parentNode;if(!g||g===old)return;
    var em=g.querySelector('.lbEmpty');if(em)em.parentNode.removeChild(em);
    if(!g.querySelector('.lbHd'))g.querySelector('.lbGh').insertAdjacentHTML('afterend',LB_HD);
    var t0=ldT(r.getAttribute('data-at')),rs=lbKids(g),nx=null;
@@ -20972,6 +21004,12 @@ function bizSheet(t0){
    var real=function(p){return lbKids(p).filter(function(r){return !r.classList.contains('ldTest');}).length;},tot=0,nw=0;
    lbAll(B,'.lbGrp').forEach(function(g){var n=real(g),c=g.querySelector('.lbGh small');tot+=n;if(g.getAttribute('data-g')==='חדש')nw=n;if(c)c.textContent='('+n+')';});
    var m=B.querySelector('.bzSec');if(m)m.textContent='📋 כל הלידים ('+tot+(nw?', '+(nw===1?'חדש אחד':nw+' חדשים'):'')+')';
+   var W=B.querySelector('.lbNow');
+   if(W){
+    var wr=lbKids(W).filter(function(r){return !r.classList.contains('ldTest');}),wh=W.querySelector('.lbTh'),ws=W.querySelector('.lbNs');
+    if(wh)wh.textContent='🆕 נכנסו היום ('+wr.length+')';
+    if(ws)ws.textContent=lbNowSub(wr.filter(function(r){return r.getAttribute('data-src')==='other'&&r.getAttribute('data-s')==='חדש';}).length,wr.filter(function(r){return r.getAttribute('data-src')==='signup';}).length);
+   }
    var T=B.querySelector('.lbToday');if(!T)return;
    var all=lbKids(T).length,n=real(T),no=T.querySelector('.lbTNo'),th=T.querySelector('.lbTh');
    if(th)th.textContent='⏰ היום'+(n?' ('+n+')':'');
@@ -20990,6 +21028,8 @@ function bizSheet(t0){
     if(r.parentNode&&r.parentNode.classList.contains('lbGrp'))lbIntoGrp(el,r,s);
    });
    // נסגר and אבד: the server cancels the reminder, so it goes from the rows and from ⏰ היום.
+   var rc=null;recs.forEach(function(x){if(x.id===id)rc=x;});
+   if(rc&&rc.source==='signup'&&!lbShut(s)&&!String(rc.nextAt||'').trim()){lbRemSet(el,id,lbWeek(rc));rc.nextAt='';}
    if(lbShut(s))lbRemSet(el,id,'');
    lbCount(el);lbFilter(el);
   }
@@ -21000,7 +21040,7 @@ function bizSheet(t0){
    var T=el.querySelector('.lbToday'),inT=null,src=null;
    rows.forEach(function(r){
     var x=r.querySelector('.lbRem');if(x){x.setAttribute('data-at',k);x.textContent=lbRemTxt(k);x.classList.toggle('lbDue',due);x.classList.toggle('lbNone',!k);}
-    if(T&&r.parentNode===T)inT=r;else src=r;
+    if(T&&r.parentNode===T)inT=r;else if(!src||(r.parentNode&&r.parentNode.classList.contains('lbGrp')))src=r;
    });
    if(day&&src&&T&&!inT){
     var c=src.cloneNode(true);c.removeAttribute('open');var ce=c.querySelector('.lbEd');if(ce)ce.parentNode.removeChild(ce);
@@ -21044,7 +21084,7 @@ function bizSheet(t0){
     var ok=(f==='all'||r.getAttribute('data-src')===f)&&(!q||dq.indexOf(q)>-1||(qd.length>1&&dq.replace(/[^0-9]/g,'').indexOf(qd)>-1));
     r.classList.toggle('lbHide',!ok);
    });
-   lbAll(B,'.lbGrp').concat(lbAll(B,'.lbToday')).forEach(function(g){g.classList.toggle('lbHide',act&&!lbKids(g).some(function(r){return !r.classList.contains('lbHide');}));});
+   lbAll(B,'.lbGrp').concat(lbAll(B,'.lbToday')).concat(lbAll(B,'.lbNow')).forEach(function(g){g.classList.toggle('lbHide',act&&!lbKids(g).some(function(r){return !r.classList.contains('lbHide');}));});
   }
   function lbEdHtml(row,k){
    var B='<button type="button" data-tdy="1" class="yb';
