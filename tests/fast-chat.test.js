@@ -173,3 +173,14 @@ test('home box answers as chat while a training is on', async () => {
   const s = await FC.turn(d, 'יש לכם משלוחים?', { llm: stub('כן, עד הבית'), salesTrain: salesStub, plain: true });
   assert.equal(s.reply, 'כן, עד הבית'); assert.equal(s.mode, 'sales');
 });
+
+test('sales: a task inside the training ends it and goes to execution (22.11, PATIO)', async () => {
+  const d = tmp(); const sent = [];
+  await FC.turn(d, 'אימון מכירות', { llm: stub('x'), salesTrain: salesStub });
+  const task = Object.assign({}, salesStub, { customerTurn: async () => 'משימה: לרשום שלושה לידים' });
+  const r = await FC.turn(d, 'עוד לידים: דוד לוי 052', { llm: stub('x'), salesTrain: task, toMonitor: async (k, t) => { sent.push([k, t]); return 'id1'; } });
+  assert.deepEqual(sent, [['שיחה', 'עוד לידים: דוד לוי 052']]);
+  assert.equal(r.mode, 'chat');
+  assert.ok(!/^משימה:/.test(r.reply));
+  assert.equal(FC.load(d).mode, 'chat');
+});
