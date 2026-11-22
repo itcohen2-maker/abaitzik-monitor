@@ -2845,6 +2845,8 @@ body.editing .bn{display:none}
 @media not all and (min-width:1000px) and (pointer:fine){
 body.editing{padding-bottom:calc(var(--editBarH,112px) + 16px)!important}
 body.editing #pH{transform:none!important;height:auto!important}
+/* 22.11.2026, Itzik on the dummy (iPhone): a press on a row selected its name and opened copy, look up, translate. */
+body.editing #pH>.arrRow,body.editing #pH>.arrRow *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
 body.editing #pH>.arrRow{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;justify-content:flex-start!important;align-items:center!important;gap:0!important;box-sizing:border-box;position:relative;float:none!important;
  width:100%!important;max-width:none!important;min-height:60px;height:auto!important;margin:0 0 8px!important;padding:8px 10px!important;
  background:var(--surface)!important;background-image:none!important;color:var(--ink);border:1px solid var(--line)!important;border-radius:14px!important;
