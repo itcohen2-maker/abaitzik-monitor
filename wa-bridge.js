@@ -49,7 +49,10 @@ const ORIGINS = ['https://itcohen2-maker.github.io', 'https://shai.it-solution.c
 // 11.11.2026: every self signup trial monitor lives at https://<id>.m.it-solution.co.il, so those are allowed by pattern.
 // 17.11.2026: the public demo monitor too (lib/public-demo.js); it holds no code, so it reaches only the public /api/demo/*.
 // 21.11.2026: and the trade demos (lib/trades.js), exact hosts only.
-function originOk(o) { return ORIGINS.indexOf(o) > -1 || o === 'https://demo.m.it-solution.co.il' || require('./lib/trades.js').isDemoOrigin(o) || /^https:\/\/t[a-f0-9]{6}\.m\.it-solution\.co\.il$/.test(String(o || '')); }
+// 22.11.2026: the dummy of Itzik's own monitor in the new look (setup/owner-dummy.sh), its exact host from setup/owner-dummy.host.
+// It carries his own sealed code, so it is his chat; he said nothing worked there before this.
+const OWNER_DUMMY = (() => { try { const h = fs.readFileSync(path.join(__dirname, 'setup', 'owner-dummy.host'), 'utf8').trim(); return /^[a-z0-9-]+\.m\.it-solution\.co\.il$/.test(h) ? 'https://' + h : ''; } catch (e) { return ''; } })();
+function originOk(o) { return ORIGINS.indexOf(o) > -1 || (!!OWNER_DUMMY && o === OWNER_DUMMY) || o === 'https://demo.m.it-solution.co.il' || require('./lib/trades.js').isDemoOrigin(o) || /^https:\/\/t[a-f0-9]{6}\.m\.it-solution\.co\.il$/.test(String(o || '')); }
 /*
   1.11.2026: the client demo (lib/demo-mode.js). While it is on, every question,
   from the page or from WhatsApp, goes to the worker with this frame first, so
