@@ -247,7 +247,7 @@ $HOST {
 	}
 	handle {
 		root * $DIR/docs
-		try_files {path} {path}.html /index.html
+		try_files {path} {path}index.html {path}/index.html {path}.html /index.html
 		file_server
 	}
 }
