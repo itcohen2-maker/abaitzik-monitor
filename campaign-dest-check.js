@@ -62,7 +62,9 @@ function judge(campaignName, adName, dest) {
   let u = null; try { u = new URL(dest.link); } catch (e) { /* no link */ }
   if (!u) return { monitor, ok: false, want, got: 'אין קישור במודעה' };
   const host = u.hostname.replace(/^www\./, '') === 'it-solution.co.il';
-  const ok = monitor ? host && /^\/start\/?$/.test(u.pathname)
+  // 21.11.2026: the trades campaign (צלם, קבלן, יועץ, קוסמטיקאית) leads to /day/?ref=m-<trade>, the trade's own
+  // monitor signup page (same signup button, ref kept). That is right, so /day/ counts for a monitor ad with an m- ref.
+  const ok = monitor ? host && (/^\/start\/?$/.test(u.pathname) || (/^\/day\/?$/.test(u.pathname) && /^m-/.test(ref)))
     : host && (u.pathname === '/' || u.pathname === '') && u.hash === '#chat' && !!ref;
   return { monitor, ok, want, got: dest.link };
 }
