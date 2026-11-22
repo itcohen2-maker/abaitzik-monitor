@@ -95,6 +95,10 @@ function personalize(q, qf) {
           Object.assign(j, add);
           // 22.11.2026: signup-provision.sh writes the welcome before the questions, so a woman got "ברוך הבא" (Itzik saw it on t555858)
           if (j.gender === "f" && typeof j.welcome === "string") j.welcome = j.welcome.replace("ברוך הבא", "ברוכה הבאה");
+          // 22.11.2026, Itzik: "why don't I get the new look" on t555858. The trade demo has its trade's screens (lib/trades.js),
+          // a trial from a trade signup had none and looked like a general monitor. Only when no screens were chosen.
+          const TT = j.trade && require('./lib/trades.js').get(j.trade);
+          if (TT && Array.isArray(TT.screens) && !(Array.isArray(j.screens) && j.screens.length)) j.screens = TT.screens.slice();
           fs.writeFileSync(ij, JSON.stringify(j, null, 1));
         } finally { if (lk) try { execFileSync('chattr', ['+i', ij]); } catch (e) {} }
       }
