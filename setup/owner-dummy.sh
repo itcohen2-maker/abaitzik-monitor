@@ -2,8 +2,9 @@
 # 22.11.2026, Itzik: "אמרנו בשביל להחליף לי את הלוק החדש שאני צריך קודם כל לעבוד על מוניטור דמה שהוא תואם את המוניטור שלי
 # ורק אחרי שאני רואה שאין תקיעות אנחנו נעביר". The dummy of his own monitor, in the new look.
 #  1. the code: main as it is now (what his own page runs), without docs/ promo/ tests/ (git archive, no history);
-#  2. the data: a copy of his data/ as it is now, without data/keys.json, so nothing sent from the dummy reaches
-#     his real queue, his WhatsApp or his mail (no topics, no keys);
+#  2. the data: a copy of his data/ as it is now, with data/keys.json. 22.11.2026, Itzik: "ניסיתי להכנס למוניטור וכלום לא עובד":
+#     without the keys the page had no channel and no owner code, so nothing answered. Now it is his monitor in every way,
+#     and what he sends from the dummy reaches his real queue, like a second device;
 #  3. the page: his own instance.json plus ownerLook: true and the dummy's address, sealed with his own passphrase
 #     (gate-params.json), exactly like his page. Static: no listener, no timers, no git, never pushed to GitHub.
 # Run as root: bash setup/owner-dummy.sh   (again any time, to refresh the copy). Address: owner-dummy.host
@@ -21,7 +22,7 @@ cp -a "$NEW"/. "$APP"/
 rm -rf "$NEW"
 cp -p "$SRC/gate-params.json" "$SRC/gate-key.txt" "$APP/"
 mkdir -p "$APP/data"
-rsync -a --delete --exclude=keys.json "$SRC/data/" "$APP/data/"
+rsync -a --delete "$SRC/data/" "$APP/data/"
 node -e 'const fs=require("fs"),[src,dst,host]=process.argv.slice(1);const j=JSON.parse(fs.readFileSync(src,"utf8"));
 j.ownerLook=true;j.publicUrl="https://"+host+"/";j.basePath="/";j.origin="https://"+host;j.uploadUrl="";
 fs.writeFileSync(dst,JSON.stringify(j,null,1));' "$SRC/instance.json" "$APP/instance.json" "$HOST"
