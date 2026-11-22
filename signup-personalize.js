@@ -92,7 +92,10 @@ function personalize(q, qf) {
         try {
           if (lk) execFileSync('chattr', ['-i', ij]);
           const j = JSON.parse(fs.readFileSync(ij, 'utf8'));
-          fs.writeFileSync(ij, JSON.stringify(Object.assign(j, add), null, 1));
+          Object.assign(j, add);
+          // 22.11.2026: signup-provision.sh writes the welcome before the questions, so a woman got "ברוך הבא" (Itzik saw it on t555858)
+          if (j.gender === "f" && typeof j.welcome === "string") j.welcome = j.welcome.replace("ברוך הבא", "ברוכה הבאה");
+          fs.writeFileSync(ij, JSON.stringify(j, null, 1));
         } finally { if (lk) try { execFileSync('chattr', ['+i', ij]); } catch (e) {} }
       }
     } catch (e) { log(q.id + ' instance: ' + e.message.slice(0, 80)); }
