@@ -556,9 +556,17 @@
   "ytd": "It's just a web address, written in squares. The black and white squares encode text, usually a link. The camera reads them and opens the address, and it doesn't check who printed them. That's the scammers' trick: they print a sticker with their own code and paste it over a parking meter or a restaurant menu. The code leads to a fake site that asks for your card details. So what helps? Look at the address your phone shows before you tap. And if the place does not use QR for payment at all, that is a red flag. It is better to pay through the official app. Don't trust the squares, trust the address. Have you ever scanned a code without knowing where it leads? Source: US FTC consumer alert, December 2023",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-15T06:00:45.408Z"
+  "posted": true,
+  "postedAt": "2026-11-22T18:04:17.330Z",
+  "approvedAt": "2026-11-15T06:00:45.408Z",
+  "auto": {
+   "reel": "18425727568154076",
+   "story": "18026091239949374",
+   "storyError": null,
+   "page": "2460538611145631",
+   "pageError": null,
+   "channel": "itsolution.global"
+  }
  },
  {
   "id": "battery-he",
