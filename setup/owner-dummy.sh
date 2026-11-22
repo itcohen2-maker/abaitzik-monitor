@@ -9,6 +9,8 @@
 #     (gate-params.json), exactly like his page. Static: no listener, no timers, no git, never pushed to GitHub.
 # Run as root: bash setup/owner-dummy.sh   (again any time, to refresh the copy). Address: owner-dummy.host
 set -euo pipefail
+# 22.11.2026: files readable from the moment they are written. With the default umask the guard (and a visitor) hit EACCES mid-refresh.
+umask 022
 SRC=/home/monitor/abaitzik-monitor
 APP=/srv/owner-dummy
 HOST=$(cat "$SRC/setup/owner-dummy.host" 2>/dev/null || echo "")
