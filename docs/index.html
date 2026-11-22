@@ -3349,7 +3349,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-22T15:50:04.545Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-22T15:54:02.129Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5156,7 +5156,7 @@ function fileView(name){
   };
   var gb=body.querySelector('.fv-gal');
   if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(shareFail);};
-  if(t.indexOf('text/')===0)b.text().then(function(s){
+  if(t.indexOf('text/')===0&&t.indexOf('text/html')!==0)b.text().then(function(s){
    var mine=srcText('file:'+name);if(mine){s=mine;var mk=document.createElement('div');mk.className='empty';mk.style.fontSize='13px';mk.textContent='✏️ הגרסה שערכת בפתקים';body.insertBefore(mk,body.firstChild);}
    body.querySelector('.fv-txt').textContent=s;
    var fp=srcPendingAll('file:'+name);if(fp.length)srcAsk(fp[0],function(){close();fileOpen(name);});
@@ -5305,7 +5305,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='0e3a52316a';
+var CODE_ID='8a1151f7ff';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');

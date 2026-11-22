@@ -6887,7 +6887,8 @@ function fileView(name){
   };
   var gb=body.querySelector('.fv-gal');
   if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(shareFail);};
-  if(t.indexOf('text/')===0)b.text().then(function(s){
+  // 22.11.2026: a page (text/html) shows in its iframe and has no .fv-txt; filling one threw on every open (the guard on the dummy).
+  if(t.indexOf('text/')===0&&t.indexOf('text/html')!==0)b.text().then(function(s){
    var mine=srcText('file:'+name);if(mine){s=mine;var mk=document.createElement('div');mk.className='empty';mk.style.fontSize='13px';mk.textContent='✏️ הגרסה שערכת בפתקים';body.insertBefore(mk,body.firstChild);}
    body.querySelector('.fv-txt').textContent=s;
    var fp=srcPendingAll('file:'+name);if(fp.length)srcAsk(fp[0],function(){close();fileOpen(name);});

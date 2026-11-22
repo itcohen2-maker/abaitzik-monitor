@@ -32,8 +32,11 @@ cd "$APP"
 rm -f "$APP/docs/manifest.webmanifest"
 sudo -u monitor -H node build.js 2>&1 | tail -2
 # what his page serves from git (videos, the candle site, pages) and the build does not write: hard links, no extra space
-runuser -u monitor -- git -c safe.directory="$SRC" -C "$SRC" ls-files docs | cut -d/ -f2 | sort -u | while read -r d; do
-  [ -n "$d" ] && [ ! -e "$APP/docs/$d" ] && [ -e "$SRC/docs/$d" ] && cp -al "$SRC/docs/$d" "$APP/docs/$d"
+# 22.11.2026: file by file. By top folder, docs/icons (which the build makes) never got icons/shachar.png and lolos-giraffe.png,
+# and the guard found them missing (404) on every screen of the dummy. Also what the build wrote in his docs and git does not
+# hold. Only files the dummy does not have, so its own build (the new look) is never overwritten.
+( cd "$SRC/docs" && find . -type f ) | while read -r f; do
+  [ -e "$APP/docs/$f" ] || { mkdir -p "$(dirname "$APP/docs/$f")" && cp -al "$SRC/docs/$f" "$APP/docs/$f"; }
 done
 chmod -R o+rX "$APP/docs"
 du -sh "$APP" | cut -f1
