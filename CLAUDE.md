@@ -141,6 +141,8 @@
   the alarm still ring; anything that must ring at night goes `node notify.js --urgent "t" "m"`. He changes it in
   Settings, box "שעות שקטות"; the listener applies the line "שעות שקטות HH:MM עד HH:MM" / "שעות שקטות כבוי" itself.
 
+- **שם המוניטור (22.11.2026):** בהגדרות, תיבה "שם המוניטור" שולחת "שם המוניטור: <שם>"; המאזין שומר אותו ב data/status/name.json בלי מודל (lib/monitor-name.js), והדף מציג אותו במקום השם שב instance.json. שם ריק מחזיר את המקורי. instance.json לא נוגעים בו.
+
 - **Every update blinks, in every monitor (Itzik, 13.10.2026).** A new tile gets `data-new="1"` (the hand, fast blink).
   Something new placed inside an existing tile gets a bumped `data-upd="<date-slug>"` on that tile button; the `updTiles`
   boot gives it `updblink`, a slow soft pulse (2.6s), until he opens it once. "Not a strong blink. An update is a slow,

@@ -1545,6 +1545,15 @@ function kapsoProject(q, s) {
 
 const server = http.createServer(function (q, s) {
   const u = new URL(q.url, 'http://x');
+  // 22.11.2026 (lib/cal-feed.js): the subscribed calendar of the appointments and tasks. A calendar app cannot send a body,
+  // so the key is in the address; a wrong key gets 404 with no body, and nothing else is answered here.
+  const calm = u.pathname.match(/^\/api\/cal\/([^/]+)\.ics$/);
+  if (calm && q.method === 'GET') {
+    let ok = false; try { ok = require('./lib/cal-feed.js').keyOk(DATA, calm[1]); } catch (e) { log('cal feed: ' + e.message); }
+    if (!ok) { s.writeHead(404); return s.end(); }
+    s.writeHead(200, { 'Content-Type': 'text/calendar; charset=utf-8', 'Cache-Control': 'no-store' });
+    return s.end(require('./lib/cal-feed.js').ics(DATA));
+  }
   // 14.11.2026 (lib/partner.js): Facebook through partner access until Meta's App Review. GET the page, POST the Page link.
   if ((u.pathname === '/api/partner' && q.method === 'GET') || (u.pathname === '/api/partner/claim' && q.method === 'POST')) {
     (async function () {

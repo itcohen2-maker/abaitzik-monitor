@@ -25,6 +25,8 @@ const fs = require('fs');
 const path = require('path');
 // Which monitor this is. Without instance.json this is Itzik's, word for word.
 const inst = require('./lib/instance.js');
+// 22.11.2026: the name the owner set in Settings (data/status/name.json), shown in the header and the title.
+const monName = require('./lib/monitor-name.js');
 /*
   14.11.2026, the offer page sells meeting summaries, clients, calendar, mail sorting and quotes with signing in every
   package. So the business set (lib/biz-home.js) is on for every customer with a package: a plan file (lib/plan-io.js)
@@ -953,6 +955,9 @@ function build() {
     clinic: (Array.isArray(inst.screens) && inst.screens.some((id) => TENANT_TOP.indexOf(id) >= 0)) ? (() => { try { return require('./lib/clinic.js').payload(inst.dataPath); } catch (e) { return null; } })() : null,
     // 11.11.2026: a customer's visit key (lib/visits.js), sealed. With it the page says when it is open and for how long.
     visitKey: inst.name === 'abaitzik' ? '' : (() => { try { const k = fs.readFileSync(path.join(inst.dataPath, 'status', 'visit-key.txt'), 'utf8').trim(); return /^[a-f0-9]{32}$/.test(k) ? k : ''; } catch (e) { return ''; } })(),
+    // 22.11.2026, idea he took: the subscribed calendar key (lib/cal-feed.js), sealed payload only, his copy only.
+    // Shown only after the bridge answered the address once (status/cal-feed-on.txt), so no button leads to a dead link.
+    calKey: inst.name === 'abaitzik' && fs.existsSync(path.join(inst.dataPath, 'status', 'cal-feed-on.txt')) ? (() => { try { return require('./lib/cal-feed.js').key(inst.dataPath); } catch (e) { return ''; } })() : '',
     // 11.11.2026: Itzik's 👀 tile, the customers' visits with the display name from data/tenants. Sealed, his copy only.
     // 12.11.2026, Itzik: "אם מישהו נרשם דרך הטופס אפילייט של שי, אתה צריך לעדכן אותי באריחים".
     // Every affiliate: leads from his form or the site (affiliates.js rows) and trial signups through ?ref (data/signup/refs).
@@ -1337,7 +1342,7 @@ function build() {
       .filter(Boolean);
   } catch (e) { /* no requests yet */ }
   const openPin = /^[0-9a-f]{64}$/.test(inst.openPin) ? inst.openPin : '';
-  const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: inst.pageTitle,
+  const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: monName.shown(inst.pageTitle),
     screens, unlocks,
     computer: inst.computer, phone: inst.phone, welcome: inst.welcome, homeTile: inst.homeTile || '', gender: inst.gender || '',
     uploadUrl: inst.uploadUrl || '', clalit: !!inst.clalit, openPin, guides, links });
@@ -1417,7 +1422,7 @@ function build() {
   const MANIFEST = path.join(OUT_DIR, 'manifest.webmanifest');
   if (!fs.existsSync(MANIFEST)) {
     fs.writeFileSync(MANIFEST, JSON.stringify({
-      name: inst.pageTitle, short_name: inst.appTitle,
+      name: monName.shown(inst.pageTitle), short_name: inst.appTitle,
       description: 'מה נכנס, מה נענה, ומה עוד מחכה.',
       start_url: './', scope: './', display: 'standalone', dir: 'rtl', lang: 'he',
       background_color: '#191714', theme_color: '#14675a',
@@ -1782,7 +1787,7 @@ ${require('./lib/public-demo.js').head(inst) /* 17.11.2026: the public demo only
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png?v=20261017">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20261017">
-<title>${inst.pageTitle}</title>
+<title>${esc(monName.shown(inst.pageTitle))}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@300;400;500;700&display=swap">
@@ -4979,7 +4984,7 @@ try{
     checked against the server. A page can be five minutes old and its data an
     hour stale, and saying so is the difference between a monitor and a poster.
   -->
-  <div class="t">${inst.name === 'abaitzik' ? 'מוניטור בבנייה עצמית' : 'המוניטור של ' + inst.owner}</div>
+  <div class="t">${monName.read() ? esc(monName.read()) : inst.name === 'abaitzik' ? 'מוניטור בבנייה עצמית' : 'המוניטור של ' + inst.owner}</div>
   <div class="s" id="built"></div>
   <div class="s dim" id="checked" hidden></div>
  </div>
@@ -5152,7 +5157,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <button type="button" class="gt gRec" data-grp="home" id="gRecipes" data-upd="kubbe-20261114b"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
   <button type="button" class="gt g16" data-grp="money" id="gIsra" hidden><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
-  <button type="button" class="gt g10" data-grp="home" id="gFiles" data-new="1" data-upd="20261112-fiday"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
+  <button type="button" class="gt g10" data-grp="home" id="gFiles" data-new="1" data-upd="20261122-fivol"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
   <button type="button" class="gt g8" data-grp="work" id="gHomestyle" data-new="1" data-upd="20261023-hs-quote3"><b>🏠 הום סטייל</b><small>חדש: הצעת מחיר ובקשה לאיש המחשבים</small></button>
   <button type="button" class="gt g10" data-grp="home" id="gCams" data-new="1" data-upd="20261022-privacy" data-files="cameras-tenants.png,cameras-tenants.pdf,cameras-erocam.txt"><b>📹 מצלמות</b><small>דף לדיירים: הברקוד, הסיסמה ושמונה שלבים</small></button>
   <!--
@@ -5178,7 +5183,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
     tasks of today, and a peek at tomorrow.
   -->
   <button type="button" class="gt gMyDay" data-grp="day" id="gMyDay" data-new="1" data-upd="20261024-tdel"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
-  ${inst.name === 'abaitzik' ? '<!-- 18.11.2026, Itzik: two tiles of the same appointments was a double. His 🏥 lives only in 🏡 מצב אישי (🩺 תורים עתידיים, opens the same screen). Customers keep it here: their 🩺 does not open it. -->' : '<button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="20261122-past-appts"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>'}
+  ${inst.name === 'abaitzik' ? '<!-- 18.11.2026, Itzik: two tiles of the same appointments was a double. His 🏥 lives only in 🏡 מצב אישי (🩺 תורים עתידיים, opens the same screen). Customers keep it here: their 🩺 does not open it. -->' : '<button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="calfeed-20261122"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>'}
   <button type="button" class="gt g16" data-grp="day" id="gRemind" data-upd="20261115-remsnooze"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10 roundTile roundCap" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-caption-20261112"><span>📝</span><small>פתקים</small></button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
@@ -5512,6 +5517,17 @@ ${pushUi.html(pushKey())}
   <input type="time" id="quietTo" value="07:00" aria-label="נגמרות ב">
   <button type="button" class="skb" id="quietOn">שמירה</button>
   <button type="button" class="skb" id="quietOff">כבוי</button>
+ </div>
+</div>
+<!-- 22.11.2026: the monitor name, one line to the listener (lib/monitor-name.js). Empty goes back to the original name. -->
+<div class="alerts" id="nameBox">
+ <div>
+  <b>שם המוניטור</b>
+  <small id="nameSaid">השם שמופיע בראש המסך. שם ריק מחזיר את השם המקורי.</small>
+ </div>
+ <div class="skinrow" role="group" aria-label="שם המוניטור">
+  <input type="text" id="monName" maxlength="30" value="${esc(monName.read())}" aria-label="שם המוניטור">
+  <button type="button" class="skb" id="monNameSave">שמירה</button>
  </div>
 </div>
 <!-- 14.11.2026: one switch per kind of notification, so only what matters rings (lib/alert-kinds.js). -->
@@ -10454,6 +10470,16 @@ pingBind();
  document.getElementById('quietOff').addEventListener('click',function(){go(false);});
  paint();
 })();
+/* 22.11 monitor name: one line to the listener, which applies it with no model. */
+(function(){
+ var b=document.getElementById('monNameSave'),f=document.getElementById('monName');if(!b||!f)return;
+ b.addEventListener('click',function(){
+  var v=f.value.trim();
+  sendText('שם המוניטור','שם המוניטור: '+v,'הגדרה').then(function(){
+   toast(v?'נשמר. השם יתחלף אחרי רענון.':'נשמר. חוזר לשם המקורי אחרי רענון.');
+  }).catch(function(){toast('לא יצא, אין רשת. לנסות שוב.');});
+ });
+})();
 /* 14.11 alert kinds: one line to the listener, which applies it with no model. */
 (function(){
  var b=document.getElementById('kindSave');if(!b)return;
@@ -13599,10 +13625,12 @@ function renderAppts(){
    +(rm?'<div class="n">⏰ תזכורת '+esc(new Date(rm.due).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'}))+' בתשע בבוקר</div>':'')
    +(a.doc?'<div class="n"><a href="'+esc(a.doc)+'" target="_blank" rel="noopener">'+esc(a.docLabel||'ההפניה')+'</a></div>':'')
    +(a.img?'<a href="'+esc(a.img)+'" target="_blank" rel="noopener"><img src="'+esc(a.img)+'" alt="ההודעה מבית החולים" loading="lazy"></a>':'')
-   +'<button type="button" class="apCal" data-cal="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">📅 ליומן של האייפון</button>'
+   +(D.calKey?'':'<button type="button" class="apCal" data-cal="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">📅 ליומן של האייפון</button>')
    +'<button type="button" class="apEdit" data-edit="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">✏️ לשנות</button>'
    +'<button type="button" class="apDel" data-del="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">🗑️ למחוק</button></div>';
  }).join(''):'<div class="empty">אין תור עתידי. מוסיפים תור בטופס כאן למטה.</div>';
+ // 22.11.2026, idea he took: one subscribed calendar instead of one file per appointment. The phone pulls it by itself (lib/cal-feed.js).
+ if(D.calKey)host.insertAdjacentHTML('afterbegin','<button type="button" id="apSub" style="font-size:15px;margin:0 0 10px;width:100%">📲 להוסיף ליומן בטלפון (מתעדכן לבד)</button>');
  if(P.length)host.innerHTML+='<details class="apPast" style="margin-top:12px"><summary style="cursor:pointer;font-size:15px">🗂 תורים שעברו ('+P.length+')</summary>'+P.map(function(a){
   var d=a.when,x=new Date(a.when);
   try{d=x.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Asia/Jerusalem'});}catch(e){}
@@ -13614,6 +13642,7 @@ function renderAppts(){
  host.onclick=async function(e){
   // 24.10, idea he took: "לשנות תור בלי למחוק ולכתוב מחדש". ✏️ fills the form above; sending it overwrites the same appointment.
   // 30.10, idea he took: "הוספת תור ליומן של האייפון". 📅 downloads a calendar file; the phone opens it and adds the appointment.
+  if(e.target.closest&&e.target.closest('#apSub')){location.href='webcal://wa.abaitzik.com/api/cal/'+D.calKey+'.ics';return;}
   var cal=e.target.closest&&e.target.closest('[data-cal]');
   if(cal){var a2=(D.appts||[]).filter(function(a){return a.id===cal.getAttribute('data-cal');})[0];if(a2)apCalDownload(a2);return;}
   var ed=e.target.closest&&e.target.closest('[data-edit]');
@@ -13770,6 +13799,12 @@ function renderFiles(){
    ones and anything marked cancelled fold under "גרסאות קודמות".
  */
  function kb(f){return f.s>1048576?(Math.round(f.s/104857.6)/10+' MB'):(Math.max(1,Math.round(f.s/1024))+' KB');}
+ /* 22.11.2026, Itzik's idea "רוצה את זה": a size line on top of my files, and the three biggest, so it is clear what takes room. */
+ var fiTot=All.reduce(function(a,f){return a+(+f.s||0);},0);
+ var fiBig=All.slice().sort(function(a,b){return (+b.s||0)-(+a.s||0);}).slice(0,3);
+ var fiSz=function(s){return s>=1073741824?(Math.round(s/107374182.4)/10+' GB'):s>1048576?(Math.round(s/104857.6)/10+' MB'):(Math.max(1,Math.round(s/1024))+' KB');};
+ var fiVol='<div class="rephint" id="fiVol" style="margin:4px 0 8px">💾 בשמירה אצלנו: <b>'+fiSz(fiTot)+'</b> ב '+All.length+' קבצים'
+  +(fiBig.length>1?'<br><small>הגדולים ביותר: '+fiBig.map(function(f){return '<a href="files/'+esc(f.n)+'">'+esc(String(f.n).split('/').pop())+'</a> ('+fiSz(+f.s||0)+')';}).join(' · ')+'</small>':'')+'</div>';
  /*
    10.10, from the reviewer, taken by Itzik: "הקבצים שלי הם רשימת שמות יבשה".
    Only a name and a size, so a designer looking for one sample had to open
@@ -13808,7 +13843,7 @@ function renderFiles(){
   });
   if(old.length)h+='<details style="margin-top:6px"><summary style="padding:10px 4px;color:var(--dim)">גרסאות קודמות ('+old.length+')</summary>'
    +old.map(function(f){return row(f,false,true);}).join('')+'</details>';
-  box.innerHTML=tabs+h;
+  box.innerHTML=fiVol+tabs+h;
   return;
  }
  // 4.11.2026 (direction ד): four coloured drawers by age instead of a heading for every day.
@@ -13822,7 +13857,7 @@ function renderFiles(){
   h+='</div>';
  });
  if(old.length)h+='<h3 data-n="'+old.length+'">🗂️ גרסאות קודמות</h3><div>'+old.map(function(f){return row(f,false,true);}).join('')+'</div>';
- box.innerHTML=tabs+h;
+ box.innerHTML=fiVol+tabs+h;
  dwRe(box,{key:'files',counts:'data',short:{'גרסאות קודמות':'קודמות','ישן יותר':'ישן'}});
 }
 function fileWork(n){

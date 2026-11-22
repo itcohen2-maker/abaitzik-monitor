@@ -807,6 +807,24 @@ function recordIncoming(m) {
         return true;
       } catch (e) { say('!! שעות שקטות לא נשמרו: ' + e.message); }
     }
+    /*
+      22.11.2026: the monitor's name from the settings box, applied here with no model. Only the
+      name file changes (instance.json is locked on a customer's monitor); build.js shows it.
+    */
+    const nv = codeOk && require('./lib/monitor-name.js').parse(text);
+    if (nv) {
+      try {
+        const nm = require('./lib/monitor-name.js').set(nv.name);
+        rec.status = 'done';
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-monitor-name.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id,
+            text: nm.name ? 'השם של המוניטור עודכן ל' + nm.name + '. יוצג אחרי הרענון.' : 'חזרתי לשם המקורי של המוניטור.', status: 'done' }, null, 1), 'utf8');
+        say('שם המוניטור: ' + (nm.name || '(ריק, שם מקורי)'));
+        try { publishChat(); } catch (e) { /* the next build carries it */ }
+        return true;
+      } catch (e) { say('!! שם המוניטור לא נשמר: ' + e.message); }
+    }
     // 14.11: the alert kind switches from Settings, the same way, with no model (lib/alert-kinds.js).
     const kv = codeOk && require('./lib/alert-kinds.js').parse(text);
     if (kv) {
