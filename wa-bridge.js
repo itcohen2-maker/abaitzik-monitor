@@ -493,6 +493,9 @@ async function onMessage(m, contactName) {
   }
   markRead(m.id);
   { const said = alarmTap(m, 'abaitzik'); if (said) { await waSend(m.from, said); return; } }
+  // 22.11.2026 (idea 202611172144-quickconnect): his own number sending the quick connect phrase gets a fixed answer, no session.
+  { const qt = textOf(m);
+    if (qt && QK.looksLikeConnect(qt) && QK.parse(qt)) { log('quick connect from the owner number, answered'); await waSend(m.from, 'המספר הזה כבר מחובר למוניטור שלך ✓. כדי לבדוק חיבור מהיר של לקוח, שולחים את ההודעה מטלפון אחר.'); return; } }
   // 4.11: Meta's 24 hour window opens with his message; lib/wa-out.js reads this.
   { const sl = loadState(); sl.lastIn = sl.lastIn || {}; sl.lastIn[m.from] = Date.now(); saveState(sl); }
   // 1.11, for Shai's demo: "summarize meetings and send tasks", by voice, on WhatsApp.

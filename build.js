@@ -3509,6 +3509,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ap img{display:block;width:100%;max-width:240px;border-radius:10px;margin-top:8px}
 .tk{display:flex;align-items:center;gap:12px;padding:12px;margin:8px 0;border-radius:12px;background:rgba(127,127,127,.12);cursor:pointer;font-size:1.05em}
 .tk input{width:24px;height:24px;flex:0 0 24px}
+.tkSearch{width:100%;box-sizing:border-box;padding:10px 12px;margin:4px 0 6px;border-radius:12px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);color:inherit;font:inherit;font-size:16px}
 .tk.done span{text-decoration:line-through;opacity:.55}
 .tk.tnc{cursor:default}.tk.tnc span{flex:1}
 .tkDel{margin-inline-start:auto;border:0;background:none;font-size:18px;padding:4px 6px;cursor:pointer}
@@ -5177,7 +5178,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
     tasks of today, and a peek at tomorrow.
   -->
   <button type="button" class="gt gMyDay" data-grp="day" id="gMyDay" data-new="1" data-upd="20261024-tdel"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
-  ${inst.name === 'abaitzik' ? '<!-- 18.11.2026, Itzik: two tiles of the same appointments was a double. His 🏥 lives only in 🏡 מצב אישי (🩺 תורים עתידיים, opens the same screen). Customers keep it here: their 🩺 does not open it. -->' : '<button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="20261116-tests-img"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>'}
+  ${inst.name === 'abaitzik' ? '<!-- 18.11.2026, Itzik: two tiles of the same appointments was a double. His 🏥 lives only in 🏡 מצב אישי (🩺 תורים עתידיים, opens the same screen). Customers keep it here: their 🩺 does not open it. -->' : '<button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="20261122-past-appts"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>'}
   <button type="button" class="gt g16" data-grp="day" id="gRemind" data-upd="20261115-remsnooze"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10 roundTile roundCap" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-caption-20261112"><span>📝</span><small>פתקים</small></button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
@@ -6187,6 +6188,8 @@ __RIVSHARE__
 <section id="pTk" hidden>
  <h2>משימות</h2>
  <div class="rephint">לחיצה על משימה מסמנת שבוצעה. הסימון נשמר בטלפון שלך.</div>
+ <!-- 22.11, idea he took: "אין שורת חיפוש במסך המשימות". Filters the list on the phone as he types. -->
+ <input type="search" id="tkSearch" class="tkSearch" placeholder="🔍 חיפוש במשימות" autocomplete="off" aria-label="חיפוש במשימות">
  <div id="tkBox"></div>
  <!-- 17.10, idea he took: "במסך המשימות אין איך להוסיף משימה". The same box as מה יש לי היום, with a day picker. -->
  <div class="tdSec">להוסיף משימה</div>
@@ -13581,6 +13584,8 @@ function renderAppts(){
  if(!host)return;
  var now=Date.now();
  var A=(D.appts||[]).filter(function(a){var t=Date.parse(a.when);return isNaN(t)||t>now-3*3600e3;});
+ // 22.11.2026, idea he took: "תורים שכבר עברו נעלמים לגמרי". Past ones fold under the list, newest first, read only.
+ var P=(D.appts||[]).filter(function(a){var t=Date.parse(a.when);return !isNaN(t)&&t<=now-3*3600e3;}).sort(function(a,b){return a.when<b.when?1:-1;});
  host.innerHTML=A.length?A.map(function(a){
   var d=a.when||'עוד בלי תאריך',h='',t0=Date.parse(a.when);
   var rm=remLive().filter(function(r){var u=Date.parse(r.due);return !r.sentAt&&u<t0&&t0-u<3*864e5;})[0];
@@ -13598,6 +13603,13 @@ function renderAppts(){
    +'<button type="button" class="apEdit" data-edit="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">✏️ לשנות</button>'
    +'<button type="button" class="apDel" data-del="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">🗑️ למחוק</button></div>';
  }).join(''):'<div class="empty">אין תור עתידי. מוסיפים תור בטופס כאן למטה.</div>';
+ if(P.length)host.innerHTML+='<details class="apPast" style="margin-top:12px"><summary style="cursor:pointer;font-size:15px">🗂 תורים שעברו ('+P.length+')</summary>'+P.map(function(a){
+  var d=a.when,x=new Date(a.when);
+  try{d=x.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Asia/Jerusalem'});}catch(e){}
+  return '<div class="ap" style="opacity:.75"><div class="d">'+esc(d)+'</div><b>'+esc(a.what)+'</b>'
+   +(a.where?'<div class="w">📍 '+esc(a.where)+'</div>':'')
+   +(a.note?'<div class="n">'+esc(a.note)+'</div>':'')+'</div>';
+ }).join('')+'</details>';
  // 20.10, idea he took: "אי אפשר למחוק תור שנכנס בטעות". The button sends "מחיקת תור: <id>" and the server deletes the file.
  host.onclick=async function(e){
   // 24.10, idea he took: "לשנות תור בלי למחוק ולכתוב מחדש". ✏️ fills the form above; sending it overwrites the same appointment.
@@ -14190,7 +14202,11 @@ function renderTasks(){
  var D2=T.filter(function(t){return done[t.id];});
  if(D2.length)h+='<button type="button" class="gclear" id="tkClear">עשיתי הכל · '+D2.length
   +'<small>מנקה רק את מה שסימנת. מה שלא סומן נשאר.</small></button>';
- T.forEach(function(t){
+ // 22.11: the search row above the list shows only tasks that contain what he typed.
+ var sq=document.getElementById('tkSearch'),q=sq?sq.value.trim().toLowerCase():'';
+ if(sq&&!sq.dataset.on){sq.dataset.on='1';sq.oninput=renderTasks;}
+ var TV=q?T.filter(function(t){return String(t.text||'').toLowerCase().indexOf(q)>=0;}):T;
+ TV.forEach(function(t){
   if(t.day!==last){
    last=t.day;
    var lbl=t.day;
@@ -14201,7 +14217,7 @@ function renderTasks(){
    +(done[t.id]?' checked':'')+'><span>'+esc(t.text)+'</span>'+tkActs(t)+'</label>';
  });
  // An empty screen says in one line what it is for, like the ideas screen does.
- host.innerHTML=h||'<div class="empty">אין משימות. כל משימה שתשלח למוניטור תופיע כאן לפי היום שלה.</div>';
+ host.innerHTML=h||(q?'<div class="empty">אין משימה עם "'+esc(q)+'".</div>':'<div class="empty">אין משימות. כל משימה שתשלח למוניטור תופיע כאן לפי היום שלה.</div>');
  host.onclick=function(e){var d=e.target.closest&&e.target.closest('[data-tkdel]');if(d){e.preventDefault();tkDelete(d);return;}
   var ed=e.target.closest&&e.target.closest('[data-tkedit]');if(ed){e.preventDefault();tkEditStart(ed);}};
  var b=document.getElementById('tkClear');
