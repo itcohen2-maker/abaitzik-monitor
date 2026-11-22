@@ -613,7 +613,7 @@
   "order": 14,
   "file": "media/plate-tea-v1.mp4",
   "poster": "media/plate-tea-v1.jpg",
-  "approved": false,
+  "approved": true,
   "screens": [
    {
     "head": "תה ירוק",
