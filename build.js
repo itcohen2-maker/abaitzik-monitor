@@ -2166,6 +2166,7 @@ button.abtn[disabled]{opacity:.55}
    four lines and stretched its row. Every tile's small line stops at two lines, so every tile keeps one size. */
 .grid .gt small{display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.grid .gt b{display:-webkit-box!important;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}#blkBiz .gt{padding:10px!important;min-height:94px}
 .gt.leadNew[hidden]{display:none}
+.gt.tHid{display:none!important}
 /* 6.11.2026: Isracard lives inside the lawyer tile (gSale); its own tile stays off. */
 #gIsra{display:none!important}
 .gt.leadNew.lnSeen{animation:none}
@@ -13185,7 +13186,7 @@ function applyHidden(){
  var hid=tileStore('tilesHidden',[]);
  tileIds().forEach(function(id){
   var el=document.getElementById(id);
-  if(el)el.hidden=hid.indexOf(id)>=0;
+  if(el){el.hidden=hid.indexOf(id)>=0;el.classList.toggle('tHid',el.hidden);}
  });
  // 24.10: a tile for a feature that is off stays hidden whatever this loop says.
  try{applyFeatures();}catch(e){}
@@ -24818,7 +24819,7 @@ function tileSheet(t){
    var d=w.querySelector('.tsh-del');
    if(!d.classList.contains('sure')){d.classList.add('sure');d.textContent='בטוח? לחיצה נוספת מוחקת את "'+name+'"';return;}
    var hid=tileStore('tilesHidden',[]);if(hid.indexOf(t.id)<0)hid.push(t.id);tileSave('tilesHidden',hid);
-   t.hidden=true;w.remove();toast('"'+name+'" נמחק מהמסך. אפשר להחזיר אותו בהגדרות.');
+   t.hidden=true;t.classList.add('tHid');w.remove();toast('"'+name+'" נמחק מהמסך. אפשר להחזיר אותו בהגדרות.');
   }
  });
 }
@@ -24883,8 +24884,9 @@ function mergeBiz(g){
  var list=Array.prototype.filter.call(bz.children,function(c){return c.classList&&c.classList.contains('gt')&&c.id!=='gLeads';});
  for(var i=list.length-1;i>=0;i--)g.insertBefore(list[i],g.firstChild);
  // 22.11.2026, Itzik: "מחיקת האריחים לא עובדת במוניטור דמה". applyHidden ran before these business tiles joined the grid,
- // so a deleted one came back after every reload. Hide them here, as they move in.
- var hid=tileStore("tilesHidden",[]);list.forEach(function(c){if(hid.indexOf(c.id)>=0)c.hidden=true;});
+ // so a deleted one came back after every reload; and each business tile sets its own hidden from its data
+ // (paintDemoSt: t.hidden=!S), which undid it again. The class tHid hides with !important and nothing paints over it.
+ var hid=tileStore("tilesHidden",[]);list.forEach(function(c){c.classList.toggle("tHid",hid.indexOf(c.id)>=0);});
 }
 (function(){
  var grid=document.querySelector('.grid');
