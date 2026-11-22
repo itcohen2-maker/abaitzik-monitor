@@ -998,6 +998,8 @@ function build() {
     // The server copy of the notes and task ticks, which a phone with an empty
     // storage fills itself from. See lib/notes-sync.js.
     notesSync: require('./lib/notes-sync.js').read(path.join(inst.dataPath, 'notes', 'notes')),
+    // 22.11.2026, Itzik: "שים לי במסך אישי את כל הפרטים של המרצדס שלי". data/personal/car.json (gitignored), sealed like the rest.
+    car: inst.name === 'abaitzik' ? (() => { try { return JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'personal', 'car.json'), 'utf8')); } catch (e) { return null; } })() : null,
   };
 
   /*
@@ -16580,7 +16582,8 @@ var PS_GO={doctor:'appts',shop:'https://docs.google.com/document/d/1A2tvet0ucYND
   var mine=(INSTANCE&&INSTANCE.name)==='abaitzik';
   return '<div class="psTop"><b>🏡 הבית שלי</b><button type="button" class="psBack" data-a="x">💼 חזרה לעסקי</button></div>'
    +(mine?'<div class="psGrid" id="psGridMine"><button type="button" class="psT" id="ps-kn" data-a="kn" style="--c:#d6e6cf"><i>🌿</i><div>מרשם קנביס<small>המרשם של החודש, להדפסה</small></div></button>'
-     +'<button type="button" class="psT" id="ps-nache" data-a="nache" style="--c:#dbe7f3"><i>♿</i><div>תעודת נכה<small>לפתוח, לשלוח, להדפיס</small></div></button></div>':'')
+     +'<button type="button" class="psT" id="ps-nache" data-a="nache" style="--c:#dbe7f3"><i>♿</i><div>תעודת נכה<small>לפתוח, לשלוח, להדפיס</small></div></button>'
+     +(D.car?'<button type="button" class="psT" id="ps-car" data-a="car" style="--c:#e3e7ee"><i>🚐</i><div>המרצדס שלי<small>'+esc(D.car.sub||'')+'</small></div></button>':'')+'</div>':'')
    +(sent?'<div class="psSent" role="status">'+SENT+'</div>':'')
    +(T.length?'<small>תורים, כרטיסים, חשבונות והודעות שמגיעים במייל נכנסים לבד לאריח המתאים, ויורדים כשהיום עבר.</small><div class="psGrid" id="psGridT">'+T.map(tileHtml).join('')+'</div>':'<small>עוד לא בחרת מה יופיע כאן.</small>')
    +'<button type="button" class="psBtn lt" data-a="pick">✏️ לשנות מה מופיע</button>'
@@ -16609,6 +16612,7 @@ var PS_GO={doctor:'appts',shop:'https://docs.google.com/document/d/1A2tvet0ucYND
   if(k){var i=sel.indexOf(k);if(i<0)sel.push(k);else sel.splice(i,1);b.classList.toggle('on',i<0);return;}
   if(a==='x')return close();
   if(a==='kn'){kanabisSheet();return;}
+  if(a==='car'){if(typeof carSheet==='function')carSheet();return;}
   var go=b.getAttribute('data-go');
   // 15.11.2026, Itzik: "אני לא רוצה להגיע לדרייב, אני רוצה להגיע כמו לתורים עתידיים": the 🏥 screen itself.
   if(go){if(go==='kn')kanabisSheet();else if(go==='appts'){close();pane('Q');renderAppts();}else window.open(go,'_blank','noopener');return;}
@@ -22846,6 +22850,22 @@ function kanabisSheet(showAll){
  document.body.appendChild(w);
 }
 var knIc=document.getElementById('icKanabis');if(knIc)knIc.onclick=kanabisSheet;
+// 22.11.2026, Itzik: "את כל מה שביררנו היום בנוגע למרצדס, תשמור, שים לי במסך אישי את כל הפרטים". From D.car (data/personal/car.json).
+function carSheet(){
+ var C=D.car;if(!C)return;var old=document.getElementById('carSheet');if(old)old.remove();
+ var box='background:var(--sunk);color:var(--ink);border-radius:12px;padding:10px;margin:8px 0;text-align:right;font:500 14px/1.55 Heebo,sans-serif';
+ var w=document.createElement('div');w.id='carSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','המרצדס שלי');
+ w.innerHTML='<div class="ycard"><b>'+esc(C.title||'🚐 המרצדס שלי')+'</b>'
+  +(C.badges||[]).map(function(t){return '<div style="background:#e6f4ea;color:#14532d;border-radius:12px;padding:8px 10px;margin:6px 0;text-align:right;font:800 14px/1.5 Heebo,sans-serif">'+esc(t)+'</div>';}).join('')
+  +'<div style="'+box+'">'+(C.rows||[]).map(function(r){return '<div style="margin:4px 0"><b>'+esc(r[0])+':</b> '+esc(r[1])+'</div>';}).join('')+'</div>'
+  +(C.price&&C.price.length?'<b style="display:block;margin-top:10px">💰 כמה היא שווה</b><div style="'+box+'">'+C.price.map(function(t){return '<div style="margin:4px 0">'+esc(t)+'</div>';}).join('')+'</div>':'')
+  +(C.doc?'<button type="button" class="yb yb1" data-f="'+esc(C.doc)+'">📜 רישיון הרכב, לפתוח ולהדפיס</button>':'')
+  +(C.links||[]).map(function(l){return '<a class="yb" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="'+esc(l[1])+'">'+esc(l[0])+'</a>';}).join('')
+  +'<small style="display:block;margin-top:6px">עודכן ב '+esc(String(C.updated||'').split('-').reverse().join('.'))+'</small>'
+  +'<button type="button" class="yb yx" data-x="1">סגירה</button></div>';
+ w.onclick=function(e){var bt=e.target.closest?e.target.closest('button'):null;if(e.target===w||(bt&&bt.getAttribute('data-x')))return w.remove();var f=bt&&bt.getAttribute('data-f');if(f){w.remove();fileOpen(f);}};
+ document.body.appendChild(w);
+}
 document.getElementById('landList').innerHTML=LANDING.map(function(l){
  return '<div class="item"><div class="top"><span class="who">'+esc(l.name)+'</span>'
   +'<span class="chip">'+esc(l.note)+'</span></div>'
