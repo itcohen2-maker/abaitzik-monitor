@@ -24874,11 +24874,21 @@ function pinHome(home){
  // this screen. They live on the settings screen now, so there is nothing left
  // to pin down there and nothing here to drag them back up.
 }
+// 22.11.2026, Itzik on the dummy: "למה אי אפשר למחוק ולהזיז את האריחים האלה?" The business tiles (blkBiz) stood in a
+// group of their own that the arranging never reached. Where the page says so (the owner look, lib/trade-cards.js sets
+// OWNER_MERGE_BIZ) they join the regular grid, so they move and come off like any tile. The leads tile stays where it is.
+function mergeBiz(g){
+ if(!window.OWNER_MERGE_BIZ||!g)return;
+ var bz=document.getElementById('blkBiz');if(!bz)return;
+ var list=Array.prototype.filter.call(bz.children,function(c){return c.classList&&c.classList.contains('gt')&&c.id!=='gLeads';});
+ for(var i=list.length-1;i>=0;i--)g.insertBefore(list[i],g.firstChild);
+}
 (function(){
  var grid=document.querySelector('.grid');
  var home=document.getElementById('pH');
+ if(window.OWNER_MERGE_BIZ){var bt0=document.getElementById('blkTiles');if(bt0){mergeBiz(bt0);grid=bt0;}}
  if(grid){nameChildren(grid,'tile');applyOrder(grid,'tileOrder');armTiles(grid);}
- (function(){function re(){var g=document.getElementById('blkTiles');if(g&&g!==window.TILES_GRID&&!tEdit){nameChildren(g,'tile');applyOrder(g,'tileOrder');armTiles(g);}}
+ (function(){function re(){var g=document.getElementById('blkTiles');if(g&&g!==window.TILES_GRID&&!tEdit){mergeBiz(g);nameChildren(g,'tile');applyOrder(g,'tileOrder');armTiles(g);}}
   // re-arm the moment the grid is swapped (a long press right after the swap must work too), and once a second as a backstop
   try{new MutationObserver(re).observe(document.body,{childList:true,subtree:true});}catch(e){}
   setInterval(re,1000);})();
