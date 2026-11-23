@@ -26,7 +26,7 @@ cp -p "$SRC/gate-params.json" "$SRC/gate-key.txt" "$APP/"
 mkdir -p "$APP/data"
 rsync -a --delete "$SRC/data/" "$APP/data/"
 node -e 'const fs=require("fs"),[src,dst,host]=process.argv.slice(1);const j=JSON.parse(fs.readFileSync(src,"utf8"));
-j.ownerLook=true;j.publicUrl="https://"+host+"/";j.basePath="/";j.origin="https://"+host;j.uploadUrl="";
+j.ownerLook=true;j.calBoard=true;j.publicUrl="https://"+host+"/";j.basePath="/";j.origin="https://"+host;j.uploadUrl="";
 fs.writeFileSync(dst,JSON.stringify(j,null,1));' "$SRC/instance.json" "$APP/instance.json" "$HOST"
 chown -R monitor:monitor "$APP"
 chmod 711 "$APP"

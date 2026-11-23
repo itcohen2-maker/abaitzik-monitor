@@ -5083,6 +5083,7 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
 <section id="pH">
 ${require('./lib/trade-cards.js').html(inst)}
 ${require('./lib/trade-desk.js').html(inst)}
+${require('./lib/cal-board.js').html(inst)}
 ${(() => { try { return require('./lib/bookings-ui.js').html(inst); } catch (e) { console.error('bookings off: ' + e.message); return ''; } })()}
 ${(() => { try { return require('./lib/trade-free.js').html(inst); } catch (e) { return ''; } })()}
 ${require('./lib/home-ui.js').greet}
@@ -20358,6 +20359,7 @@ function calSheet(all,mode,ym,sel){
  };
  var ev=C.events.slice().sort(function(a,b){return Date.parse(a.start)-Date.parse(b.start);});
  var h='<div class="ycard"><b>📅 היומן</b>';
+ if(D.cal&&typeof calWeekMini==='function')h+=calWeekMini();
  if(!D.cal)h+='<p>היומן עוד לא מחובר. אחרי החיבור יופיעו כאן כל הפגישות שלך.</p><button type="button" class="yb" data-k="conn">🔌 לחבר את היומן</button>';
  else if(!C.ok)h+='<p>החיבור ליומן של גוגל נותק, ולכן מה שכאן לא מתעדכן.</p>'+(C.connect?'<a class="yb" href="'+esc(C.connect)+'" target="_blank" rel="noopener">🔗 לחבר את היומן מחדש</a>':'');
  h+='<div class="calmode"><button type="button" data-mode="list" class="'+(mode==='list'?'on':'')+'">📋 רשימה</button><button type="button" data-mode="month" class="'+(mode==='month'?'on':'')+'">🗓️ חודש</button></div>';
