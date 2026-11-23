@@ -170,3 +170,11 @@ test('B: a mouse hold on the home does not start the arranging mode; Escape leav
   const tc = require('fs').readFileSync(require('path').join(__dirname, '..', 'lib', 'trade-cards.js'), 'utf8');
   assert.ok(tc.includes("w.addEventListener('pointerdown', function (e) { if (!window.editing) e.stopPropagation(); });"));
 });
+
+test('the one-time mic check is a flow block of the desktop work area, never a fixed card over a card', () => {
+  const css = styleOf(TD.html(inst('beauty')));
+  assert.match(css, /#micFirst\{position:relative!important;/);
+  assert.ok(!/#micFirst\{[^}]*position:fixed/.test(css), 'no fixed mic card on the desk');
+  const js = TD.html(inst('beauty'));
+  assert.ok(js.includes("$('micFirst')"), 'the page moves the card into the work area and back');
+});
