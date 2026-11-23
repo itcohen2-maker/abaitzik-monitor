@@ -73,7 +73,7 @@ function home(id) { return '/home/' + id + '/' + id + '-monitor'; }
     try { used = require('./lib/plan.js').usage(fs.readFileSync(path.join(home(id), 'data', 'status', 'usage.jsonl'), 'utf8'), { from: start, to: start + 7 * 864e5 }).actions; } catch (e) { used = 0; }
     const c = { name: q.name || '', url: 'https://' + q.host + '/', google: !!(src.step && src.mail), mails: since.length,
       urgent: since.filter((m) => m.tag === 'דחוף').length, daysLeft: Math.max(1, Math.ceil((start + 7 * 864e5 - NOW) / 864e5)),
-      used, total: 40, lang: RU.tenantLang(home(id)), endText: (RU.tenantLang(home(id)) === 'ru' ? RU : N).endText(start + 7 * 864e5) };
+      used, total: require('./lib/plan.js').PACKAGES.trial.actions, lang: RU.tenantLang(home(id)), endText: (RU.tenantLang(home(id)) === 'ru' ? RU : N).endText(start + 7 * 864e5) };
     const m = N.mail(k, c);
     if (DRY) { say(id + ' ' + k + ' → ' + q.email + '\n' + m.subject + '\n' + m.text); continue; }
     const r = await require('./lib/mailer.js').send(DATA, { to: q.email, subject: m.subject, text: m.text });
