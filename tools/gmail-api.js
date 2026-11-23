@@ -35,8 +35,9 @@ async function accessToken() {
   let sec;
   try { sec = j(path.join(ROOT, 'data/setup', acc.setup + '.secrets.json'))[acc.step || 'google']; } catch (e) {}
   if (!sec) fail('account ' + account + ' is not connected yet (the Google button on its setup page was not completed)');
-  const rt = JSON.parse(sec.value).refresh_token;
-  const app = j(path.join(ROOT, 'data/oauth-app.json')).google;
+  const tok = JSON.parse(sec.value), rt = tok.refresh_token;
+  // 23.11.2026: a Gmail grant made by the second Google project refreshes there (lib/oauth.js googleApp)
+  const apps = j(path.join(ROOT, 'data/oauth-app.json')), app = (tok.app === 'googlemail' && apps.googlemail) || apps.google;
   const r = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ client_id: app.clientId, client_secret: app.clientSecret, refresh_token: rt, grant_type: 'refresh_token' }),
