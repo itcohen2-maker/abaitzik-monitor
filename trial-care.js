@@ -70,7 +70,8 @@ function toItzik(text) {
     if (!plan || plan.plan !== 'trial' || !plan.start) continue;
     const start = Date.parse(plan.start);
     if (NOW > start + 8 * 864e5) continue;
-    const my = st.t[id] = st.t[id] || { sent: {}, cursor: start };
+    // the first run starts a day back, not at the trial start
+    const my = st.t[id] = st.t[id] || { sent: {}, cursor: Math.max(start, NOW - 864e5) };
     const female = ((q.profile || {}).gender) === 'f';
     const url = 'https://' + q.host + '/';
     const msgs = chat(id);
@@ -110,16 +111,13 @@ function toItzik(text) {
   const h = israelHour(NOW);
   const due = rows.length && h >= 8 && h < 22 && !(st.lastDigest && NOW - Date.parse(st.lastDigest) < 30 * 60e3);
   if (due) {
-    const text = C.digestText(rows);
-    if (DRY) say('digest:\n' + text);
-    else {
+    // one message per trial, so WhatsApp never cuts it
+    for (const x of rows) {
+      const text = C.digestText([x]);
+      if (DRY) { say('digest:\n' + text); continue; }
       let r = ''; try { r = toItzik(text); } catch (e) { r = 'failed ' + String(e.message).slice(0, 120); }
-      say('digest ' + rows.map((x) => x.id + ':' + x.items.length).join(' ') + ' ' + r);
-      if (!/failed/.test(r)) {
-        rows.forEach((x) => { st.t[x.id].cursor = x.cursor; st.t[x.id].told = []; });
-        st.lastDigest = new Date(NOW).toISOString();
-        changed = true;
-      }
+      say('digest ' + x.id + ':' + x.items.length + ' ' + r);
+      if (!/failed/.test(r)) { st.t[x.id].cursor = x.cursor; st.t[x.id].told = []; st.lastDigest = new Date(NOW).toISOString(); changed = true; }
     }
   }
   if (changed && !DRY) {
