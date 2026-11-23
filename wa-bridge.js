@@ -195,6 +195,8 @@ function filesNamed(text, dataDir) {
     if (!name || name.indexOf('..') > -1) continue;
     const hit = ['files-private', 'files'].map(function (d) { return path.join(dataDir, d, name); }).find(function (f) { try { return fs.statSync(f).isFile(); } catch (e) { return false; } });
     if (hit && out.indexOf(hit) < 0 && fs.statSync(hit).size <= 95 * 1024 * 1024) out.push(hit);
+    // 23.11.2026: a named file the bridge cannot read was skipped in silence (Yosef's quote PDF never went out). Now it is a failure wa-health sees.
+    if (!hit) log('file failed ' + name + ': not found or not readable in ' + dataDir);
   }
   return out;
 }
