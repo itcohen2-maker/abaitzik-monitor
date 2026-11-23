@@ -1,0 +1,66 @@
+{
+ "at": "2026-11-23T02:01:36.773Z",
+ "up": 14400,
+ "since": "2026-11-22T22:01:37.094Z",
+ "last": "",
+ "n": 0,
+ "recent": [
+  {
+   "at": "2026-11-22T21:58:23.871Z",
+   "kind": "text"
+  },
+  {
+   "at": "2026-11-22T21:58:33.236Z",
+   "kind": "text"
+  },
+  {
+   "at": "2026-11-22T21:58:47.503Z",
+   "kind": "text"
+  },
+  {
+   "at": "2026-11-22T21:59:01.638Z",
+   "kind": "text"
+  },
+  {
+   "at": "2026-11-22T21:59:26.943Z",
+   "kind": "text"
+  }
+ ],
+ "budget": {
+  "ntfy": {
+   "label": "ntfy",
+   "used": 0,
+   "cap": 150,
+   "left": 150,
+   "paid": false,
+   "blockedUntil": "",
+   "daily": false
+  },
+  "mail": {
+   "label": "מייל",
+   "used": 0,
+   "cap": 40,
+   "left": 40,
+   "paid": false,
+   "blockedUntil": "",
+   "daily": false
+  },
+  "beat": {
+   "label": "פעימה",
+   "used": 0,
+   "cap": 30,
+   "left": 30,
+   "paid": false,
+   "blockedUntil": "",
+   "daily": false
+  }
+ },
+ "queued": 0,
+ "pc": {
+  "on": true,
+  "seen": "2026-11-23T02:01:17.899Z"
+ },
+ "hold": false,
+ "quota": null,
+ "plan": null
+}
