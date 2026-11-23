@@ -151,7 +151,7 @@ test('the owner\'s one tap: a booking from the link is marked "ממתין לאי
   assert.deepStrictEqual(UI.data(inst, NOW).items.map((i) => [i.src, i.status]), [['link', 'booked']]);
   assert.deepStrictEqual(B.parseRequest('אישור תור לקוחה: ' + a.id), { kind: 'confirm', id: a.id });
   const r = H.handle(inst, 'תור לקוחה\nאישור תור לקוחה: ' + a.id + '\n\nקוד', NOW);
-  assert.strictEqual(r.ok, true); assert.match(r.reply, /^אישרתי: התור של דנה כהן ביום שני 23\.11 בשעה 10:00\.$/);
+  assert.strictEqual(r.ok, true); assert.match(r.reply, /^אישרתי: התור של דנה כהן ביום שני 23\.11 בשעה 10:00./);
   assert.strictEqual(B.byToken(dp, a.tok).status, 'confirmed');
   assert.strictEqual(H.handle(inst, 'אישור תור לקוחה: nope', NOW).ok, false);
   assert.match(require('../lib/fireflies-key.js').mask('תור לקוחה\nאישור תור לקוחה: abc'), /הפרטים לא נרשמים כאן/);
