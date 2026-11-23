@@ -606,9 +606,17 @@
   "ytd": "Closing and reopening an app burns more battery. What really drains it: high screen brightness, constant searching after a weak signal, and apps refreshing data. Your phone freezes background apps on its own. Source: Apple (Craig Federighi, 2016) and Google.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-15T06:00:45.408Z"
+  "posted": true,
+  "postedAt": "2026-11-23T18:02:49.298Z",
+  "approvedAt": "2026-11-15T06:00:45.408Z",
+  "auto": {
+   "reel": "18196995601409239",
+   "story": "18065193392797644",
+   "storyError": null,
+   "page": "2225426855065829",
+   "pageError": null,
+   "channel": "itsolution.global"
+  }
  },
  {
   "id": "shazam-he",
