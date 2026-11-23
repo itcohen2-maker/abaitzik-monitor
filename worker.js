@@ -299,6 +299,8 @@ function prompt(list) {
   return [
     'זו הרצה אוטומטית. אין אדם בצד השני של הפלט הזה ואף אחד לא יקרא אותו.',
     'אל תבקש אישור ואל תציע לעשות משהו: תבצע. אל תסיים בלי לכתוב תשובה ולדחוף אותה.',
+    // 23.11.2026: an instance with lang "ru" is answered in simple Russian (nothing for any other instance)
+    ...require('./lib/i18n.js').promptLines(inst.lang),
     '',
     'חשוב: יתכן שרצים עכשיו עוד סשנים במקביל על הודעות אחרות שלו.',
     'לכן **אל תריץ git add, git commit או git push בעצמך**. במקום זה תמיד',

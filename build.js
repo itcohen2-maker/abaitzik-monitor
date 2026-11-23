@@ -409,6 +409,11 @@ if (!gate.enabled() && !process.env.MONITOR_NO_GATE) {
 const pushUi = require('./lib/push-ui.js');
 function pushKey() { return process.env.VAPID_PUBLIC || inst.vapidPublic || ''; }
 
+// 23.11.2026: Hebrew stays exactly as it is; only an instance with lang "ru" goes through lib/i18n.js.
+function langPage(page) {
+  return inst.lang === 'ru' ? require('./lib/i18n.js').apply(page, 'ru', { admin: inst.adminName || 'IT Solution' }) : page;
+}
+
 function renderPage(payload) {
   // Belt and braces on the promise the settings screen makes. build() scrubs
   // the payload before it splits it into the sealed files; this catches the
@@ -1289,7 +1294,9 @@ function build() {
 
   // The owner cut runs before slim(), which strips HTML comments and with
   // them the ITZIK and TENANT markers the cut is made of.
-  const html0 = filesUpd(slim(cutFor(inst, renderPage(payload))));
+  // 23.11.2026: a monitor with "lang": "ru" gets its page through the dictionary here, before codeId is taken, so a new
+  // dictionary makes open pages reload. The data payload and the instance JSON are not touched by it (lib/i18n.js).
+  const html0 = langPage(filesUpd(slim(cutFor(inst, renderPage(payload)))));
   // The code, with everything that moves on every build taken out: the payload
   // itself, and the build stamp the top of the page carries as a literal. The
   // first try hashed the stamp too, so the id changed on a data only build and
@@ -1411,7 +1418,7 @@ function build() {
   // installed app has no chrome and no back button: a dead end. Pages serves
   // this file for anything missing under the repo, so now every wrong address
   // ends on a door back to the monitor.
-  fs.writeFileSync(path.join(OUT_DIR, '404.html'), NOT_FOUND, 'utf8');
+  fs.writeFileSync(path.join(OUT_DIR, '404.html'), langPage(NOT_FOUND), 'utf8');
   /*
     The home screen install, for an instance that does not have one.
 
@@ -1425,8 +1432,8 @@ function build() {
   if (!fs.existsSync(MANIFEST)) {
     fs.writeFileSync(MANIFEST, JSON.stringify({
       name: monName.shown(inst.pageTitle), short_name: inst.appTitle,
-      description: 'מה נכנס, מה נענה, ומה עוד מחכה.',
-      start_url: './', scope: './', display: 'standalone', dir: 'rtl', lang: 'he',
+      description: inst.lang === 'ru' ? require('./lib/i18n.js').t('ru', 'מה נכנס, מה נענה, ומה עוד מחכה.') : 'מה נכנס, מה נענה, ומה עוד מחכה.',
+      start_url: './', scope: './', display: 'standalone', dir: inst.lang === 'ru' ? 'ltr' : 'rtl', lang: inst.lang === 'ru' ? 'ru' : 'he',
       background_color: '#191714', theme_color: '#14675a',
       icons: [
         { src: 'icons/icon-192.png?v=20261017', sizes: '192x192', type: 'image/png' },
@@ -1472,7 +1479,7 @@ function build() {
       }
     }
   } catch (e) { console.error('sounds copy failed: ' + e.message); }
-  fs.writeFileSync(path.join(OUT_DIR, 'videos.html'), videosPage(), 'utf8');
+  fs.writeFileSync(path.join(OUT_DIR, 'videos.html'), langPage(videosPage()), 'utf8');
   console.log('built docs/index.html |', items.length, 'items,',
     payload.counts.pending, 'pending,', payload.counts.replied, 'replied,',
     contacts.length, 'contacts,', reports.length, 'reports,',
@@ -7243,7 +7250,7 @@ function ntfyText(kind, text, gid) {
  // Headers have to stay ASCII, so the Hebrew all rides in the body.
  // The page is emitted from a template literal, so a backslash escape here
  // would be eaten at build time. The newline is built from its code point.
- var plain = [kind, text, '', 'קוד ' + sendCode()].join(String.fromCharCode(10));
+ var plain = [kind, text, '', /*keep*/ 'קוד ' + sendCode()].join(String.fromCharCode(10));
  var ready = SEALING() ? gseal(plain) : Promise.resolve(plain);
  return ready.then(function (body) {
   // 19.11.2026: our own upload service first (lib/upload-server.js handleText, the same code as a file), ntfy only
