@@ -1,1 +1,1 @@
-Itzik 17.10.2026: the old monitor icon stays. Read by build.js; do not delete.
+Itzik 23.11.2026: the new monitor icon (mic ring, white מ, pulse line). Read by build.js; do not delete.

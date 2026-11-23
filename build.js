@@ -1460,8 +1460,8 @@ function build() {
       start_url: './', scope: './', display: 'standalone', dir: inst.lang === 'ru' ? 'ltr' : 'rtl', lang: inst.lang === 'ru' ? 'ru' : 'he',
       background_color: '#191714', theme_color: '#14675a',
       icons: [
-        { src: 'icons/icon-192.png?v=20261017', sizes: '192x192', type: 'image/png' },
-        { src: 'icons/icon-512.png?v=20261017', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+        { src: 'icons/icon-192.png?v=20261123', sizes: '192x192', type: 'image/png' },
+        { src: 'icons/icon-512.png?v=20261123', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
       ],
     }, null, 2), 'utf8');
   }
@@ -1473,7 +1473,9 @@ function build() {
     icon that is still one of our earlier defaults is replaced too; one a customer
     made himself (any other content) is still never touched.
   */
-  const OLD_ICONS = new Set(['de35af33d237c0e277e63fcc6478ba2f', 'e676b326d78a5f51eb5b3cb9ca35e0a2', '136d78e0dee8a24a6e19f4e51475009b']);
+  const OLD_ICONS = new Set(['de35af33d237c0e277e63fcc6478ba2f', 'e676b326d78a5f51eb5b3cb9ca35e0a2', '136d78e0dee8a24a6e19f4e51475009b',
+    // 23.11.2026, Itzik chose the new icon (the mic ring, a white מ in Assistant, the pulse line under it): the gold מ (180, 192, 512) is replaced everywhere too
+    '9e519b0b5c2fd499a9f452b94c36e500', 'a2ff619563391afacedff7435349eefd', 'b0014eb371dac2993fded320dbc2cd57']);
   /*
     17.10, Itzik: "החזר את האייקון הישן של המוניטור". The old files are in the list above,
     so a build would swap them back. A folder with keep.txt in it is the owner's choice
@@ -1818,8 +1820,8 @@ ${require('./lib/public-demo.js').head(inst) /* 17.11.2026: the public demo only
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="${inst.appTitle}">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/icon-180.png?v=20261017">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20261017">
+<link rel="apple-touch-icon" href="icons/icon-180.png?v=20261123">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20261123">
 <title>${esc(monName.shown(inst.pageTitle))}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
