@@ -637,7 +637,10 @@ async function strangerMessage(m, contactName) {
 }
 async function quickReply(m, text) {
   if (!QK.allowReply(DATA, m.from)) { log('quick connect: reply limit for ' + String(m.from).slice(0, 5) + '...'); return; }
-  await tenantSend(m.from, text);
+  // 23.11.2026: Meta refused the free text (outside its 24 hour window, 23.11 08:00). The same line goes as the approved
+  // template, the only thing Meta accepts then. It is a reply to the one who just wrote, nothing goes to anyone else.
+  if (await tenantSend(m.from, text)) return;
+  try { await waTemplate(m.from, text); log("quick connect: reply sent as template"); } catch (e) { log("!! quick connect template failed: " + e.message.slice(0, 160)); }
 }
 async function quickConnect(m, text, contactName, tn) {
   markRead(m.id);
