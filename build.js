@@ -1377,7 +1377,7 @@ function build() {
   const chatExamples = Array.isArray(inst.chatExamples) ? inst.chatExamples.slice(0, 3) : [];
   const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: monName.shown(inst.pageTitle),
     screens, unlocks,
-    computer: inst.computer, phone: inst.phone, welcome: inst.welcome, homeTile: inst.homeTile || '', gender: inst.gender || '',
+    computer: inst.computer, phone: inst.phone, welcome: inst.welcome, homeTile: inst.homeTile || '', gender: inst.gender || '', ownerLook: !!inst.ownerLook,
     uploadUrl: inst.uploadUrl || '', clalit: !!inst.clalit, openPin, guides, links, chatExamples });
   const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson)
     .replace('__OPENPIN__', openPin);
