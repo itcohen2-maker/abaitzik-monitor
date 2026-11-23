@@ -67,6 +67,8 @@ for f in "$Q"/t*.json; do
     setf "$f" state ready; setf "$f" host "$HOST"
     echo "$today $ID ready " >> "$LOG.days"; done_today=$((done_today+1))
     log "$ID ready, mail sent"
+    # 23.11.2026, Itzik: every new monitor lead reaches his WhatsApp (notify.js --lead), with where he came from.
+    sudo -u monitor node "$REPO/notify.js" "🆕 נרשם למוניטור: $NAME" "המוניטור שלו נפתח ($HOST)${SRC:+, הגיע מעמוד המקצועות}${REF:+, ref $REF}. שבוע ניסיון." --lead >/dev/null 2>&1 || true
     sudo -u monitor node -e 'require("./lib/handle.js").complete({key:"signup-ready-"+process.argv[1],kind:"lead",who:process.argv[2],title:"המוניטור שלו נפתח ונשלח אליו במייל ("+process.argv[3]+"). שבוע ניסיון, 40 פעולות.",link:"biz"})' "$ID" "$NAME" "$HOST" 2>>"$LOG" || true
   else
     setf "$f" state mailfail; log "$ID built, mail failed"

@@ -105,6 +105,8 @@ function personalize(q, qf) {
     } catch (e) { log(q.id + ' instance: ' + e.message.slice(0, 80)); }
     try { execFileSync('sudo', ['-u', q.id, '-H', 'node', 'build.js'], { cwd: dir, stdio: 'ignore', timeout: 180000 }); } catch (e) { log(q.id + ' build: ' + e.message.slice(0, 80)); }
     try { execFileSync('sudo', ['-u', 'monitor', 'node', '-e', 'require("./lib/handle.js").complete({key:"signup-profile-"+process.argv[1],kind:"lead",who:process.argv[2],title:process.argv[3],link:"biz"})', q.id, q.name, P.summaryLine(q.name, p)], { cwd: REPO, stdio: 'ignore' }); } catch (e) {}
+    // 23.11.2026, Itzik: every step of a monitor lead reaches his WhatsApp, a special request first of all.
+    try { execFileSync('sudo', ['-u', 'monitor', 'node', 'notify.js', (p.wish ? '⭐ בקשה מיוחדת מ ' : '📝 שאלון מ ') + q.name, P.summaryLine(q.name, p) + (p.talk === 'wa' && !p.waPhone ? '. בחר לדבר בוואטסאפ ולא השאיר מספר' : ''), '--lead'], { cwd: REPO, stdio: 'ignore', timeout: 60000 }); } catch (e) { log(q.id + ' notify: ' + e.message.slice(0, 80)); }
   }
   q.personalized = p.at; wr(qf, q, 'monitor');
   log(q.id + ' welcome written' + (DRY ? ' (dry): ' + w.title : ''));

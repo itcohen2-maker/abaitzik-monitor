@@ -52,7 +52,8 @@ function line(b) {
   // A session tells about its answer through here, so a line of no other kind counts as an answer
   // for the switches in Settings (lib/alert-kinds.js). --urgent stays unmuted, --kind=<k> says it outright.
   // 22.11.2026, Itzik: "אם זה ליד שמבקש עזרה, לא שבוע ניסיון, אני חייב לקבל התראה בוואטסאפ". --lead is urgent at priority 5,
-  // which is what lib/notify-channels.js waCopy needs to copy the alert to his WhatsApp. A trial signup does not pass it.
+  // which is what lib/notify-channels.js waCopy needs to copy the alert to his WhatsApp. 23.11.2026, Itzik: "לעדכן אותי על כל דבר מהלידים של המוניטור בוואטסאפ": a trial signup passes it too
+  // (signup-provision.sh, signup-personalize.js, lib/wa-quick-provision.js).
   const lead = args.includes('--lead');
   const urgent = lead || args.includes('--urgent');
   const k = (args.find(a => a.startsWith('--kind=')) || '').slice(7);
