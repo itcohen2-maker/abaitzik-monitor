@@ -3355,7 +3355,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-23T21:06:13.762Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-23T21:10:01.620Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4171,7 +4171,7 @@ body.offHome .wrap:has(#pA:not([hidden]))>#pA{flex:1;min-height:0}
  <div class="gres" id="gResults"></div>
 
  <div class="row" id="blkIcons" role="group" aria-label="קיצורים">
-  <a class="ic icNew" data-grp="day" id="icGcal" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener" data-new="1" data-upd="20261107-month"><span class="c c-gcal">
+  <a class="ic icNew" data-grp="day" id="icGcal" data-calcopy="1" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener" data-new="1" data-upd="20261107-month"><span class="c c-gcal">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9.5 13.5h1.5v4M14 13.5h2l-1.5 4"/></svg></span>יומן</a>
   <button type="button" class="ic icNew" data-grp="day" id="icPersonal" data-new="1"><span class="c c-ps">🏡</span>מצב אישי</button>
   <button type="button" class="ic icNew" data-grp="work" id="icBoard" data-new="1"><span class="c c-board">🎛️</span>לוח בקרה</button><button type="button" class="ic icNew" data-grp="work" id="icLeadBoard" data-new="1"><span class="c c-lboard">🔔</span>לוח לידים</button>
@@ -5882,7 +5882,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a3d70cafce';
+var CODE_ID='48d66ded01';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","ownerLook":true,"uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[],"chatExamples":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -16544,7 +16544,8 @@ function firstSteps(){
 }
 
 (function(){var a=document.getElementById('icGcal');if(!a)return;
- a.addEventListener('click',function(e){if(!D.cal)return;e.preventDefault();e.stopPropagation();calSheet(false);},true);})();
+ a.addEventListener('click',function(e){var copy=a.getAttribute('data-calcopy')==='1';if(!copy&&!(window.D&&D.cal))return;e.preventDefault();e.stopPropagation();
+  var n=0;(function go(){if(window.D&&D.cal){calSheet(false);return;}if(n===0&&typeof toast==='function')toast('היומן נטען, עוד רגע...');if(++n<40)setTimeout(go,250);else if(typeof toast==='function')toast('היומן לא נטען. אפשר לרענן ולנסות שוב.');})();},true);})();
 var OO_API='https://wa.abaitzik.com/api/owner-open',ooAt=0;
 function ooBeacon(src){
  try{
@@ -21278,7 +21279,7 @@ function rxTap(e){
 if(typeof document!=='undefined'){document.addEventListener('click',function(e){if(e.target&&e.target.closest&&e.target.closest('.rx,.rx-snz,.rx-cm'))rxTap(e);},true);
 document.addEventListener('change',function(e){var x=e.target;if(x&&x.getAttribute&&x.getAttribute('data-rx-do')==='date'&&x.value){var n=Number(x.closest('[data-rx-snz]').getAttribute('data-rx-snz'));x.disabled=true;rxSend(n,'date',x.value);}},true);}
 var MG_GO={plate:function(){location.href='plate/plate.html?v='+Date.now();},status:function(){location.href='status/index.html?v='+Date.now();},
- cal:function(){window.open('https://calendar.google.com/calendar/u/0/r/day','_blank','noopener');},
+ cal:function(){if(window.D&&D.cal&&typeof calSheet==='function'){calSheet(false);return;}window.open('https://calendar.google.com/calendar/u/0/r/day','_blank','noopener');},
  answers:function(){if(typeof pane==='function'){pane('a');if(typeof renderAnswers==='function')renderAnswers();if(typeof landPane==='function')landPane('pA');}},
  biz:function(){if(typeof bizSheet==='function')bizSheet();},
  tenants:function(){var t=document.getElementById('gTenants');if(t)t.click();}};
