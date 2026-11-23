@@ -3355,7 +3355,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-23T16:30:07.616Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-23T16:33:06.329Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3665,7 +3665,7 @@ body #tradeRing{flex:none;width:clamp(170px,min(calc(var(--dkDay,460px) - 150px)
 #deskSeg button:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
 body:not(.offHome) .wrap>#fcRow{margin-inline:44px!important}
 body:not(.offHome) .wrap>#reloadBtn{margin-inline:0 44px!important}
-body:not(.offHome) .wrap>#talkCard{position:fixed;z-index:3;left:44px;right:calc(88px + var(--dkDay,460px) + 44px);bottom:calc(var(--dkBot,0px) + 14px);max-width:880px;margin:0!important}
+body:not(.offHome) .wrap>#talkCard{position:fixed;z-index:3;inset-inline-end:44px;inset-inline-start:calc(88px + var(--dkDay,460px) + 44px);bottom:calc(var(--dkBot,0px) + 14px);max-width:880px;margin:0!important}
 body:not(.offHome) #talkCard .gMenu{top:auto!important;bottom:calc(100% + 6px)}
 body:not(.offHome) #fcSheet #fcForm{display:none!important}
 body:not(.offHome) .wrap{display:flex;flex-wrap:wrap;align-content:flex-start;align-items:center}
@@ -3679,11 +3679,11 @@ body:not(.offHome) .wrap>#pH #leadAlert>#gLeads>b{font-size:16px!important}
 body:not(.offHome) .wrap>#pH #bareBtn{width:auto!important;padding:10px 22px!important;min-height:0!important}
 body:not(.offHome) .wrap>#reloadBtn{flex:none;margin-top:12px!important}
 body:not(.offHome) .wrap>#pH #approvalsBox{margin-top:14px}
-#fcSheet.gFull{left:0!important;right:calc(88px + var(--dkDay,460px))!important;width:auto!important;inset-inline-start:auto}
+#fcSheet.gFull{inset-inline-end:0!important;inset-inline-start:calc(88px + var(--dkDay,460px))!important;width:auto!important;inset-inline-start:auto}
 #fcSheet.gFull .ycard{max-width:720px!important}
-#bkSheet.ysheet{left:0!important;right:calc(88px + var(--dkDay,460px))!important;top:var(--dkTop,0px)!important;bottom:var(--dkBot,0px)!important;width:auto!important;height:auto!important;padding:0 44px!important;background:var(--ground)!important;align-items:flex-start!important;justify-content:center!important;overflow:auto}
+#bkSheet.ysheet{inset-inline-end:0!important;inset-inline-start:calc(88px + var(--dkDay,460px))!important;top:var(--dkTop,0px)!important;bottom:var(--dkBot,0px)!important;width:auto!important;height:auto!important;padding:0 44px!important;background:var(--ground)!important;align-items:flex-start!important;justify-content:center!important;overflow:auto}
 #bkSheet .ycard{max-width:720px!important;width:100%;max-height:none!important;min-height:100%;border-radius:0!important;box-shadow:none!important;margin:0 auto;padding-top:26px}
-html body #bkNew.ysheet,html body #bkLinkS.ysheet{background:color-mix(in srgb,var(--ink) 50%,transparent)!important;align-items:center!important;justify-content:center!important;padding:24px!important;left:0!important;right:calc(88px + var(--dkDay,460px))!important;top:var(--dkTop,0px)!important;bottom:var(--dkBot,0px)!important;width:auto!important;height:auto!important}
+html body #bkNew.ysheet,html body #bkLinkS.ysheet{background:color-mix(in srgb,var(--ink) 50%,transparent)!important;align-items:center!important;justify-content:center!important;padding:24px!important;inset-inline-end:0!important;inset-inline-start:calc(88px + var(--dkDay,460px))!important;top:var(--dkTop,0px)!important;bottom:var(--dkBot,0px)!important;width:auto!important;height:auto!important}
 html body #bkNew .ycard,html body #bkLinkS .ycard{max-width:480px!important;border-radius:18px!important;max-height:88vh;box-shadow:0 20px 60px color-mix(in srgb,var(--ink) 35%,transparent)}
 body:not(.offHome) #fcSheet.gFull{top:var(--dkChatTop,130px)!important;bottom:calc(var(--dkBot,0px) + var(--dkComp,90px) + 22px)!important;height:auto!important;padding:0 44px!important;justify-content:flex-start!important}
 body:not(.offHome) #fcSheet.gFull .ycard{max-width:880px!important;padding-inline:0!important}
@@ -3718,7 +3718,7 @@ body.editing .editbox>*{animation:none!important;outline:1px dashed var(--accent
 .editbar{inset-inline:auto 0;inset-inline-start:calc(88px + var(--dkDay,460px));bottom:var(--dkBot,0px)}
 body.tjig #talkCard,body.tjig #fcSheet{display:none!important}
 body.tjig #tileArr,body.tjig #tileArrTop{display:none!important}
-#tileBar{left:0;right:calc(88px + var(--dkDay,460px));bottom:var(--dkBot,0px)}
+#tileBar{inset-inline-end:0;inset-inline-start:calc(88px + var(--dkDay,460px));bottom:var(--dkBot,0px)}
 body.tjig:not(.offHome) .wrap{padding-bottom:150px}
 body.offHome .wrap:has(#pA:not([hidden])){display:flex;flex-direction:column;height:calc(100vh - var(--dkTop,0px) - var(--dkBot,0px));overflow:hidden;padding:18px 0 0;padding-inline-start:88px}
 body.offHome .wrap:has(#pA:not([hidden]))>*:not(.bn){max-width:none;width:auto;margin-inline:0;padding-inline:0}
@@ -5857,7 +5857,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='8cdf2fa31c';
+var CODE_ID='27087497ac';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[],"chatExamples":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -5916,7 +5916,7 @@ function gseal(plain) {
  });
 }
 function ntfyText(kind, text, gid) {
- var plain = [kind, text, '', 'קוד ' + sendCode()].join(String.fromCharCode(10));
+ var plain = [kind, text, '', /*keep*/ 'קוד ' + sendCode()].join(String.fromCharCode(10));
  var ready = SEALING() ? gseal(plain) : Promise.resolve(plain);
  return ready.then(function (body) {
   var title = 'monitor' + (gid ? ' ' + gid + ' cap' : '');
