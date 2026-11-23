@@ -154,12 +154,15 @@ function leakCheck(t, res) {
   });
 }
 
+const TOLD_RAM = '/run/tenant-check-told.json';
 function escalate(t, res, state) {
   const day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
   res.problems.forEach((p) => {
-    const key = day + '|' + t.id + '|' + p.replace(/\d+/g, '#').slice(0, 60);
+    const key = day + '|' + t.id + '|' + p.replace(/0x[0-9a-f]+/gi, '').replace(/\d+/g, '#').slice(0, 60);
+    // the error text carries memory addresses that change every run (0x5bbc...), so they are dropped from the key (23.11: alerts every 2 minutes)
     if (state.told[key] || DRY) return;
     state.told[key] = new Date().toISOString();
+    try { fs.writeFileSync(TOLD_RAM, JSON.stringify(state.told)); } catch (e) {}
     try {
       require('./lib/handle.js').add(DATA, { key: 'tenant-check-' + key, kind: 'tenant-broken', who: t.title || t.id, title: (t.title || t.id).replace(/^המוניטור של /, '') + ': ' + p + '. ניסיתי לתקן לבד ולא הצליח.', link: 'tenants' });
       spawnSync('chown', ['-R', 'monitor:monitor', path.join(DATA, 'handle')]);
@@ -170,7 +173,8 @@ function escalate(t, res, state) {
 
 function main() {
   const prevAll = readJson(OUT, { tenants: {}, told: {} });
-  const state = { at: new Date().toISOString(), tenants: {}, told: prevAll.told || {} };
+  // told is also kept in /run (RAM): when the disk is full the main file cannot be written and every run would alert again
+  const state = { at: new Date().toISOString(), tenants: {}, told: Object.assign({}, prevAll.told || {}, readJson(TOLD_RAM, {})) };
   // keep a week of "told" keys only
   Object.keys(state.told).forEach((k) => { if (Date.now() - Date.parse(state.told[k]) > 7 * 86400000) delete state.told[k]; });
   tenants().forEach((t) => {
