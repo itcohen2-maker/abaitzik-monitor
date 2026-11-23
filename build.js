@@ -3523,6 +3523,9 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .tkAct{margin-inline-start:auto;display:flex;align-items:center}.tkAct .tkDel{margin-inline-start:0}
 .tncode{user-select:all;letter-spacing:1px}.tncopy{margin-top:4px;padding:4px 10px;border-radius:8px;border:0;background:#1e3a5f;color:#9ecbff;font-weight:700}
 .tnopen{flex:none;padding:8px 14px;border-radius:10px;background:#1e3a5f;color:#9ecbff;text-decoration:none;font-weight:700}
+.tnside{flex:none;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:104px;align-self:flex-start}
+.tnside .tnopen{display:flex;flex-direction:column;align-items:center;line-height:1.2;text-align:center}.tnside .tnopen small{font-size:11px;font-weight:600;opacity:.85}
+.tnside .tnlh{font-size:11.5px;opacity:.65;margin-top:4px}.tnside .tnv{font-size:12.5px;white-space:nowrap;direction:rtl}
 @keyframes tkpop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
 .tk.pop{animation:tkpop .3s ease-out}
 @media(prefers-reduced-motion:reduce){.tk.pop{animation:none}}
@@ -6462,6 +6465,8 @@ var D = __DATA__, NET = __NET__, CAT = __CAT__, tab = 'pending';
 var GATE = __GATE__, GKEY = null;
 // 17.11.2026, Itzik approved the short signup: the "ready" mail and the signup page open the monitor with a personal
 // link, https://<host>/#k=<passphrase>. Read here, before anything rewrites the hash, and used once by gateBoot.
+// 23.11.2026, Itzik: his own entries from מוניטורים אחרים come with ?me=1; that device is marked and its visits are not counted as the customer's.
+try { if (/[?&]me=1(&|$)/.test(location.search || '')) localStorage.setItem('visOwner', '1'); } catch (e) {}
 var GATE_LINK = (function(){ try { var m = /^#k=(.+)$/.exec(location.hash || ''); return m ? decodeURIComponent(m[1]) : ''; } catch (e) { return ''; } })();
 function gbytes(b64){var x=atob(b64),a=new Uint8Array(x.length);for(var i=0;i<x.length;i++)a[i]=x.charCodeAt(i);return a;}
 function graw(a){var s='';for(var i=0;i<a.length;i++)s+=String.fromCharCode(a[i]);return btoa(s);}
@@ -14078,6 +14083,23 @@ on('rcDone',function(){
   said.textContent='נשלח. המשימה סגורה.';toast(said.textContent);markSent('text');
  }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';}).then(function(){btn.disabled=false;});
 });
+/*
+  23.11.2026, Itzik: "במסך של המוניטורים שלי, תכניס בכל מוניטור כניסה בלי קוד בשבילי, ותוסיף בצד שמאל, בתוך המוקאפ,
+  ... שתי כניסות אחרונות תרשום שם, שעות". The left side of each card: his entry (#k=, ?me=1 so it is not counted
+  as the customer's visit) and the customer's last two visits from D.visits (lib/visits.js).
+*/
+function tnWhen(a){var d=new Date(a),n=new Date(),hm=d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+ var y=new Date(n.getFullYear(),n.getMonth(),n.getDate()-1);
+ if(d.toDateString()===n.toDateString())return 'היום '+hm;if(d.toDateString()===y.toDateString())return 'אתמול '+hm;
+ return d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})+' '+hm;}
+function tnSide(t){
+ var href='https://'+t.host+'/'+(t.code?'?me=1#k='+encodeURIComponent(t.code):'');
+ var V=(D.visits&&D.visits[t.id]&&D.visits[t.id].list)||[];
+ var h='<div class="tnside"><a class="tnopen" href="'+esc(href)+'" target="_blank" rel="noopener">🔓 כניסה'+(t.code?'<small>בלי קוד</small>':'')+'</a>'
+  +'<small class="tnlh">'+(V.length?'כניסות אחרונות':'עוד לא נכנס')+'</small>';
+ V.slice(0,2).forEach(function(x){h+='<small class="tnv">'+(x.dev==='computer'?'💻 ':'📱 ')+esc(tnWhen(x.at))+'</small>';});
+ return h+'</div>';
+}
 function renderTenants(){
  var host=document.getElementById('tnBox');
  if(!host)return;
@@ -14100,10 +14122,9 @@ function renderTenants(){
    +(!ok&&t.problems&&t.problems.length?'<br><small>'+t.problems.map(esc).join(' · ')+'</small>':'')
    // 11.10, Itzik: the code alone is not something he can send, so the link sits beside it, with copy and share.
    +(t.host?'<br><small>קישור: <b dir="ltr" class="tncode">https://'+esc(t.host)+'/</b></small> <button type="button" class="tncopy" data-code="https://'+esc(t.host)+'/">העתקה</button>':'')
-   +(t.host&&t.code?'<br><a class="tncopy" style="display:inline-block;text-decoration:none" target="_blank" rel="noopener" href="https://'+esc(t.host)+'/#k='+encodeURIComponent(t.code)+'">🔓 לפתוח בלחיצה, בלי קוד</a>':'')
    +(t.code?'<br><small>קוד כניסה: <b dir="ltr" class="tncode">'+esc(t.code)+'</b></small> <button type="button" class="tncopy" data-code="'+esc(t.code)+'">העתקה</button>':'')
    +(t.host?'<br><button type="button" class="tncopy tnshare" data-title="'+esc(t.title)+'" data-code="'+esc('הקישור למוניטור שלך: https://'+t.host+'/'+(t.code?'\\nקוד כניסה: '+t.code:''))+'">📤 לשלוח קישור וקוד</button>':'')
-   +'</span>'+(t.host?'<a class="tnopen" href="https://'+esc(t.host)+'/" target="_blank" rel="noopener">פתיחה</a>':'')+'</div>';
+   +'</span>'+(t.host?tnSide(t):'')+'</div>';
  });
  host.innerHTML=h||'<div class="empty">אין מוניטורים אחרים בשרת הזה.</div>';
  Array.prototype.forEach.call(host.querySelectorAll('.tncopy'),function(b){
@@ -19814,7 +19835,7 @@ function visSend(ev){try{if(!D||!D.visitKey||!visSid)return;fetch(VIS_API,{metho
 function visBegin(){visSend('start');clearInterval(visTimer);visTimer=setInterval(function(){if(!document.hidden)visSend('beat');},60000);}
 function visStop(){clearInterval(visTimer);visSend('end');}
 function visitStart(){
- if(visOn||!D||!D.visitKey)return;visOn=true;
+ if(visOn||!D||!D.visitKey)return;try{if(localStorage.getItem('visOwner')==='1')return;}catch(e){}visOn=true;
  visSid=Math.random().toString(36).slice(2,12)+Date.now().toString(36).slice(-4);
  if(!document.hidden)visBegin();
  document.addEventListener('visibilitychange',function(){if(document.hidden)visStop();else visBegin();});
