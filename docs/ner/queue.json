@@ -238,5 +238,53 @@
   "caption": "Today is Erev Shabbat. What is the exact candle lighting time where you are?\nFree for every Jew. Shabbat Shalom.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Parisian\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
   "approved": true,
   "approvedBy": "itzik-21.11-auto"
+ },
+ {
+  "name": "story-he-sun-2911",
+  "date": "2026-11-29",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "he",
+  "city": "נהריה",
+  "file": "media/story-he-sun-2911.mp4",
+  "caption": "",
+  "approved": true,
+  "approvedBy": "itzik-23.11-auto"
+ },
+ {
+  "name": "story-en-sun-2911",
+  "date": "2026-11-29",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "en",
+  "city": "Helsinki",
+  "file": "media/story-en-sun-2911.mp4",
+  "caption": "",
+  "approved": true,
+  "approvedBy": "itzik-23.11-auto"
+ },
+ {
+  "name": "post-he-sun-2911",
+  "date": "2026-11-29",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "he",
+  "city": "מעלה אדומים",
+  "file": "media/post-he-sun-2911.mp4",
+  "caption": "זמני הדלקת נרות לכל עיר בעולם, לפי המיקום המדויק שלכם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Lachaim, Kevin MacLeod (incompetech.com), CC BY 3.0.",
+  "approved": true,
+  "approvedBy": "itzik-23.11-auto"
+ },
+ {
+  "name": "post-en-sun-2911",
+  "date": "2026-11-29",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "en",
+  "city": "Rome",
+  "file": "media/post-en-sun-2911.mp4",
+  "caption": "Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Cheery Monday\" by Kevin MacLeod (incompetech.com), CC BY 4.0.",
+  "approved": true,
+  "approvedBy": "itzik-23.11-auto"
  }
 ]
