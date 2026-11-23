@@ -35,7 +35,7 @@ test('the build hands the page only name, owner, title, screens, devices, greeti
   const m = /const instanceJson = JSON\.stringify\(\{([^}]*)\}\)/.exec(src);
   assert.ok(m, 'instanceJson is built from an object literal');
   const fields = m[1].split(',').map(f => f.trim().split(':')[0].trim()).sort();
-  assert.deepEqual(fields, ['chatExamples', 'clalit','computer', 'gender', 'guides', 'homeTile', 'links', 'name', 'openPin', 'owner', 'pageTitle', 'phone', 'screens', 'unlocks', 'uploadUrl', 'welcome']);
+  assert.deepEqual(fields, ['chatExamples', 'clalit','computer', 'gender', 'guides', 'homeTile', 'links', 'name', 'openPin', 'owner', 'ownerLook', 'pageTitle', 'phone', 'screens', 'unlocks', 'uploadUrl', 'welcome']);
   // Never the topics, never the mailbox: this line is outside the gate.
   assert.ok(!/instanceJson[^\n]*ntfy/.test(src));
 });
