@@ -1,7 +1,7 @@
 {
- "at": "2026-11-23T15:29:54.867Z",
+ "at": "2026-11-23T15:31:05.121Z",
  "up": 0,
- "since": "2026-11-23T15:29:54.839Z",
+ "since": "2026-11-23T15:31:05.098Z",
  "last": "",
  "n": 0,
  "recent": [
@@ -51,8 +51,8 @@
    "cap": 30,
    "left": 19,
    "paid": false,
-   "blockedUntil": "",
-   "daily": false
+   "blockedUntil": "2026-11-23T16:29:55.144Z",
+   "daily": true
   }
  },
  "queued": 3,
