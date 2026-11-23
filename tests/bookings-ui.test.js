@@ -59,8 +59,8 @@ test('no dashes between words in anything she reads', () => {
 test('feminine for a customer who said so, masculine otherwise, never from the trade', () => {
   const d = seeded();
   const f = JSON.stringify(UI.data({ trade: 'beauty', bookings: true, dataPath: d, gender: 'f' }, NOW).t), m = JSON.stringify(UI.data({ trade: 'beauty', bookings: true, dataPath: d, gender: '' }, NOW).t); // the sentences travel with the sealed data
-  assert.match(f, /לחצי על תור חדש/); assert.match(f, /בדקי את החיבור ונסי שוב/); assert.match(f, /הוסיפי אותם למטה/);
-  assert.match(m, /לחץ על תור חדש/); assert.match(m, /בדוק את החיבור ונסה שוב/); assert.match(m, /הוסף אותם למטה/);
+  assert.match(f, /לחצי על תור חדש/); assert.match(f, /ממתין למעלה/); assert.match(f, /הוסיפי אותם למטה/);
+  assert.match(m, /לחץ על תור חדש/); assert.match(m, /ממתין למעלה/); assert.match(m, /הוסף אותם למטה/);
   assert.doesNotMatch(m, /לחצי|בדקי|הוסיפי/); assert.doesNotMatch(f, /לחץ על|בדוק את|הוסף אותם/);
   assert.strictEqual(UI.data({ trade: 'beauty', bookings: true, dataPath: d, gender: '' }, NOW).fem, false);
 });
@@ -114,4 +114,59 @@ test('the demo gets the lines through the demo toast', () => {
   assert.match(say('תור לקוחה', 'ביטול תור לקוחה: ab12').got, /לבטל/);
   assert.match(say('תור לקוחה', 'הזזת תור לקוחה: ab12 | 2026-11-23 10:00').got, /23\.11 בשעה 10:00/);
   assert.match(r.got, /22\.11 בשעה 10:00/); // a date read as the owner says it, not as an ISO string that bidi would tear apart
+});
+
+// 23.11.2026: a command that did not leave waits in the outbox, is shown as waiting, and is sent again by itself.
+function outboxRun(startStore, sendImpl) {
+  const d = seeded();
+  const h = UI.html({ trade: 'beauty', bookings: true, dataPath: d }, NOW), s = scriptOf(h);
+  const store = { bkOutbox: JSON.stringify(startStore || []) };
+  const ls = { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); } };
+  const el = { isConnected: true, innerHTML: '', scrollTop: 0, querySelector: () => null, addEventListener() {} };
+  const win = {};
+  const ctx = { window: win, document: { addEventListener() {} }, localStorage: ls, Date, Intl, JSON, Math, Promise, setTimeout, console };
+  vm.createContext(ctx); vm.runInContext(s, ctx);
+  ctx.shipOpen = (id, title, inner, after) => { const w = { querySelector: () => el, addEventListener() {} }; if (after) after(w); return w; };
+  ctx.toast = () => {};
+  ctx.sendText = sendImpl;
+  win.D = { bookings: UI.data({ trade: 'beauty', bookings: true, dataPath: d }, NOW) };
+  return { win, el, store, open: () => win.bkOpen(), tick: () => new Promise((r) => setTimeout(r, 5)) };
+}
+
+test('a command that did not leave waits in the outbox, shows as waiting, and is sent again', async () => {
+  let fail = true, sends = 0;
+  const entry = { text: 'ביטול תור לקוחה: 4c1f1be1638c', bid: '4c1f1be1638c', at: Date.now(), tries: 0 };
+  const r = outboxRun([entry], () => { sends++; return fail ? Promise.reject(new Error('net')) : Promise.resolve('ok'); });
+  r.open(); await r.tick(); await r.tick();
+  assert.ok(sends >= 1, 'retried on opening');
+  let q = JSON.parse(r.store.bkOutbox);
+  assert.strictEqual(q.length, 1, 'still waiting after a failed retry');
+  assert.ok(q[0].tries >= 1);
+  assert.match(r.el.innerHTML, /ממתין לשליחה: 1/);
+  assert.match(r.el.innerHTML, /data-a="outretry"/);
+  assert.match(r.el.innerHTML, /data-a="outdrop"/);
+  fail = false;
+  r.open(); await r.tick(); await r.tick(); await r.tick();
+  q = JSON.parse(r.store.bkOutbox);
+  assert.strictEqual(q.length, 0, 'sent once the phone is back');
+  assert.doesNotMatch(r.el.innerHTML, /ממתין לשליחה: /);
+});
+
+test('the outbox keeps the order and stops at the first command that still does not leave', async () => {
+  const sent = [];
+  const r = outboxRun([
+    { text: 'ביטול תור לקוחה: aaaaaaaaaaaa', bid: 'aaaaaaaaaaaa', at: 1, tries: 0 },
+    { text: 'אישור תור לקוחה: bbbbbbbbbbbb', bid: 'bbbbbbbbbbbb', at: 2, tries: 0 },
+  ], (subj, text) => { sent.push(text); return text.indexOf('aaaa') > 0 ? Promise.reject(new Error('x')) : Promise.resolve('ok'); });
+  r.open(); await r.tick(); await r.tick();
+  assert.deepStrictEqual(sent, ['ביטול תור לקוחה: aaaaaaaaaaaa']); // the second one is not tried before the first has left
+  assert.strictEqual(JSON.parse(r.store.bkOutbox).length, 2);
+  assert.match(r.el.innerHTML, /ממתין לשליחה: 2/);
+});
+
+test('the fail text no longer says "try again" as the end of it: it says it waits and goes again by itself', () => {
+  const h = UI.html({ trade: 'beauty', bookings: true, dataPath: seeded(), gender: 'm' }, NOW), s = scriptOf(h);
+  assert.match(UI.data({ trade: 'beauty', bookings: true, dataPath: seeded(), gender: 'm' }, NOW).t.fail, /ממתין למעלה, ונשלח שוב לבד/);
+  assert.match(s, /bkOutbox/);
+  assert.match(s, /setInterval\(function \(\) \{ flushOut\(\); \}, OUT_EVERY\)/);
 });
