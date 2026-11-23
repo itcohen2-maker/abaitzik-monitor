@@ -13,11 +13,14 @@ SRC=/home/monitor/abaitzik-monitor
 # 21.11.2026: a trade demo (lib/trades.js), "demo-build.sh gypsum": its own folder /home/demo/app-<trade>, instance demo-<trade>,
 # host demo-<trade>.m.it-solution.co.il. Without an argument, the barbershop as before. REF=<ref> builds another branch (a preview).
 TRADE="${1:-}"
+# 23.11.2026, Itzik: the cosmetician monitor in Russian. "beauty-ru" is the beauty demo with "lang": "ru" (lib/i18n.js), its own folder and host.
+DLANG=""
+if [[ "$TRADE" =~ ^([a-z]{2,20})-(ru)$ ]]; then DLANG="${BASH_REMATCH[2]}"; TRADE="${BASH_REMATCH[1]}"; fi
 if [ -n "$TRADE" ] && ! [[ "$TRADE" =~ ^[a-z]{2,20}$ ]]; then echo "bad trade"; exit 1; fi
 REF="${REF:-origin/stable}"
-NAME="demo${TRADE:+-$TRADE}"
+NAME="demo${TRADE:+-$TRADE}${DLANG:+-$DLANG}"
 HOST="$NAME.m.it-solution.co.il"
-APP=/home/demo/app${TRADE:+-$TRADE}
+APP=/home/demo/app${TRADE:+-$TRADE}${DLANG:+-$DLANG}
 mkdir -p "$APP"
 [ -n "$TRADE" ] && [ ! -f "$APP/instance.json" ] && cp /home/demo/app/instance.json "$APP/instance.json"
 NEW=$(mktemp -d /home/demo/.app-new-XXXX)
@@ -46,7 +49,8 @@ printf '{"plan":"medium","month":"%s","extra":0,"applied":[],"history":[],"addon
 node -e 'const fs=require("fs"),f=process.argv[1],j=JSON.parse(fs.readFileSync(f,"utf8"));
 j.screens=["gMyBoard","gBhCal","gBhMeet","gBhClients","gBhMail","gBhQuote","gRemind","gTasks","gCamp","gCIdeas","gShopList","gUpgrade"];
 j.board=true;const t=process.argv[2];if(t){const T=require("./lib/trades.js").get(t);j.name="demo-"+t;j.trade=t;j.screens=T.screens.slice();j.board=false;j.gender=T.fem?"f":"";j.bookings=T.bookings===true;const B=require("./lib/demo-trades/"+t+".js").BIZ;j.owner=B.owner;j.pageTitle="המוניטור של "+B.name;j.biz={name:B.name,sub:B.sub,phone:"03-0000000",address:"רחוב הדוגמה 1, "+B.city};j.publicUrl="https://"+T.host+"/";j.origin="https://"+T.host;}
-fs.writeFileSync(f,JSON.stringify(j,null,1));' "$APP/instance.json" "$TRADE"
+if(process.argv[3]){j.lang=process.argv[3];j.name=j.name+"-"+process.argv[3];}else delete j.lang;
+fs.writeFileSync(f,JSON.stringify(j,null,1));' "$APP/instance.json" "$TRADE" "$DLANG"
 fi
 sudo -u demo -H node lib/demo-data.js data ${TRADE:+--trade "$TRADE"}
 # 21.11.2026: build.js writes the manifest only when it is missing, so a renamed demo kept its old install name
