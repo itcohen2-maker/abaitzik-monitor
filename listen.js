@@ -1942,7 +1942,7 @@ function recordFilePin(m) {
 
 // 22.11.2026: the fixed lines of the appointments screen carry a client's name and phone. They are applied here, but never
 // written to the listener's log or the pull log in the clear.
-const BOOKING_LINE = /^\s*(?:משימה\s+)?(?:מגבלות קישור|פתיחת קישור|אישור תור לקוחה|תור לקוחה|הזזת תור לקוחה|ביטול תור לקוחה|סימון תור לקוחה|הוספת לקוחה|שירות חדש|שעות פעילות|מחיקת שירות|הסרת שירות|תנאי ביטול)/;
+const BOOKING_LINE = /^\s*(?:משימה\s+)?(?:מגבלות קישור|פתיחת קישור|אישור תור לקוחה|תור לקוחה|הזזת תור לקוחה|ביטול תור לקוחה|סימון תור לקוחה|הוספת לקוחה|שירות חדש|שעות פעילות|מחיקת שירות|הסרת שירות|תנאי ביטול|הצהרת בריאות לשירות|אישור תורים:|חסימת לקוחה:|ביטול חסימה:)/;
 const noBookingNames = (t) => (BOOKING_LINE.test(String(t || '')) ? 'תור לקוחה (הפרטים לא נרשמים כאן)' : t);
 async function handleOne(m) {
   const seen = mark();
