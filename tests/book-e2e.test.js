@@ -388,7 +388,7 @@ test('links that open on a day, a service, a time: cleaned on the server, ignore
   assert.match(full, /"id":"brows"/); assert.match(full, /"id":"face"/); assert.match(full, /"d":"2026-11-23"/);
   // the agent's info now carries the slot step, and nothing else is new in the protocol
   const info = await w.P.ask('t1', { op: 'info', l: w.l });
-  assert.strictEqual(info.slotMinutes, 15); assert.deepStrictEqual(Object.keys(info).sort(), ['accent', 'days', 'fem', 'name', 'ok', 'services', 'slotMinutes']);
+  assert.strictEqual(info.slotMinutes, 15); assert.deepStrictEqual(Object.keys(info).sort(), ['accent', 'cancelHours', 'days', 'fem', 'name', 'ok', 'ownerPhone', 'services', 'slotMinutes']);
 });
 
 test('limit, full and unconfirmed look the same from outside, and the owner is told once an hour with one generic WhatsApp line', async () => {
