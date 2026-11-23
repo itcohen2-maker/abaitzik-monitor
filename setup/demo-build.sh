@@ -53,6 +53,8 @@ if(process.argv[3]){j.lang=process.argv[3];j.name=j.name+"-"+process.argv[3];}el
 fs.writeFileSync(f,JSON.stringify(j,null,1));' "$APP/instance.json" "$TRADE" "$DLANG"
 fi
 sudo -u demo -H node lib/demo-data.js data ${TRADE:+--trade "$TRADE"}
+# 23.11.2026: the Russian demo: the seeded invented data in Russian too (tools/demo-ru-data.js, lib/i18n/ru-demo.json)
+[ "$DLANG" = ru ] && [ -f tools/demo-ru-data.js ] && sudo -u demo -H node tools/demo-ru-data.js data || true
 # 21.11.2026: build.js writes the manifest only when it is missing, so a renamed demo kept its old install name
 rm -f "$APP/docs/manifest.webmanifest"
 sudo -u demo -H env MONITOR_NO_GATE=1 node build.js 2>&1 | tail -1
