@@ -894,7 +894,10 @@ function sweepQueue(st, Q, ids) {
     if (!mine) {
       // A customer: the whole answer here (his monitor link is not Itzik's), in parts when long.
       const to = st.pending[d.re].to, txt = String(d.text);
-      const parts = []; for (let i = 0; i < txt.length && parts.length < 4; i += 3800) parts.push(txt.slice(i, i + 3800));
+      // 23.11.2026: Yosef (t1e9dd5) got "files/quote-1001.pdf" as plain text, a path he cannot open. In a customer's
+      // WhatsApp that line says the file follows; the file itself goes right after (waSendFiles, still from txt).
+      const shown = txt.replace(/(^|[\s(])files\/[^\s)\]]+/g, '$1(הקובץ מגיע בהודעה הבאה)');
+      const parts = []; for (let i = 0; i < shown.length && parts.length < 4; i += 3800) parts.push(shown.slice(i, i + 3800));
       // 16.11: a page task's answer outside the customer's 24 hours goes as the one line template.
       const pg = st.pending[d.re].page, open = st.lastIn && st.lastIn[to] && Date.now() - st.lastIn[to] < 23.5 * 3600e3;
       if (pg && !open) { waTemplate(to, txt).then(function (ok) { log('tenant out ' + st.pending[d.re].tenant + ' ' + f + ' template' + (ok === false ? ' (not delivered)' : '')); }, function (e) { log('tenant out failed ' + f + ': ' + e.message.slice(0, 160)); }); return; }
