@@ -5368,7 +5368,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
        the page of every active ad per campaign plus the videos waiting to replace them, built by /root/campaign-page.js. -->
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icCamp" data-new="1"><span class="c c-camp">📣</span>קמפיין</button>' : ''}
   <!-- 21.11.2026, Itzik: "תשים בכפתור אחד אייקון את כל הכפתורים שהם אתרים שלי". One circle; sitesSheet() lists the six sites, the six circles are hidden on his page. -->
-  ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="proj" id="icSites" data-new="1" data-upd="20261121-sites"><span class="c c-its"><em class="icN' + (siteLeads().today ? ' hot' : '') + '">' + siteLeads().n + '</em>🌐</span>האתרים שלי</button>' : ''}
+  ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="proj" id="icSites" data-new="1" data-upd="20261123-monitor-page"><span class="c c-its"><em class="icN' + (siteLeads().today ? ' hot' : '') + '">' + siteLeads().n + '</em>🌐</span>האתרים שלי</button>' : ''}
   <!-- 7.11.2026, Itzik: the trainings sit in round icons beside the calendar. Shown only when the chat is allowed (fcBoot). -->
   <button type="button" class="ic icNew" data-grp="day" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>
   <button type="button" class="ic icNew" data-grp="day" id="icFcCoach" data-new="1" style="display:none"><span class="c c-fcc">🧭</span>אימון עסקי</button>
@@ -19669,8 +19669,9 @@ function campShare(){
 }
 on('icCamp',function(){campShare();});
 // 21.11.2026, Itzik: all his own sites behind one circle (icSites). Each row opens the site in a new tab.
+// 23.11.2026, Itzik: "שים את האתר באייקון של האתרים שלי": the open monitor page for Google (it-solution.co.il/monitor/).
 function sitesSheet(){
- var S=[['🌍','אבא איציק','https://abaitzik.com/'],['💻','האתר שלי, IT Solution','https://it-solution.co.il'],['💬','צ׳אט באתר','https://it-solution.co.il/#chat'],['🕯️','נרות','https://candletimes.com/?me=1'],['📱','סלינדה','https://salinda-mobile.vercel.app/'],['🐎','פגסוס','https://pegasusgame.vercel.app']];
+ var S=[['🌍','אבא איציק','https://abaitzik.com/'],['💻','האתר שלי, IT Solution','https://it-solution.co.il'],['🖥️','דף המוניטור (נמצא בגוגל)','https://it-solution.co.il/monitor/'],['💬','צ׳אט באתר','https://it-solution.co.il/#chat'],['🕯️','נרות','https://candletimes.com/?me=1'],['📱','סלינדה','https://salinda-mobile.vercel.app/'],['🐎','פגסוס','https://pegasusgame.vercel.app']];
  var w=document.createElement('div');w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','האתרים שלי');
  w.innerHTML='<div class="ycard"><b>🌐 האתרים שלי</b><small>לחיצה פותחת את האתר</small>'
   +S.map(function(s,i){return '<a class="yb'+(i?'':' yb1')+'" style="display:block;text-align:center;text-decoration:none" href="'+s[2]+'" target="_blank" rel="noopener">'+s[0]+' '+s[1]+'</a>';}).join('')
