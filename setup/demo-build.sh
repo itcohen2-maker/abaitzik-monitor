@@ -86,6 +86,9 @@ if [ "$CODE" != 200 ] || ! grep -q PUBLIC_DEMO /tmp/demo-check.html; then
   cd "$SRC" && sudo -u monitor -H node notify.js "מוניטור ההדגמה לא עולה" "$HOST החזיר $CODE אחרי הבנייה. יומן: /var/log/monitor-demo.log" || true
   exit 1
 fi
+# 24.11.2026 (the site check): the anonymised admin menu of a demo points at icons/cx.png, which no demo had, so the server answered
+# with the whole 1.4MB page instead of an image on every open. The demo gets the monitor icon under that name.
+[ -f "$APP/docs/icons/cx.png" ] || cp "$APP/docs/icons/icon-192.png" "$APP/docs/icons/cx.png" 2>/dev/null || true
 # 17.11: the day's numbers to Itzik's 📄 דוחות (lib/demo-stats.js), as user monitor, from his own copy
 if [ -z "$TRADE" ]; then cd "$SRC" && runuser -u monitor -- node lib/demo-stats.js >/dev/null 2>&1 || echo "!! demo-stats failed"; fi
 echo "$(date -Is) built"
