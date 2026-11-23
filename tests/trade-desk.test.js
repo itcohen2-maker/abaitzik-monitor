@@ -106,7 +106,7 @@ test('the empty conversation: a line, three examples, no dash, gender forms', ()
 
 test('the docked conversation keeps the monitor\'s own controls reachable', () => {
   const css = styleOf(TD.html(inst('gypsum')));
-  assert.match(css, /#fcSheet\.gFull\{top:var\(--dkChatTop/);
+  assert.match(css, /#fcSheet\.gFull\{top:auto!important;bottom:calc\(var\(--dkBot,0px\) \+ 22px\)!important;height:var\(--dkChatH\)/); // docked at the foot of the work area, its own scroll
   assert.ok(!/#bareBtn\{[^}]*display:none/.test(css) && !/#leadAlert\{[^}]*display:none/.test(css), 'nothing of the home is hidden');
   assert.match(css, /\.ytopx/); // only the close button of the permanent chat goes
 });

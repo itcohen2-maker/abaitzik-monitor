@@ -4495,7 +4495,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   and nothing becomes unreachable: one button in the header brings the rest
   back, and the choice is remembered.
 */
-#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox):not(#leadAlert):not(#tradeCards){display:none!important}
+#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox):not(#leadAlert):not(#tradeCards):not(#mgrTop){display:none!important}
 #leadAlert{display:block;margin:6px 0 10px}
 #leadAlert>#gLeads{display:block!important;width:100%;box-sizing:border-box;text-align:right;position:relative;min-height:56px!important;height:auto!important;padding:10px 14px!important;border:0;border-radius:14px;color:#fff;font-family:Heebo,sans-serif;cursor:pointer}
 #leadAlert>#gLeads>b{display:block;font-size:18px!important}#leadAlert>#gLeads>small{display:block;font-size:14px!important;opacity:.95;white-space:normal!important}
@@ -4940,7 +4940,7 @@ ${require('./lib/motion.js').css}
    white flash on a phone at night, and that flash is the whole complaint. */
 (function(){try{
  // 23.11.2026: a trade demo starts in the look of its video (lib/trades.js skin); a visitor's own choice still wins.
- window.TRADE_SKIN=${JSON.stringify(inst.publicDemo === true && inst.trade ? ((require('./lib/trades.js').get(inst.trade) || {}).skin || '') : '')};
+ window.TRADE_SKIN=${JSON.stringify(require('./lib/trades.js').defaultSkin(inst))};
  var t=localStorage.getItem('skin')||window.TRADE_SKIN||'';
  if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);
 }catch(e){}
@@ -10386,7 +10386,7 @@ function skinBind(){
  Array.prototype.forEach.call(document.querySelectorAll('.skb'),function(b){
   b.addEventListener('click',function(){
    var v=b.getAttribute('data-skin');
-   try{if(v==='auto')localStorage.removeItem('skin');else localStorage.setItem('skin',v);}catch(e){}
+   try{localStorage.setItem('skin',v);}catch(e){}
    skinApply(v);
   });
  });
