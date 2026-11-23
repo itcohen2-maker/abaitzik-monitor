@@ -2746,7 +2746,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 .bn button:active{transform:scale(.94)}
 .bn button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
 
-#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox):not(#leadAlert):not(#tradeCards){display:none!important}
+#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox):not(#leadAlert):not(#tradeCards):not(#mgrTop){display:none!important}
 #leadAlert{display:block;margin:6px 0 10px}
 #leadAlert>#gLeads{display:block!important;width:100%;box-sizing:border-box;text-align:right;position:relative;min-height:56px!important;height:auto!important;padding:10px 14px!important;border:0;border-radius:14px;color:#fff;font-family:Heebo,sans-serif;cursor:pointer}
 #leadAlert>#gLeads>b{display:block;font-size:18px!important}#leadAlert>#gLeads>small{display:block;font-size:14px!important;opacity:.95;white-space:normal!important}
@@ -3355,7 +3355,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-23T19:00:04.268Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-23T19:10:02.714Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3652,7 +3652,7 @@ body:not(.offHome) .wrap #tradeCards{position:fixed;inset-inline-start:88px;top:
 #tradeCards .trList:not([hidden]){flex:1 1 0;min-height:70px;overflow-y:auto;overflow-x:hidden}
 #trTry,#tradeWa{display:none!important}
 #tradeCards>*{flex:none}
-body #tradeRing{flex:none;width:clamp(170px,min(calc(var(--dkDay,460px) - 150px),calc(100vh - var(--dkTop,0px) - var(--dkBot,0px) - 406px)),296px)}
+body #tradeRing{flex:none;width:clamp(170px,min(calc(var(--dkDay,460px) - 150px),calc(100vh - var(--dkTop,0px) - var(--dkBot,0px) - 406px - var(--dkComp,0px))),296px)}
 #tradeCards .trStage{padding:10px 0 4px}
 #tradeCards .trHintRow{margin-top:2px}
 #tradeCards .trHint{font-size:15px;padding:8px 18px;margin-top:6px}
@@ -3666,7 +3666,9 @@ body #tradeRing{flex:none;width:clamp(170px,min(calc(var(--dkDay,460px) - 150px)
 #deskSeg button:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
 body:not(.offHome) .wrap>#fcRow{margin-inline:44px!important}
 body:not(.offHome) .wrap>#reloadBtn{margin-inline:0 44px!important}
-body:not(.offHome) .wrap>#talkCard{position:fixed;z-index:3;inset-inline-end:44px;inset-inline-start:calc(88px + var(--dkDay,460px) + 44px);bottom:calc(var(--dkBot,0px) + 14px);max-width:880px;margin:0!important}
+#tradeCards>#talkCard{position:static!important;inset:auto!important;width:100%;max-width:none!important;margin:10px 0 0!important;flex:none;box-sizing:border-box}
+:root{--dkChatH:clamp(320px,60vh,720px)}
+html.gChatOpen body:not(.offHome) .wrap{min-height:0!important;padding-bottom:calc(var(--dkChatH) + var(--dkBot,0px) + 48px)!important}
 body:not(.offHome) #talkCard .gMenu{top:auto!important;bottom:calc(100% + 6px)}
 body:not(.offHome) #fcSheet #fcForm{display:none!important}
 body:not(.offHome) .wrap{display:flex;flex-wrap:wrap;align-content:flex-start;align-items:center}
@@ -3686,10 +3688,14 @@ body:not(.offHome) .wrap>#pH #approvalsBox{margin-top:14px}
 #bkSheet .ycard{max-width:720px!important;width:100%;max-height:none!important;min-height:100%;border-radius:0!important;box-shadow:none!important;margin:0 auto;padding-top:26px}
 html body #bkNew.ysheet,html body #bkLinkS.ysheet{background:color-mix(in srgb,var(--ink) 50%,transparent)!important;align-items:center!important;justify-content:center!important;padding:24px!important;inset-inline-end:0!important;inset-inline-start:calc(88px + var(--dkDay,460px))!important;top:var(--dkTop,0px)!important;bottom:var(--dkBot,0px)!important;width:auto!important;height:auto!important}
 html body #bkNew .ycard,html body #bkLinkS .ycard{max-width:480px!important;border-radius:18px!important;max-height:88vh;box-shadow:0 20px 60px color-mix(in srgb,var(--ink) 35%,transparent)}
-body:not(.offHome) #fcSheet.gFull{top:var(--dkChatTop,130px)!important;bottom:calc(var(--dkBot,0px) + var(--dkComp,90px) + 22px)!important;height:auto!important;padding:0 44px!important;justify-content:flex-start!important}
+body:not(.offHome) #fcSheet.gFull{top:auto!important;bottom:calc(var(--dkBot,0px) + 22px)!important;height:var(--dkChatH)!important;padding:0 44px!important;justify-content:flex-start!important}
 body:not(.offHome) #fcSheet.gFull .ycard{max-width:880px!important;padding-inline:0!important}
 body:not(.offHome) #fcSheet.gFull .fcb{max-width:min(68ch,100%)!important}
-body:not(.offHome) #fcSheet.gFull .gTop,body:not(.offHome) #fcSheet .yx,body:not(.offHome) #fcSheet .ytopx{display:none!important}
+body:not(.offHome) #fcSheet .yx,body:not(.offHome) #fcSheet .ytopx{display:none!important}
+body:not(.offHome) #fcSheet.gFull .gTop{display:flex!important;flex:none}
+body:not(.offHome) .wrap>#welcomeCard{order:-1;flex:0 0 calc(100% - 88px);box-sizing:border-box;margin:26px 44px 14px!important;max-width:none}
+#micFirst{left:44px!important;right:calc(88px + var(--dkDay,460px) + 44px)!important;top:auto!important;bottom:calc(var(--dkBot,0px) + 14px)!important;max-width:640px;margin:0!important}
+html.gChatOpen #micFirst{bottom:calc(var(--dkBot,0px) + var(--dkChatH) + 36px)!important}
 body:not(.offHome) #talkCard .mvSkel,body:not(.offHome) #talkCard #gBackChat{display:none!important}
 body.offHome #fcSheet[data-desk-auto]{display:none}
 body:not(.offHome):has(#pH:not(.bare)) #fcSheet[data-desk-auto]{display:none}
@@ -3790,6 +3796,9 @@ body.offHome .wrap:has(#pA:not([hidden]))>#pA{flex:1;min-height:0}
       k.innerHTML = '<kbd>רווח</kbd>: להקליט · <kbd>Enter</kbd>: לשלוח';
       hintRow.parentNode.insertBefore(k, hintRow.nextSibling);
     }
+    var tc = $('talkCard'), wrap = $('pH') && $('pH').parentNode;
+    if (tc && $('deskKeys') && tc.parentNode !== w) { if (!tc.__home) tc.__home = { p: tc.parentNode, n: tc.nextSibling }; $('deskKeys').parentNode.insertBefore(tc, $('deskKeys').nextSibling); }
+    var wc = $('welcomeCard'); if (wc && wrap && wc.parentNode !== wrap) wrap.insertBefore(wc, $('pH'));
     var firstList = w.querySelector('.trList');
     if (sw && firstList && !$('deskSeg')) {
       var seg = document.createElement('div'); seg.id = 'deskSeg'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'היום או מה עשיתי');
@@ -3817,6 +3826,7 @@ body.offHome .wrap:has(#pA:not([hidden]))>#pA{flex:1;min-height:0}
   }
   function unbuildHome() {
     ['deskKeys', 'deskSeg'].forEach(function (id) { var e = $(id); if (e) e.remove(); });
+    var tc = $('talkCard'); if (tc && tc.__home) { var h = tc.__home; if (h.n && h.n.parentNode === h.p) h.p.insertBefore(tc, h.n); else h.p.appendChild(tc); tc.__home = null; }
     if (segObs) { segObs.disconnect(); segObs = null; }
     if (ringObs) { ringObs.disconnect(); ringObs = null; }
   }
@@ -5868,8 +5878,8 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a224f3b548';
-var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[],"chatExamples":[]};
+var CODE_ID='3b6d32eec4';
+var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","ownerLook":true,"uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[],"chatExamples":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
 var AI=(INSTANCE&&INSTANCE.name&&INSTANCE.name!=='abaitzik')?'העוזר שלך':'קלוד';
@@ -8211,7 +8221,7 @@ function skinBind(){
  Array.prototype.forEach.call(document.querySelectorAll('.skb'),function(b){
   b.addEventListener('click',function(){
    var v=b.getAttribute('data-skin');
-   try{if(v==='auto')localStorage.removeItem('skin');else localStorage.setItem('skin',v);}catch(e){}
+   try{localStorage.setItem('skin',v);}catch(e){}
    skinApply(v);
   });
  });
@@ -21527,6 +21537,22 @@ function renderHome(){
  function chain(list){return list.reduce(function(p,x){return p.then(function(){return send(x[0],x[1]);});},Promise.resolve());}
  function routinesOf(a){return R().filter(function(r){return a?r.agent===a.id:!r.agent||!ALL().some(function(x){return x.id===r.agent;});});}
  function busy(){return R().filter(function(r){return r.runNow;});}
+ function isOwn(){return !!(window.INSTANCE&&INSTANCE.ownerLook);}
+ function isFem(){return !!(window.INSTANCE&&INSTANCE.gender==='f');}
+ var expOpen=null;
+ function explainHtml(ag){
+  var f=isFem(),open=expOpen===null?!ag.length:expOpen;
+  if(!open)return '<button type="button" class="agWhat" data-a="exp">מה זה?</button>';
+  var p1=f?'כאן יושבת המנהלת שלך, ולידה העובדים.':'כאן יושב המנהל שלך, ולידו העובדים.';
+  var p2=f?'כל עובד מקבל שם ותפקיד שאת קובעת. למשל "שירה, תזכורות ללקוחות" או "דנה, פוסטים לאינסטגרם".':'כל עובד מקבל שם ותפקיד שאתה קובע. למשל "שירה, תזכורות ללקוחות" או "דנה, פוסטים לאינסטגרם".';
+  var e1=f?'כל ערב לשלוח לי מי מגיעה מחר':'כל ערב לשלוח לי מי מגיע מחר';
+  var e3=f?'כל חודש למצוא לקוחות שלא חזרו ולהכין להן הודעה':'כל חודש למצוא לקוחות שלא חזרו ולהכין להם הודעה';
+  return '<div class="agExp"><b>'+p1+'</b><p>'+p2+'</p>'
+   +'<p>אומרים לו פעם אחת מה לעשות ומתי, בכתב או בקול, והוא עושה את זה לבד: כל יום, כל שבוע או בשעה שבחרת.</p>'
+   +'<small>דוגמאות:</small><ul><li>'+e1+'</li><li>כל יום ראשון להכין פוסט לאינסטגרם</li><li>'+e3+'</li></ul>'
+   +'<p>מה ששולח הודעות לאנשים או עולה כסף, מחכה קודם לאישור שלך.</p>'
+   +'<div class="agExpBtns">'+(isOwn()?'':'<button type="button" class="agNew" data-a="new">➕ עובד חדש</button>')+(ag.length?'<button type="button" class="agWhat" data-a="exp">הסתר</button>':'')+'</div></div>';
+ }
  function sub(){
   var on=A().length,rs=R().filter(function(r){return r.state==='active';}),b=busy()[0];
   if(b){var ag=ALL().filter(function(a){return a.id===b.agent;})[0];return (ag?ag.name+' ':'')+'עובד עכשיו: '+b.text;}
@@ -21536,13 +21562,16 @@ function renderHome(){
   return (on?on+' סוכנים · ':'')+(nx?'הבא: '+nx.text.slice(0,40)+' ב '+hhmm(nx.next):rs.length+' פקודות פעילות');
  }
  function tile(){
-  var anchor=document.getElementById('blkIcons')||document.getElementById('blkTiles');if(!anchor||!anchor.parentNode)return;
+  var tradeHome=document.querySelector('#tradeCards[data-trade-home]');
+  var home=document.getElementById('pH');
+  var anchor=tradeHome&&tradeHome.parentNode?tradeHome:(!isOwn()&&home&&home.firstElementChild?home.firstElementChild:(document.getElementById('blkIcons')||document.getElementById('blkTiles')));if(!anchor||!anchor.parentNode)return;
   var t=document.getElementById('mgrTop');
   if(!t){t=document.createElement('button');t.type='button';t.id='mgrTop';
    t.innerHTML='<div class="mgAv"><span>🧑‍💼</span></div><div><b></b><small></small></div><span class="mgGo">‹</span>';
    t.addEventListener('click',function(e){e.preventDefault();open();});}
   if(anchor.previousSibling!==t)anchor.parentNode.insertBefore(t,anchor);
-  t.querySelector('b').textContent=NM();t.querySelector('small').textContent=sub();
+  t.querySelector('b').textContent=isOwn()||NM()!==NAME0?NM():(isFem()?'המנהלת שלי והעובדים':'המנהל שלי והעובדים');
+  t.querySelector('small').textContent=isOwn()?sub():(ALL().length?sub().replace(' סוכנים · ',' עובדים · '):(isFem()?'תני להם עבודות שחוזרות על עצמן, הם יעשו לבד':'תן להם עבודות שחוזרות על עצמן, הם יעשו לבד'));
   t.classList.toggle('busy',!!busy().length);
   var old=document.getElementById('gMyMgr');if(old)old.style.display='none';
  }
@@ -21618,7 +21647,7 @@ function renderHome(){
   scr.innerHTML='<div class="agW"><div class="agBar"><button type="button" class="agBack" data-a="x">‹ חזרה</button><h2>🧑‍💼 '+E(NM())+' <button type="button" class="agEd" data-a="renM" aria-label="לשנות את השם של המנהל">✏️</button></h2>'+(renFor==='amanager0'?renHtml(NM(),'',true):'')+'</div>'
    +'<p class="agLead">תן למנהל פקודות שחוזרות על עצמן. כל סוכן אחראי על תחום אחד, ואתה קובע לו מה לעשות וכמה פעמים. תזכורת מגיעה לטלפון, ועבודה חוזרת עם תשובה במסך התשובות.</p>'
    +'<div class="agSum"><div><b>'+ag.length+'</b><small>סוכנים</small></div><div><b>'+(MI().length?ev.filter(function(e){return e.k==='wait';}).length:act)+'</b><small>'+(MI().length?'מחכים לך':'פקודות פעילות')+'</small></div><div><b>'+ev.filter(function(e){return e.k==='done';}).length+'</b><small>נעשו היום</small></div></div>'
-   +'<div class="agSec">הסוכנים שלך <button type="button" class="agNew" data-a="new">+ סוכן חדש</button></div>'
+   +explainHtml(ag)+'<div class="agSec">הסוכנים שלך'+(isOwn()?' <button type="button" class="agNew" data-a="new">+ סוכן חדש</button>':'')+'</div>'
    +(formFor==='|new'?'<div class="ag" style="--c:#4285F4"><b>סוכן חדש</b>'+optHtml(true)+'</div>':'')
    +(ag.length||gen.length?ag.map(agHtml).join('')+(gen.length?agHtml(null):''):'<div class="agEmpty">עוד אין סוכנים. "+ סוכן חדש" ומתחילים מתבנית, למשל מיילים או תזכורות.</div>')
    +ideasHtml()+workHtml()+'</div><button type="button" class="agX" data-a="x">✕ סגירה</button>';
@@ -21692,6 +21721,7 @@ function renderHome(){
    }).catch(function(){b.disabled=false;say('לא נשלח. תבדוק חיבור ותנסה שוב.');});
    return;}
   if(a==='x'){close();try{if(history.state&&history.state.ag)history.back();}catch(x){}return;}
+  if(a==='exp'){expOpen=!(expOpen===null?!ALL().length:expOpen);draw();return;}
   if(a==='new'){formFor=formFor==='|new'?null:'|new';fq='day';kind='remind';pickT=-1;draw();var f=document.getElementById('agNm');if(f)f.focus();return;}
   if(a==='add'){formFor=formFor===aid+'|cmd'?null:aid+'|cmd';fq='day';kind='remind';draw();var t=document.getElementById('agTx');if(t)t.focus();return;}
   if(a==='save'){
