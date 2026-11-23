@@ -1,7 +1,7 @@
 {
- "at": "2026-11-23T15:25:44.615Z",
+ "at": "2026-11-23T15:29:54.867Z",
  "up": 0,
- "since": "2026-11-23T15:25:44.593Z",
+ "since": "2026-11-23T15:29:54.839Z",
  "last": "",
  "n": 0,
  "recent": [
@@ -51,14 +51,14 @@
    "cap": 30,
    "left": 19,
    "paid": false,
-   "blockedUntil": "2026-11-23T15:26:14.177Z",
-   "daily": true
+   "blockedUntil": "",
+   "daily": false
   }
  },
  "queued": 3,
  "pc": {
   "on": true,
-  "seen": "2026-11-23T15:24:47.028Z"
+  "seen": "2026-11-23T15:29:46.851Z"
  },
  "hold": false,
  "quota": null,
