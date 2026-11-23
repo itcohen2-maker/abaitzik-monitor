@@ -54,7 +54,7 @@ test('7: arranging on the trade desktop: one סיום, Esc leaves, the bar stand
   const r = TD.rules();
   assert.match(r, /body\.tjig #talkCard,body\.tjig #fcSheet\{display:none!important\}/);
   assert.match(r, /body\.tjig #tileArr,body\.tjig #tileArrTop\{display:none!important\}/);
-  assert.match(r, /#tileBar\{left:0;right:calc\(88px \+ var\(--dkDay,460px\)\);bottom:var\(--dkBot,0px\)\}/);
+  assert.match(r, /#tileBar\{inset-inline-end:0;inset-inline-start:calc\(88px \+ var\(--dkDay,460px\)\);bottom:var\(--dkBot,0px\)\}/);
   const src = TD.page.toString();
   assert.match(src, /classList\.contains\('tjig'\)\) \{ var td = \$\('tileDone'\)/);
   assert.match(src, /wasBare/); // the folded home is opened while arranging from the settings
