@@ -1694,7 +1694,8 @@ const server = http.createServer(function (q, s) {
     return;
   }
   // 22.11.2026 (lib/book-page.js): the public booking page, /b/<link>, /b/a/<link>.<tok> and /api/book*.
-  if (/^\/b\/[a-f0-9]/.test(u.pathname) || /^\/api\/book(\/|$)/.test(u.pathname)) { bookRoute(q, u, s); return; }
+  // 24.11.2026: /b/g/<link>.<code> is a gift card (g is not a hex letter, so it needs its own branch)
+  if (/^\/b\/(?:[a-f0-9]|g\/[a-f0-9])/.test(u.pathname) || /^\/api\/book(\/|$)/.test(u.pathname)) { bookRoute(q, u, s); return; }
   /*
     16.11.2026: a quote made in 🧾 is kept on our side, data/tenant-quotes/<customer>/biz-home/quotes.json (lib/biz-home.js
     addQuote), not only on the phone that made it. This service runs as monitor and can not write into a customer's home,
