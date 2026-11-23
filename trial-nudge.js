@@ -17,6 +17,7 @@ const NOW = (() => { const i = process.argv.indexOf('--now'); return i > 0 ? Dat
 const SENT = path.join(DATA, 'signup', 'nudges.json');
 function rd(f, d) { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } }
 function say(s) { console.log(new Date(NOW).toISOString().slice(0, 16) + 'Z nudge ' + s); }
+const RU = require('./lib/signup-ru.js');
 function home(id) { return '/home/' + id + '/' + id + '-monitor'; }
 
 (async () => {
@@ -49,7 +50,7 @@ function home(id) { return '/home/' + id + '/' + id + '-monitor'; }
       let key = ''; try { key = fs.readFileSync(path.join(d, 'fc-key.txt'), 'utf8').trim(); } catch (e) { key = ''; }
       const link = wk ? QK.link(QK.code(key, id)) : '';
       if (wk && link) {
-        const text = N.waText(wk, link, ((q.profile || {}).gender) === 'f');
+        const text = RU.tenantLang(home(id)) === 'ru' ? RU.waText(wk, link) : N.waText(wk, link, ((q.profile || {}).gender) === 'f');
         if (DRY) say(id + ' ' + wk + ' ' + text);
         else {
           const at = new Date(NOW), pad = (x) => String(x).padStart(2, '0');
@@ -72,7 +73,7 @@ function home(id) { return '/home/' + id + '/' + id + '-monitor'; }
     try { used = require('./lib/plan.js').usage(fs.readFileSync(path.join(home(id), 'data', 'status', 'usage.jsonl'), 'utf8'), { from: start, to: start + 7 * 864e5 }).actions; } catch (e) { used = 0; }
     const c = { name: q.name || '', url: 'https://' + q.host + '/', google: !!(src.step && src.mail), mails: since.length,
       urgent: since.filter((m) => m.tag === 'דחוף').length, daysLeft: Math.max(1, Math.ceil((start + 7 * 864e5 - NOW) / 864e5)),
-      used, total: 40, endText: N.endText(start + 7 * 864e5) };
+      used, total: 40, lang: RU.tenantLang(home(id)), endText: (RU.tenantLang(home(id)) === 'ru' ? RU : N).endText(start + 7 * 864e5) };
     const m = N.mail(k, c);
     if (DRY) { say(id + ' ' + k + ' → ' + q.email + '\n' + m.subject + '\n' + m.text); continue; }
     const r = await require('./lib/mailer.js').send(DATA, { to: q.email, subject: m.subject, text: m.text });
