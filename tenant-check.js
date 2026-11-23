@@ -154,6 +154,29 @@ function leakCheck(t, res) {
   });
 }
 
+function freeGB() {
+  const r = spawnSync('df', ['-BG', '--output=avail', '/'], { encoding: 'utf8' });
+  return parseInt(String(r.stdout || '').split('\n')[1] || '0', 10) || 0;
+}
+
+// 23.11.2026: the disk filled up at night, transcription failed at every customer and the alert went out
+// every 2 minutes. Under 3GB free this clears only what is safe to delete, then checks again.
+// It never touches customer data, backups or git.
+function diskGuard() {
+  const before = freeGB();
+  if (before >= 3) return { low: false, before };
+  const done = [];
+  const sh = (label, cmd) => { if (DRY) return; spawnSync('bash', ['-c', cmd], { timeout: 120000 }); done.push(label); };
+  sh('דפדפנים זמניים', 'find /tmp -maxdepth 1 \\( -name "puppeteer_dev_chrome_profile-*" -o -name "cdpprof-*" -o -name ".org.chromium.*" \\) -mmin +60 -exec rm -rf {} +');
+  sh('קבצים זמניים ישנים', 'find /tmp -maxdepth 1 -type f -mmin +1440 -delete');
+  sh('יומן המערכת', 'journalctl --vacuum-size=300M');
+  sh('מטמון התקנות', 'apt-get clean');
+  sh('יומנים ישנים', 'find /var/log -name "*.gz" -mtime +7 -delete');
+  const after = freeGB();
+  log('disk: ' + before + 'G -> ' + after + 'G (' + done.join(', ') + ')');
+  return { low: after < 3, before, after, done: done.join(', ') };
+}
+
 const TOLD_RAM = '/run/tenant-check-told.json';
 function escalate(t, res, state) {
   const day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
@@ -167,7 +190,8 @@ function escalate(t, res, state) {
       require('./lib/handle.js').add(DATA, { key: 'tenant-check-' + key, kind: 'tenant-broken', who: t.title || t.id, title: (t.title || t.id).replace(/^המוניטור של /, '') + ': ' + p + '. ניסיתי לתקן לבד ולא הצליח.', link: 'tenants' });
       spawnSync('chown', ['-R', 'monitor:monitor', path.join(DATA, 'handle')]);
     } catch (e) { log('handle: ' + e.message); }
-    spawnSync('sudo', ['-u', 'monitor', 'env', 'HOME=/home/monitor', 'node', 'notify.js', '--urgent', 'תקלה אצל לקוח', (t.title || t.id) + ': ' + p], { cwd: ROOT, timeout: 60000 });
+    const kind = p.split(':')[0];
+    (state.queue[kind] = state.queue[kind] || { p: p, who: [] }).who.push((t.title || t.id).replace(/^המוניטור של /, ''));
   });
 }
 
@@ -177,6 +201,8 @@ function main() {
   const state = { at: new Date().toISOString(), tenants: {}, told: Object.assign({}, prevAll.told || {}, readJson(TOLD_RAM, {})) };
   // keep a week of "told" keys only
   Object.keys(state.told).forEach((k) => { if (Date.now() - Date.parse(state.told[k]) > 7 * 86400000) delete state.told[k]; });
+  state.queue = {};
+  const disk = diskGuard();
   tenants().forEach((t) => {
     const prev = (prevAll.tenants || {})[t.id] || {};
     const res = { title: t.title || t.id, problems: [], fixed: [] };
@@ -196,6 +222,22 @@ function main() {
     escalate(t, res, state);
     if (res.fixed.some((x) => /הוחזרה לטיפול/.test(x)) && !DRY) spawnSync('systemctl', ['start', '--no-block', 'monitor-worker-' + t.id + '.service']);
   });
+  // 23.11: one message per kind of problem, not one per customer per run (40 alerts in one night).
+  // A full disk is fixed here (diskGuard) and reported once, as a server problem.
+  Object.keys(state.queue).forEach((kind) => {
+    const q = state.queue[kind];
+    if (/No space left|ENOSPC/i.test(q.p)) return; // covered by the disk message below
+    const many = q.who.length > 1;
+    const msg = many ? q.p.slice(0, 160) + ' (אצל ' + q.who.length + ' לקוחות: ' + q.who.join(', ') + ')' : q.who[0] + ': ' + q.p;
+    if (!DRY) spawnSync('sudo', ['-u', 'monitor', 'env', 'HOME=/home/monitor', 'node', 'notify.js', '--urgent', many ? 'תקלה אצל כמה לקוחות' : 'תקלה אצל לקוח', msg], { cwd: ROOT, timeout: 60000 });
+  });
+  const dkey = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' }) + '|disk';
+  if (disk.low && !state.told[dkey] && !DRY) {
+    state.told[dkey] = new Date().toISOString();
+    try { fs.writeFileSync(TOLD_RAM, JSON.stringify(state.told)); } catch (e) {}
+    spawnSync('sudo', ['-u', 'monitor', 'env', 'HOME=/home/monitor', 'node', 'notify.js', '--urgent', 'הדיסק בשרת כמעט מלא', 'פיניתי לבד מה שבטוח למחוק (' + disk.done + '), ונשארו רק ' + disk.after + ' ג׳יגה פנויים. צריך לבדוק מה תופס מקום.'], { cwd: ROOT, timeout: 60000 });
+  }
+  delete state.queue;
   if (NEW) state.tenants = Object.assign({}, prevAll.tenants || {}, state.tenants);
   if (!DRY) {
     fs.writeFileSync(OUT, JSON.stringify(state, null, 1) + '\n');
