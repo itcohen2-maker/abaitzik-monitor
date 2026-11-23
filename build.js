@@ -5353,7 +5353,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
        the card itself, decrypted, with the share button for the licensing office. -->
   <!-- 15.11.2026, Itzik: "גם את תעודת הנכה תעביר לשם". The card moved into the personal mode (🏡, personalSheet). -->
   <!-- 4.11, Itzik: "עיגול אחד של היומן של גוגל, כניסה ישירה אליו". Opens his calendar (account u/0, itcohen2), today. -->
-  <a class="ic icNew" data-grp="day" id="icGcal" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener" data-new="1" data-upd="20261107-month"><span class="c c-gcal">
+  <a class="ic icNew" data-grp="day" id="icGcal"${(() => { try { return fs.existsSync(path.join(inst.dataPath || "data", "cal", "events.json")) ? ' data-calcopy="1"' : ""; } catch (e) { return ""; } })()} href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener" data-new="1" data-upd="20261107-month"><span class="c c-gcal">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9.5 13.5h1.5v4M14 13.5h2l-1.5 4"/></svg></span>יומן</a>
   <!-- 12.11.2026, Itzik: "אייקון של מצב אישי כמו בסרטון". The calm side of the monitor, in the ad's colours (personalSheet, lib/personal.js). -->
   <button type="button" class="ic icNew" data-grp="day" id="icPersonal" data-new="1"><span class="c c-ps">🏡</span>מצב אישי</button>
@@ -20562,7 +20562,8 @@ function firstSteps(){
 }
 
 (function(){var a=document.getElementById('icGcal');if(!a)return;
- a.addEventListener('click',function(e){if(!D.cal)return;e.preventDefault();e.stopPropagation();calSheet(false);},true);})();
+ a.addEventListener('click',function(e){var copy=a.getAttribute('data-calcopy')==='1';if(!copy&&!(window.D&&D.cal))return;e.preventDefault();e.stopPropagation();
+  var n=0;(function go(){if(window.D&&D.cal){calSheet(false);return;}if(n===0&&typeof toast==='function')toast('היומן נטען, עוד רגע...');if(++n<40)setTimeout(go,250);else if(typeof toast==='function')toast('היומן לא נטען. אפשר לרענן ולנסות שוב.');})();},true);})();
 /*
   7.11.2026: 💬 שיחה עם המוניטור. A fast consulting chat (lib/fast-chat.js on the server, answers in
   seconds). It does not act: "להעביר לביצוע" sends a message to the normal request queue. Shown only
