@@ -29,3 +29,12 @@ test('the manager card line', () => {
   assert.strictEqual(w.st, 'warn');
   assert.ok(!/[-‐‑‒–—]/.test(w.t + w.sub));
 });
+
+test('23.11: the cosmeticians campaign (c-beauty, c-beauty-ru) leads to /day/ and that is right', () => {
+  const D = require('../campaign-dest-check.js');
+  assert.strictEqual(typeof D.judge, 'function');
+  for (const l of ['https://it-solution.co.il/day/?ref=c-beauty', 'https://it-solution.co.il/day/?ref=c-beauty-ru&lang=ru']) {
+    const r = D.judge('קוסמטיקאיות 23.11 · עברית ורוסית · /day', 'קוסמטיקאית · עברית · c-beauty', { link: l });
+    assert.strictEqual(r.monitor, true); assert.strictEqual(r.ok, true);
+  }
+});

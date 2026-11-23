@@ -44,7 +44,8 @@ async function graph(p, token) {
 
 // the rule, kept pure so the tests can hold it
 function isMonitorAd(campaignName, adName, ref) {
-  return /מוניטור/.test(campaignName || '') || /מוניטור/.test(adName || '') || /^m-/.test(ref || '');
+  // 23.11.2026: the cosmeticians campaign (ref c-beauty, c-beauty-ru) is a monitor campaign too; the alert called it a rescue ad
+  return /מוניטור/.test(campaignName || '') || /מוניטור/.test(adName || '') || /^[mc]-/.test(ref || '');
 }
 function destOf(creative) {
   const oss = (creative && creative.object_story_spec) || {};
@@ -64,7 +65,7 @@ function judge(campaignName, adName, dest) {
   const host = u.hostname.replace(/^www\./, '') === 'it-solution.co.il';
   // 21.11.2026: the trades campaign (צלם, קבלן, יועץ, קוסמטיקאית) leads to /day/?ref=m-<trade>, the trade's own
   // monitor signup page (same signup button, ref kept). That is right, so /day/ counts for a monitor ad with an m- ref.
-  const ok = monitor ? host && (/^\/start\/?$/.test(u.pathname) || (/^\/day\/?$/.test(u.pathname) && /^m-/.test(ref)))
+  const ok = monitor ? host && (/^\/start\/?$/.test(u.pathname) || (/^\/day\/?$/.test(u.pathname) && /^[mc]-/.test(ref)))
     : host && (u.pathname === '/' || u.pathname === '') && u.hash === '#chat' && !!ref;
   return { monitor, ok, want, got: dest.link };
 }
