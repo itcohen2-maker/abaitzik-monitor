@@ -911,7 +911,13 @@ function build() {
     routines: require('./lib/routines.js').forPage(inst.dataPath, Date.now()),
     agents: require('./lib/routines.js').agentsForPage(inst.dataPath),
     // 12.11.2026, Itzik: "🏡 מצב אישי" in every monitor (lib/personal.js), sealed payload only.
-    personal: require('./lib/personal.js').forPage(inst.dataPath),
+    // 23.11.2026: the tile names are display text (the page sends the key k, never the name): a "ru" instance gets them translated here.
+    personal: (() => {
+      const P = require('./lib/personal.js').forPage(inst.dataPath);
+      if (inst.lang !== 'ru') return P;
+      const I = require('./lib/i18n.js');
+      return Object.assign({}, P, { tiles: P.tiles.map((x) => I.fields('ru', x, ['t'])), catalog: P.catalog.map((x) => I.fields('ru', x, ['t'])) });
+    })(),
     manager: inst.name === 'abaitzik' ? require('./lib/manager.js').forPage(inst.dataPath, Date.now()) : null,
     pegasus,
     improve,
@@ -987,7 +993,13 @@ function build() {
     fcKey: inst.name === 'abaitzik' ? '' : (() => { try { const k = fs.readFileSync(path.join(inst.dataPath, 'fc-key.txt'), 'utf8').trim(); return /^[a-f0-9]{24,64}$/.test(k) ? k : ''; } catch (e) { return ''; } })(),
     demoFcKey: inst.name === 'abaitzik' ? (() => { try { const k = (JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'fastchat', 'tenants.json'), 'utf8')).demo || {}).key || ''; return /^[a-f0-9]{24,64}$/.test(k) ? k : ''; } catch (e) { return ''; } })() : '',
     // 7.11.2026: 🔌 חיבורים, what is connected and a connect link for each (lib/connections.js). His copy only.
-    conn: (() => { const F = require('./lib/features.js').read(inst.dataPath, inst.name); return F.conn ? require('./lib/connections.js').list(inst.dataPath, inst.name, F, null, inst.plan) : null; })(),
+    conn: (() => {
+      const F = require('./lib/features.js').read(inst.dataPath, inst.name);
+      const C = F.conn ? require('./lib/connections.js').list(inst.dataPath, inst.name, F, null, inst.plan) : null;
+      // 23.11.2026: the labels of the rows are display text (the page reads r.id and r.key), so a "ru" instance gets them translated here
+      if (C && inst.lang === 'ru') { const I = require('./lib/i18n.js'); C.rows = C.rows.map((r) => I.fields('ru', r, ['title', 'paid', 'note', 'linkLabel', 'link2Label'])); }
+      return C;
+    })(),
     // 12.11.2026: ▶️ the public YouTube comments of the channel given in 🔌 (lib/yt-comments.js). Sealed like the rest of D.
     yt: (() => { try { return require('./lib/yt-comments.js').forPage(inst.dataPath); } catch (e) { return null; } })(),
     // 12.10: the 🩺 board, every monitor's faults in one file (health-board.js). His copy only.
@@ -1271,10 +1283,22 @@ function build() {
   try {
     const pio = require('./lib/plan-io.js');
     if (inst.name === 'abaitzik') payload.planBoard = pio.board(inst.dataPath, Date.now());
-    else payload.plan = require('./lib/plan.js').view(pio.statusOf(inst.name, path.join(inst.dataPath, 'status'), Date.now()));
+    else payload.plan = require('./lib/i18n.js').fields(inst.lang, require('./lib/plan.js').view(pio.statusOf(inst.name, path.join(inst.dataPath, 'status'), Date.now())), ['label', 'launch', 'say', 'warnLine']);
     if (inst.name !== 'abaitzik') payload.payOffer = require('./lib/pay-offer.js').view(inst.name);
     // 14.11.2026: the add-ons and upgrades the customer can buy and pay on SUMIT (lib/addons.js).
-    if (inst.name !== 'abaitzik') payload.addonMenu = require('./lib/addons.js').menu(pio.stateOf(inst.name), require('./lib/bank-flow.js').BANKS);
+    if (inst.name !== 'abaitzik') {
+      payload.addonMenu = require('./lib/addons.js').menu(pio.stateOf(inst.name), require('./lib/bank-flow.js').BANKS);
+      // 23.11.2026: names of add-ons, programs, banks and account kinds are display text (the page sends key and value codes), translated for "ru"
+      const M = payload.addonMenu;
+      if (M && inst.lang === 'ru') {
+        const I = require('./lib/i18n.js');
+        M.addons = M.addons.map((x) => I.fields('ru', x, ['name']));
+        M.upgrades = M.upgrades.map((x) => I.fields('ru', x, ['label']));
+        M.banks = M.banks.map((x) => I.fields('ru', x, ['name']));
+        M.software = I.values('ru', M.software);
+        M.kinds = I.values('ru', M.kinds);
+      }
+    }
     // 14.11.2026: where a customer's page asks for a signing link (lib/csign.js); kept out of the page code itself.
     if (inst.name !== 'abaitzik') payload.payApi = 'https://wa.abaitzik.com';
   } catch (e) { console.error('plan: ' + e.message); }
@@ -16323,6 +16347,8 @@ function campSheet(){
  w.id='cpSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','קמפיינים');
  var kinds=['מודעה ממומנת','סטורי','ריל','פוסט','קרוסלה','סרטון מכל החומרים','להכין סרטון מסוים להעלאה לאינסטגרם'];
+ // 23.11.2026: the value of 'קרוסלה' is compared and sent in Hebrew (data-k), so the dictionary leaves it; a "ru" build gives the button its label here
+ var KIND_LAB=${JSON.stringify(inst.lang === 'ru' ? { 'קרוסלה': require('./lib/i18n.js').label('ru', 'קרוסלה') } : {})};
  var CP_ASK=['מה לעשות עם התמונות?','מה לכתוב עליהן?','מי הלקוחות שלך?','מבצע, מחיר או טלפון?'];
  var cpAiQs=[],cpAiAsked=[],cpAiBusy=false,cpAiDone={};
  function cpRealText(t){var s=t;CP_ASK.concat(cpAiAsked).forEach(function(q){s=s.split(q).join('');});return s.split(String.fromCharCode(10)).join(' ').trim();}
@@ -16336,7 +16362,7 @@ function campSheet(){
   +'<label id="cpJoinBox" hidden style="display:block;font:700 14px Heebo,sans-serif;margin:6px 0"><input type="checkbox" id="cpJoin" checked> לחבר את הכול לסרטון אחד, לפי הסדר שלמעלה</label>'
   +'<small style="opacity:1;font-weight:600">מה לעשות איתם? אפשר לבחור כמה:</small>'
   +'<div class="arPick" id="cpKinds" role="group" aria-label="מה לעשות">'
-  +kinds.map(function(k){return '<button type="button" class="yb" data-k="'+k+'">'+k+'</button>';}).join('')+'</div>'
+  +kinds.map(function(k){return '<button type="button" class="yb" data-k="'+k+'">'+(KIND_LAB[k]||k)+'</button>';}).join('')+'</div>'
   +'<div id="cpSounds" hidden></div>'
   +'<button type="button" class="yb" data-a="pickau">🎵 להעלות צליל משלי</button>'
   +'<input type="file" id="cpAudio" accept="audio/*" hidden>'
@@ -16658,7 +16684,7 @@ function personalSheet(){
  var old=document.getElementById('psSheet');if(old)old.remove();
  var P=D.personal||{chosen:false,picked:[],tiles:[],catalog:[],requests:[]};
  var w=document.createElement('div');w.id='psSheet';w.className='ysheet';
- w.setAttribute('role','dialog');w.setAttribute('aria-label','מצב אישי');
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','${inst.lang === 'ru' ? 'המצב האישי' : 'מצב אישי'}'); /* 23.11.2026: 'מצב אישי' is a command prefix, so the dictionary skips it; a ru build says this wording, which it can translate */
  var picking=!P.chosen,sel=(P.picked||[]).slice(),sent=false;
  // 12.11.2026, Itzik: "ברגע שהוא שלח את זה, אתה רושם, המערכת עובדת על זה ותבנה לך את זה בהקדם."
  var SENT='✓ נרשם. המערכת עובדת על זה ותבנה לך את זה בהקדם.';
