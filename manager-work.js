@@ -107,12 +107,17 @@ function mailSweep(now, results) {
   let prev = []; try { prev = JSON.parse(fs.readFileSync(f, 'utf8')).items || []; } catch (e) {}
   if (prev.some(x => x.kind === 'mailsweep' && now - Date.parse(x.when) < 4 * 3600 * 1000)) return; // once per round
   let out = '';
-  const read = () => execFileSync('node', ['mail-read.js', MAIL_Q, '--days', '1', '--limit', '30', '--bodies', '1500'], { cwd: __dirname, encoding: 'utf8', timeout: 6 * 60 * 1000, stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  // 23.11.2026: mails Itzik already closed (lib/mail-seen.js) are not written again
+  const MS = require('./lib/mail-seen.js'), seen = MS.read(inst.dataPath);
+  const closed = [...seen].filter((k) => /^\d+$/.test(k)).slice(-60);
+  const Q = MAIL_Q + (closed.length ? ' מיילים שאיציק כבר סגר, לא לכתוב עליהם ולא לספור אותם כדחופים: ' + closed.map((u) => '[' + u + ']').join(' ') + '.' : '');
+  const read = () => execFileSync('node', ['mail-read.js', Q, '--days', '1', '--limit', '30', '--bodies', '1500'], { cwd: __dirname, encoding: 'utf8', timeout: 6 * 60 * 1000, stdio: ['ignore', 'pipe', 'pipe'] }).trim();
   // 11.11.2026: one quiet retry before a failure is written, and the real reason (stderr) is kept, not the command line
   try { try { out = read(); } catch (e1) { execFileSync('sleep', ['30']); out = read(); } }
   catch (e) { results.push({ kind: 'mailsweep', text: 'סריקת מיילים', status: 'failed', line: 'הקריאה נכשלה: ' + noDash(String(e.stderr || e.stdout || e.message).trim().slice(-160)) }); return; }
-  const urgent = /דחוף\s*:\s*כן/.test(out.split('\n')[0] || '');
-  const body = noDash(out.split('\n').slice(1).filter(l => l.trim()).join(' · '));
+  const raw = noDash(out.split('\n').slice(1).filter(l => l.trim()).join(' · '));
+  const body = MS.filterLine(raw, seen);
+  const urgent = /דחוף\s*:\s*כן/.test(out.split('\n')[0] || '') && !(MS.uidsIn(raw).length && !MS.uidsIn(body).length);
   results.push({ kind: 'mailsweep', text: 'סריקת מיילים', status: urgent ? 'needsItzik' : 'mail', line: body.slice(0, 600) || 'אין מיילים חדשים' });
 }
 

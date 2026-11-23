@@ -55,6 +55,8 @@ try {
 try { const sc = JSON.parse(execFileSync('node', ['signup-check.js'], { cwd: __dirname, encoding: 'utf8', timeout: 120000 }).trim().split('\n').pop()); if (sc && sc.k) m.items.push({ k: sc.k, st: sc.st, t: sc.t, sub: sc.sub }); } catch (e) { m.items.push({ k: 'signup', st: 'warn', t: '📝 בדיקת ההרשמה לא רצה', sub: String(e.message).slice(0, 120) }); }
 // 12.11.2026, Itzik: "שומר שכל הבקשות המיוחדות של המשתמשים החדשים בוצעו". The wish from each trial's questionnaire (lib/trial-wishes.js).
 try { const TW = require('./lib/trial-wishes.js'); const wi = TW.item(TW.list(dataPath, now)); if (wi) m.items.push(wi); } catch (e) { log('wishes: ' + e.message); }
+// 23.11.2026: mail Itzik closed with ✓ בוצע or ✕ לא רלוונטי is not on the card or in the push (lib/mail-seen.js)
+try { m.items = M.applySeen(m.items, dataPath, now); } catch (e) { log('!! mail seen: ' + e.message); }
 if (DRY) { console.log(JSON.stringify(m, null, 1)); console.log(M.pushText(m)); process.exit(0); }
 
 fs.mkdirSync(path.join(dir, 'manager'), { recursive: true });

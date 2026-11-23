@@ -1006,6 +1006,22 @@ function recordIncoming(m) {
       try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
       return true;
     }
+    // 23.11.2026, Itzik: "אני מוחק ואז היא מופיעה עוד פעם". ✓ בוצע or ✕ לא רלוונטי on a mail line of the manager
+    // (lib/agents-ui.js, lib/home-ui.js) is saved here with no model, by mail number, in mail-board-seen.json
+    // (lib/mail-seen.js), so the next round does not bring the same mail back. A line with no mail number goes on
+    // to the session as before.
+    const dmM = codeOk && /^\s*(?:בקשה)?\s*(?:✓\s*סימנתי בוצע|✕\s*לא רלוונטי)\s*מהדוח\s*[:：]\s*([\s\S]*)$/.exec(text.replace(/\n\s*קוד[^\n]*$/, '').trim());
+    if (dmM && /מייל/.test(dmM[1])) {
+      const MS = require('./lib/mail-seen.js');
+      const keys = MS.uidsIn(dmM[1]);
+      if (/מיילים\s*:\s*(?:\d+ דברים דחופים|דבר אחד דחוף)/.test(dmM[1])) keys.push(MS.briefKey(new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' })));
+      if (keys.length) {
+        try { MS.add(inst.dataPath, keys); say('מייל נסגר: ' + keys.join(',')); fs.unlinkSync(path.join(CHAT, name)); }
+        catch (e) { say('!! מייל נסגר: ' + e.message); }
+        try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+        return true;
+      }
+    }
     // 16.11.2026: "🎙️ מפתח פיירפליס: <key>" from 🔌 חיבורים (lib/fireflies-key.js). Saved here with no model into data/keys.json;
     // the message file is deleted whatever happens, so the key never stays in the chat.
     const ffIn = require('./lib/fireflies-key.js').parseMsg(text.replace(/\n\s*קוד[^\n]*$/, ''));
