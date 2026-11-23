@@ -59,7 +59,7 @@ test('move and cancel: answered, the slot freed, a refusal gives the reason and 
   assert.match(ok.reply, /^הוזז: התור של דנה פרץ עבר ליום שני 23\.11 בשעה 12:00\.$/); assert.strictEqual(ok.changed, true);
   assert.strictEqual(B.byToken(i.dataPath, a.tok).start, '2026-11-23T12:00:00+02:00');
   const c = run(i, 'ביטול תור לקוחה: ' + b.id);
-  assert.match(c.reply, /^בוטל: התור של הדס לוי ביום שני 23\.11 בשעה 11:00\. השעה התפנתה\.$/);
+  assert.match(c.reply, /^בוטל: התור של הדס לוי ביום שני 23\.11 בשעה 11:00\. השעה התפנתה\. הכנתי ללקוחה הודעה על הביטול, והיא מחכה ב 📤 הודעות לשליחה\.$/); // 23.11.2026: the client is told, as a prepared message
   assert.strictEqual(B.freeSlots(i.dataPath, '2026-11-23', 'brows', NOW).some((s) => s.time === '11:00'), true);
   assert.strictEqual(run(i, 'ביטול תור לקוחה: nope').reply, 'התור לא נמצא, אולי כבר בוטל.');
   assert.ok(!bh.readList(i.dataPath, 'event').some((e) => e.bookingId === b.id)); // the diary dropped it

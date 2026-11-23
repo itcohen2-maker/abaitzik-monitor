@@ -243,17 +243,15 @@ test('act: confirm only a booked future booking, cancel and move only in the fut
   assert.ok(t3);
 });
 
-test('a freed hour offers up to three lapsed clients as prepared wa.me messages, written by the agent for the owner to send', async () => {
+test('a cancel by the client does NOT offer the freed hour to lapsed clients any more (23.11.2026), the owner is only told', async () => {
   const w = await world();
-  const ago = (days, name, phone) => { const d = new Date(NOW - days * 864e5).toISOString().slice(0, 10); const r = B.add(w.dp, { start: d + ' 10:00', serviceId: 'brows', name, phone }, NOW - (days + 1) * 864e5); assert.ok(r.ok, JSON.stringify(r)); B.setStatus(w.dp, r.booking.id, 'done', NOW); };
-  ago(70, 'יעל שגיא', '0500000104'); ago(63, 'שירן אוחיון', '0500000102'); ago(60, 'נועה ברק', '0500000103'); ago(58, 'רונית דהן', '0500000110'); ago(7, 'מיכל רון', '0500000106');
+  const ago = (days, name, phone) => { const d = new Date(NOW - days * 864e5).toISOString().slice(0, 10); const r = B.add(w.dp, { start: d + ' 10:00', serviceId: 'brows', name, phone }, NOW - (days + 1) * 864e5); assert.ok(r.ok); B.setStatus(w.dp, r.booking.id, 'done', NOW); };
+  ago(70, 'יעל שגיא', '0500000104'); ago(63, 'שירן אוחיון', '0500000102');
   const tok = J(await w.book()).booking.tok;
   await w.post('/api/book/act', { l: w.l, tok, action: 'cancel' });
-  const lists = SL.all(w.dp);
-  assert.strictEqual(lists.length, 1); assert.deepStrictEqual(lists[0].items.map((x) => x.name), ['יעל שגיא', 'שירן אוחיון', 'נועה ברק']);
-  const pg = SL.forPage(w.dp, NOW)[0];
-  assert.ok(pg.items.every((x) => x.link.startsWith('https://wa.me/9725') && !x.bad)); assert.match(pg.items[0].text, /התפנה לי תור יום שני 23\.11 בשעה 10:00/);
-  assert.strictEqual(SL.validate(lists[0]).length, 0);
+  assert.strictEqual(SL.all(w.dp).length, 0);
+  const recs = fs.readdirSync(path.join(w.dp, 'chat', 'chat')).map((f) => JSON.parse(fs.readFileSync(path.join(w.dp, 'chat', 'chat', f), 'utf8')));
+  assert.ok(recs.some((r) => /בוטל על ידי הלקוח/.test(r.text) && !/הודעות ל/.test(r.text)));
 });
 
 test('the owner is told one record per event, but at most one WhatsApp push in ten minutes', async () => {
@@ -355,7 +353,7 @@ test('the demo link: invented data, nothing saved, nobody told', async () => {
   const s = J(await w.get('/api/book/slots', { l: BP.DEMO_LINK, date: day, service: 'face' })); assert.ok(s.slots.length > 5);
   const before = B.readItems(demo.dir()).length;
   const ft = /"ft":"([^"]+)"/.exec(pg.body)[1]; w.st.now += 5000;
-  const r = J(await w.post('/api/book', { l: BP.DEMO_LINK, ft, cid: 'demokey12345', service: 'face', start: s.slots[0].start.slice(0, 16).replace('T', ' '), name: 'דנה כהן', phone: '0521234567', website: '' }));
+  const r = J(await w.post('/api/book', { l: BP.DEMO_LINK, ft, cid: 'demokey12345', service: 'face', start: s.slots[0].start.slice(0, 16).replace('T', ' '), name: 'דנה כהן', phone: '0521234567', website: '', health: require('./fixtures/health-decl.js') }));
   assert.strictEqual(r.ok, true); assert.strictEqual(B.readItems(demo.dir()).length, before);
   assert.strictEqual((await w.get('/b/a/' + BP.DEMO_LINK + '.' + 'a'.repeat(24))).status, 200);
   assert.strictEqual(J(await w.post('/api/book/act', { l: BP.DEMO_LINK, tok: BP.DEMO_TOK, action: 'cancel' })).status, 'cancelled');
@@ -388,7 +386,7 @@ test('links that open on a day, a service, a time: cleaned on the server, ignore
   assert.match(full, /"id":"brows"/); assert.match(full, /"id":"face"/); assert.match(full, /"d":"2026-11-23"/);
   // the agent's info now carries the slot step, and nothing else is new in the protocol
   const info = await w.P.ask('t1', { op: 'info', l: w.l });
-  assert.strictEqual(info.slotMinutes, 15); assert.deepStrictEqual(Object.keys(info).sort(), ['accent', 'cancelHours', 'days', 'fem', 'name', 'ok', 'ownerPhone', 'services', 'slotMinutes']);
+  assert.strictEqual(info.slotMinutes, 15); assert.deepStrictEqual(Object.keys(info).sort(), ['accent', 'approval', 'cancelHours', 'days', 'fem', 'healthAgree', 'healthQ', 'name', 'ok', 'ownerPhone', 'services', 'slotMinutes']);
 });
 
 test('limit, full and unconfirmed look the same from outside, and the owner is told once an hour with one generic WhatsApp line', async () => {
