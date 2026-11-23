@@ -3355,7 +3355,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-23T19:23:20.774Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-23T19:28:52.040Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3694,8 +3694,7 @@ body:not(.offHome) #fcSheet.gFull .fcb{max-width:min(68ch,100%)!important}
 body:not(.offHome) #fcSheet .yx,body:not(.offHome) #fcSheet .ytopx{display:none!important}
 body:not(.offHome) #fcSheet.gFull .gTop{display:flex!important;flex:none}
 body:not(.offHome) .wrap>#welcomeCard{order:-1;flex:0 0 calc(100% - 88px);box-sizing:border-box;margin:26px 44px 14px!important;max-width:none}
-#micFirst{left:44px!important;right:calc(88px + var(--dkDay,460px) + 44px)!important;top:auto!important;bottom:calc(var(--dkBot,0px) + 14px)!important;max-width:640px;margin:0!important}
-html.gChatOpen #micFirst{bottom:calc(var(--dkBot,0px) + var(--dkChatH) + 36px)!important}
+#micFirst{position:relative!important;inset:auto!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;z-index:auto!important;order:-1;flex:0 0 calc(100% - 88px);box-sizing:border-box;margin:0 44px 14px!important;max-width:none!important;width:auto!important}
 body:not(.offHome) #talkCard .mvSkel,body:not(.offHome) #talkCard #gBackChat{display:none!important}
 body.offHome #fcSheet[data-desk-auto]{display:none}
 body:not(.offHome):has(#pH:not(.bare)) #fcSheet[data-desk-auto]{display:none}
@@ -3826,6 +3825,7 @@ body.offHome .wrap:has(#pA:not([hidden]))>#pA{flex:1;min-height:0}
   }
   function unbuildHome() {
     ['deskKeys', 'deskSeg'].forEach(function (id) { var e = $(id); if (e) e.remove(); });
+    var mf = $('micFirst'); if (mf && mf.parentNode !== document.body) document.body.appendChild(mf);
     var tc = $('talkCard'); if (tc && tc.__home) { var h = tc.__home; if (h.n && h.n.parentNode === h.p) h.p.insertBefore(tc, h.n); else h.p.appendChild(tc); tc.__home = null; }
     if (segObs) { segObs.disconnect(); segObs = null; }
     if (ringObs) { ringObs.disconnect(); ringObs = null; }
@@ -3967,6 +3967,9 @@ body.offHome .wrap:has(#pA:not([hidden]))>#pA{flex:1;min-height:0}
   var tries = 0, reopens = [];
   function place() {
     var t = 0;
+    var mf = $('micFirst'), wrap0 = $('pH') && $('pH').parentNode, wc0 = $('welcomeCard');
+    if (mf && wrap0 && mf.parentNode !== wrap0) wrap0.insertBefore(mf, wc0 && wc0.parentNode === wrap0 ? wc0.nextSibling : $('pH'));
+    if (mf && mf.parentNode === wrap0 && !mf.__placed) { mf.__placed = 1; try { window.scrollTo(0, Math.max(0, mf.getBoundingClientRect().top + window.scrollY - 24)); } catch (e) {} }
     var tc = $('talkCard'); if (tc && tc.offsetHeight) document.documentElement.style.setProperty('--dkComp', tc.offsetHeight + 'px');
     ['pH', 'reloadBtn'].forEach(function (id) { var e = $(id); if (e && e.offsetParent !== null) { var r = e.getBoundingClientRect(); if (r.height > 0 && r.bottom > t) t = r.bottom; } });
     if (t) document.documentElement.style.setProperty('--dkChatTop', Math.round(t + 12) + 'px');
@@ -4264,7 +4267,14 @@ body.offHome .wrap:has(#pA:not([hidden]))>#pA{flex:1;min-height:0}
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-
+<div class="alerts" id="pushBox" hidden>
+ <div>
+  <b>התראות לטלפון</b>
+  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
+ </div>
+ <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
+ <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
+</div>
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -5878,7 +5888,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='3b6d32eec4';
+var CODE_ID='2a3b2335d3';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","ownerLook":true,"uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[],"chatExamples":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -22758,7 +22768,7 @@ function bhQuoteShow(q,w){
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="";
+var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
