@@ -3355,7 +3355,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-23T16:34:42.541Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-23T16:39:47.610Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4264,6 +4264,16 @@ body.offHome .wrap:has(#pA:not([hidden]))>#pA{flex:1;min-height:0}
   <input type="time" id="quietTo" value="07:00" aria-label="נגמרות ב">
   <button type="button" class="skb" id="quietOn">שמירה</button>
   <button type="button" class="skb" id="quietOff">כבוי</button>
+ </div>
+</div>
+<div class="alerts" id="langBox">
+ <div>
+  <b>שפה · Язык</b>
+  <small>המוניטור כולו, דף קביעת התור והתשובות, בעברית או ברוסית.</small>
+ </div>
+ <div class="skinrow" role="group" aria-label="שפה">
+  <button type="button" class="skb" id="langHe" lang="he" aria-pressed="true">עברית</button>
+  <button type="button" class="skb" id="langRu" lang="ru" aria-pressed="false">Русский</button>
  </div>
 </div>
 <div class="alerts" id="nameBox">
@@ -5857,7 +5867,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='27087497ac';
+var CODE_ID='611fc78498';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[],"chatExamples":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8316,6 +8326,12 @@ pingBind();
  document.getElementById('quietOn').addEventListener('click',function(){go(true);});
  document.getElementById('quietOff').addEventListener('click',function(){go(false);});
  paint();
+})();
+(function(){
+ function go(word,msg){sendText('שפת המוניטור','שפת המוניטור: '+word,'הגדרה').then(function(){toast(msg);}).catch(function(){toast('לא יצא, אין רשת. לנסות שוב.');});}
+ var he=document.getElementById('langHe'),ru=document.getElementById('langRu');
+ if(he)he.addEventListener('click',function(){go(/*keep*/ 'עברית','נשמר. המוניטור יחזור לעברית בעוד דקה, אחרי רענון.');});
+ if(ru)ru.addEventListener('click',function(){go(/*keep*/ 'רוסית','Сохранено. Монитор будет на русском через минуту, после обновления.');});
 })();
 (function(){
  var b=document.getElementById('monNameSave'),f=document.getElementById('monName');if(!b||!f)return;

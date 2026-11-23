@@ -5533,6 +5533,17 @@ ${pushUi.html(pushKey())}
   <button type="button" class="skb" id="quietOff">כבוי</button>
  </div>
 </div>
+<!-- 23.11.2026: the language of the monitor, one line to the listener (lib/monitor-lang.js). -->
+<div class="alerts" id="langBox">
+ <div>
+  <b>שפה · Язык</b>
+  <small>המוניטור כולו, דף קביעת התור והתשובות, בעברית או ברוסית.</small>
+ </div>
+ <div class="skinrow" role="group" aria-label="שפה">
+  <button type="button" class="skb" id="langHe" lang="he" aria-pressed="${inst.lang === 'ru' ? 'false' : 'true'}">עברית</button>
+  <button type="button" class="skb" id="langRu" lang="ru" aria-pressed="${inst.lang === 'ru' ? 'true' : 'false'}">Русский</button>
+ </div>
+</div>
 <!-- 22.11.2026: the monitor name, one line to the listener (lib/monitor-name.js). Empty goes back to the original name. -->
 <div class="alerts" id="nameBox">
  <div>
@@ -10494,6 +10505,13 @@ pingBind();
  document.getElementById('quietOn').addEventListener('click',function(){go(true);});
  document.getElementById('quietOff').addEventListener('click',function(){go(false);});
  paint();
+})();
+/* 23.11 monitor language: one line to the listener (lib/monitor-lang.js); the page is rebuilt in the chosen language. */
+(function(){
+ function go(word,msg){sendText('שפת המוניטור','שפת המוניטור: '+word,'הגדרה').then(function(){toast(msg);}).catch(function(){toast('לא יצא, אין רשת. לנסות שוב.');});}
+ var he=document.getElementById('langHe'),ru=document.getElementById('langRu');
+ if(he)he.addEventListener('click',function(){go(/*keep*/ 'עברית','נשמר. המוניטור יחזור לעברית בעוד דקה, אחרי רענון.');});
+ if(ru)ru.addEventListener('click',function(){go(/*keep*/ 'רוסית','Сохранено. Монитор будет на русском через минуту, после обновления.');});
 })();
 /* 22.11 monitor name: one line to the listener, which applies it with no model. */
 (function(){
