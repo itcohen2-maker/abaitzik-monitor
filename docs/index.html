@@ -3355,7 +3355,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-23T17:57:49.502Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-23T18:00:02.525Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3626,6 +3626,7 @@ try{
 },function next(items, nowMin) { for (var i = 0; i < (items || []).length; i++) if (items[i].m > nowMin) return items[i]; return null; });</script><script>window.OWNER_MERGE_BIZ=1;(function(){var MQ="(min-width:1000px) and (pointer:fine)";function mv(){if(window.matchMedia&&matchMedia(MQ).matches)return;var tc=document.getElementById("tradeCards"),k=document.getElementById("talkCard"),hr=tc&&tc.querySelector(".trHintRow");if(!tc||!k||!hr)return;if(k.parentNode!==tc)tc.insertBefore(k,hr.nextSibling);var at=k;["newBlock","fcRow","mgrTop","leadAlert"].forEach(function(id){var e=document.getElementById(id);if(!e)return;if(e.previousSibling!==at||e.parentNode!==tc)tc.insertBefore(e,at.nextSibling);at=e;});var hm=document.getElementById("homeMgr");if(hm)hm.style.display="none";var b=document.getElementById("bareBtn");if(b&&b.parentNode){var p=b.parentNode,a2=b;["blkIcons","blkTiles"].forEach(function(id){var e=document.getElementById(id);if(!e)return;if(e.previousSibling!==a2||e.parentNode!==p)p.insertBefore(e,a2.nextSibling);a2=e;});}}var hh=document.getElementById("pH");if(hh&&window.MutationObserver)new MutationObserver(function(){setTimeout(mv,0);}).observe(hh,{childList:true});if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mv);else mv();window.addEventListener("load",mv);setTimeout(mv,1500);})();</script>
 <style>@media (min-width:1000px) and (pointer:fine){
 .wrap{max-width:none;margin:0;padding:26px 0 0;padding-inline-start:88px;min-height:100vh}
+html.gChatOpen:not(.zz),html.gChatOpen:not(.zz) body{overflow-y:auto!important}
 body.offHome .wrap{padding-bottom:40px}
 body.offHome .wrap>*:not(.bn){max-width:860px;width:100%;margin-inline:auto;box-sizing:border-box}
 body:not(.offHome) .wrap{padding-inline-start:calc(88px + var(--dkDay,460px));padding-bottom:0}
@@ -4253,14 +4254,7 @@ body.offHome .wrap:has(#pA:not([hidden]))>#pA{flex:1;min-height:0}
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -5874,7 +5868,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='6babef5da9';
+var CODE_ID='87a58091b5';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[],"chatExamples":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12750,6 +12744,7 @@ function campSheet(){
  w.id='cpSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','קמפיינים');
  var kinds=['מודעה ממומנת','סטורי','ריל','פוסט','קרוסלה','סרטון מכל החומרים','להכין סרטון מסוים להעלאה לאינסטגרם'];
+ var KIND_LAB={};
  var CP_ASK=['מה לעשות עם התמונות?','מה לכתוב עליהן?','מי הלקוחות שלך?','מבצע, מחיר או טלפון?'];
  var cpAiQs=[],cpAiAsked=[],cpAiBusy=false,cpAiDone={};
  function cpRealText(t){var s=t;CP_ASK.concat(cpAiAsked).forEach(function(q){s=s.split(q).join('');});return s.split(String.fromCharCode(10)).join(' ').trim();}
@@ -12762,7 +12757,7 @@ function campSheet(){
   +'<label id="cpJoinBox" hidden style="display:block;font:700 14px Heebo,sans-serif;margin:6px 0"><input type="checkbox" id="cpJoin" checked> לחבר את הכול לסרטון אחד, לפי הסדר שלמעלה</label>'
   +'<small style="opacity:1;font-weight:600">מה לעשות איתם? אפשר לבחור כמה:</small>'
   +'<div class="arPick" id="cpKinds" role="group" aria-label="מה לעשות">'
-  +kinds.map(function(k){return '<button type="button" class="yb" data-k="'+k+'">'+k+'</button>';}).join('')+'</div>'
+  +kinds.map(function(k){return '<button type="button" class="yb" data-k="'+k+'">'+(KIND_LAB[k]||k)+'</button>';}).join('')+'</div>'
   +'<div id="cpSounds" hidden></div>'
   +'<button type="button" class="yb" data-a="pickau">🎵 להעלות צליל משלי</button>'
   +'<input type="file" id="cpAudio" accept="audio/*" hidden>'
@@ -13052,7 +13047,7 @@ function personalSheet(){
  var old=document.getElementById('psSheet');if(old)old.remove();
  var P=D.personal||{chosen:false,picked:[],tiles:[],catalog:[],requests:[]};
  var w=document.createElement('div');w.id='psSheet';w.className='ysheet';
- w.setAttribute('role','dialog');w.setAttribute('aria-label','מצב אישי');
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','מצב אישי'); /* 23.11.2026: 'מצב אישי' is a command prefix, so the dictionary skips it; a ru build says this wording, which it can translate */
  var picking=!P.chosen,sel=(P.picked||[]).slice(),sent=false;
  var SENT='✓ נרשם. המערכת עובדת על זה ותבנה לך את זה בהקדם.';
  var DW=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
@@ -22733,7 +22728,7 @@ function bhQuoteShow(q,w){
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
