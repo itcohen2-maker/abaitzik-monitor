@@ -80,7 +80,9 @@ function main() {
       console.log(id + ':\n' + body);
       if (!DRY) {
         const r = spawnSync('sudo', ['-u', 'monitor', 'env', 'HOME=/home/monitor', 'node', 'notify.js', '📍 ' + cur.name, body, '--lead'], { cwd: ROOT, timeout: 60000, encoding: 'utf8' });
-        if (r.status !== 0) { console.log(id + ': notify failed, kept for next run'); return; }
+        // notify.js queues what it could not deliver and retries it itself, so a failed push is never sent again from here
+        // (23.11: the phone push was blocked, the WhatsApp copy went out, and this repeated it every 5 minutes).
+        console.log(id + ': ' + (/whatsapp copy: \w/.test(String(r.stdout)) ? 'sent on WhatsApp' : r.status === 0 ? 'sent' : 'queued by notify.js'));
       }
     }
     if (!DRY) state[id] = keep;
