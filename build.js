@@ -4906,7 +4906,9 @@ ${require('./lib/motion.js').css}
 /* Runs before the body exists on purpose. A skin applied after first paint is a
    white flash on a phone at night, and that flash is the whole complaint. */
 (function(){try{
- var t=localStorage.getItem('skin')||'';
+ // 23.11.2026: a trade demo starts in the look of its video (lib/trades.js skin); a visitor's own choice still wins.
+ window.TRADE_SKIN=${JSON.stringify(inst.publicDemo === true && inst.trade ? ((require('./lib/trades.js').get(inst.trade) || {}).skin || '') : '')};
+ var t=localStorage.getItem('skin')||window.TRADE_SKIN||'';
  if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);
 }catch(e){}
 // Same reason: the calm class has to be on the element before the first paint,
@@ -10315,7 +10317,7 @@ window.addEventListener('online',wake);
 // choice lives on the device, like every other per device preference here, so
 // his phone and the laptop can differ without fighting each other.
 function skinGet(){
- try{return localStorage.getItem('skin')||'auto';}catch(e){return 'auto';}
+ try{return localStorage.getItem('skin')||window.TRADE_SKIN||'auto';}catch(e){return window.TRADE_SKIN||'auto';}
 }
 function skinApply(v){
  var r=document.documentElement;
