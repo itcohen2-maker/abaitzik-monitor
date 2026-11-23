@@ -25,3 +25,10 @@ test("the page has the week and the board, and calSheet shows the week only wher
 test("the page script runs on its own (no syntax error)", () => {
   assert.doesNotThrow(() => new Function("(" + CB.page.toString() + ")"));
 });
+
+test("a week is Sunday to Saturday, and now is always inside the hours", () => {
+  const src = CB.page.toString();
+  assert.ok(/function weekStart\(d\) \{ return addDays\(d, -dow\(d\)\); \}/.test(src));
+  assert.ok(/w0 = weekStart\(t\)/.test(src) && /if \(bd\.mode === 'week'\) bd\.day = weekStart\(bd\.day\)/.test(src));
+  assert.ok(/ds\.indexOf\(t\) >= 0/.test(src));
+});
