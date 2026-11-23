@@ -167,3 +167,16 @@ test("17.11.2026: a number in wa-spam.json makes no lead, no push and no reply",
   assert.strictEqual(pushes.length, 0);
   assert.strictEqual(sent.length, 0);
 });
+
+test('23.11: a number outside Israel makes no lead, no item, no push and no reply', async () => {
+  const fs2 = require('fs'), os2 = require('os'), path2 = require('path');
+  const DATA = fs2.mkdtempSync(path2.join(os2.tmpdir(), 'wa-foreign-'));
+  const calls = { handle: 0, notify: 0, send: 0 };
+  const r = await require('../lib/wa-stranger.js').intake(DATA, { from: '919149778751', type: 'text', text: { body: 'Hlo' } }, {
+    name: 'First Deserve Then Desire', now: Date.parse('2026-11-23T19:56:00Z'), textOf: (m) => m.text.body,
+    handle: () => { calls.handle++; }, notify: () => { calls.notify++; }, send: async () => { calls.send++; return true; }, publish: () => {}, log: () => {} });
+  assert.strictEqual(r.skipped, 'foreign');
+  assert.deepStrictEqual(calls, { handle: 0, notify: 0, send: 0 });
+  assert.ok(!fs2.existsSync(path2.join(DATA, 'biz', 'biz')) || fs2.readdirSync(path2.join(DATA, 'biz', 'biz')).length === 0);
+  assert.strictEqual(JSON.parse(fs2.readFileSync(path2.join(DATA, 'status', 'wa-foreign.json'), 'utf8')).length, 1);
+});
