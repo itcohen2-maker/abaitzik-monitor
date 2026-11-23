@@ -30,11 +30,18 @@ for f in "$Q"/t*.json; do
     continue
   fi
   HOST="$ID.m.it-solution.co.il"
+  # 23.11.2026: a signup made in Russian (queue field lang, set by lib/signup.js from the page) opens a Russian monitor.
+  SLANG=""; [ "$(field "$f" lang)" = ru ] && SLANG=ru
+  TTL="המוניטור של $NAME"; WEL="שלום $NAME, ברוך הבא למוניטור. שבוע הניסיון שלך התחיל."
+  if [ "$SLANG" = ru ]; then
+    TTL=$(node -e 'process.stdout.write(require("./lib/signup-ru.js").tenantTexts(process.argv[1]).title)' "$NAME")
+    WEL=$(node -e 'process.stdout.write(require("./lib/signup-ru.js").tenantTexts(process.argv[1]).welcome)' "$NAME")
+  fi
   setf "$f" state building
   log "$ID building for $(echo "$EMAIL" | sed 's/^\(..\).*@/\1***@/')"
   PROF=$(mktemp); printf '# %s\n\nמוניטור ניסיון שנפתח בהרשמה עצמאית באתר IT Solution.\nטלפון: %s\nמייל: %s\n' "$NAME" "$PHONE" "$EMAIL" > "$PROF"
   # 17.11.2026: new-tenant.sh prints the entry code for a manual setup; a signup keeps it out of the log (only the mail has it).
-  if ! { bash "$REPO/setup/new-tenant.sh" "$ID" "$ID" "$HOST" "$NAME" "המוניטור של $NAME" "שלום $NAME, ברוך הבא למוניטור. שבוע הניסיון שלך התחיל." "" "$PROF" 2>&1 | grep --line-buffered -v "קוד הכניסה ל" >> "$LOG"; [ "${PIPESTATUS[0]}" = 0 ]; }; then
+  if ! { bash "$REPO/setup/new-tenant.sh" "$ID" "$ID" "$HOST" "$NAME" "$TTL" "$WEL" "" "$PROF" 2>&1 | grep --line-buffered -v "קוד הכניסה ל" >> "$LOG"; [ "${PIPESTATUS[0]}" = 0 ]; }; then
     rm -f "$PROF"; setf "$f" state failed; log "$ID new-tenant failed"
     sudo -u monitor node "$REPO/notify.js" "פתיחת מוניטור נכשלה" "ההרשמה של $NAME לא נפתחה. יומן: /var/log/monitor-signup.log" >/dev/null 2>&1
     continue
@@ -44,8 +51,10 @@ for f in "$Q"/t*.json; do
   IJ="/home/$ID/$ID-monitor/instance.json"
   if [ -f "$IJ" ]; then
     WASI=0; lsattr -d "$IJ" 2>/dev/null | cut -d' ' -f1 | grep -q i && { WASI=1; chattr -i "$IJ"; }
-    node -e 'const fs=require("fs"),f=process.argv[1],j=JSON.parse(fs.readFileSync(f,"utf8"));if(!j.biz)j.biz={name:process.argv[2],sub:"העסק שלי"};fs.writeFileSync(f,JSON.stringify(j,null,1))' "$IJ" "$NAME" || log "$ID biz on failed"
+    node -e 'const fs=require("fs"),f=process.argv[1],j=JSON.parse(fs.readFileSync(f,"utf8"));if(!j.biz)j.biz={name:process.argv[2],sub:process.argv[3]==="ru"?"Мой бизнес":"העסק שלי"};if(process.argv[3]==="ru")j.lang="ru";fs.writeFileSync(f,JSON.stringify(j,null,1))' "$IJ" "$NAME" "$SLANG" || log "$ID biz on failed"
     [ "$WASI" = 1 ] && chattr +i "$IJ"
+    # lang is read when the page is built, so the Russian monitor is rebuilt once now (as its own user, like new-tenant.sh)
+    if [ "$SLANG" = ru ]; then ( cd "/home/$ID/$ID-monitor" && sudo -H -u "$ID" node build.js >> "$LOG" 2>&1 ) || log "$ID ru rebuild failed"; fi
   fi
   # The trial package, counted from now.
   # 21.11.2026: a trade signup from /day/ (ref m-gypsum, m-beauty, m-consult, m-photo) is source "day": it gets the solo and pro offer.
@@ -57,9 +66,9 @@ for f in "$Q"/t*.json; do
   CODE=$(cut -d' ' -f1 "/root/tenant-codes/$ID.txt")
   # The ready mail, from info@ (SMTP settings in /etc/monitor.env). The code goes only into the mail, never the log.
   if ( set -a; . /etc/monitor.env; set +a; cd "$REPO" && node -e '
-    const M=require("./lib/mailer.js"),[to,name,url,pass]=process.argv.slice(1);
-    M.send("data",Object.assign({to},M.readyMail(name,url,pass))).then(r=>{if(!r.ok){console.error(r.error);process.exit(1)}});' \
-    "$EMAIL" "$NAME" "https://$HOST/#k=$(node -e 'process.stdout.write(encodeURIComponent(process.argv[1]))' "$CODE")" "$CODE" ); then
+    const M=require("./lib/mailer.js"),[to,name,url,pass,lang]=process.argv.slice(1);
+    M.send("data",Object.assign({to},M.readyMail(name,url,pass,lang))).then(r=>{if(!r.ok){console.error(r.error);process.exit(1)}});' \
+    "$EMAIL" "$NAME" "https://$HOST/#k=$(node -e 'process.stdout.write(encodeURIComponent(process.argv[1]))' "$CODE")" "$CODE" "$SLANG" ); then
     # 17.11.2026, the short signup: the page that verified him gets the same personal link (lib/signup.js status,
     # only with that page's token), so he goes straight in without a second code. Kept on the queue entry, which
     # already holds his mail and is readable only by monitor.
@@ -68,7 +77,7 @@ for f in "$Q"/t*.json; do
     echo "$today $ID ready " >> "$LOG.days"; done_today=$((done_today+1))
     log "$ID ready, mail sent"
     # 23.11.2026, Itzik: every new monitor lead reaches his WhatsApp (notify.js --lead), with where he came from.
-    sudo -u monitor node "$REPO/notify.js" "🆕 נרשם למוניטור: $NAME" "המוניטור שלו נפתח ($HOST)${SRC:+, הגיע מעמוד המקצועות}${REF:+, ref $REF}. שבוע ניסיון." --lead >/dev/null 2>&1 || true
+    sudo -u monitor node "$REPO/notify.js" "🆕 נרשם למוניטור${SLANG:+ (רוסית)}: $NAME" "המוניטור שלו נפתח ($HOST)${SRC:+, הגיע מעמוד המקצועות}${REF:+, ref $REF}. שבוע ניסיון." --lead >/dev/null 2>&1 || true
     sudo -u monitor node -e 'require("./lib/handle.js").complete({key:"signup-ready-"+process.argv[1],kind:"lead",who:process.argv[2],title:"המוניטור שלו נפתח ונשלח אליו במייל ("+process.argv[3]+"). שבוע ניסיון, 40 פעולות.",link:"biz"})' "$ID" "$NAME" "$HOST" 2>>"$LOG" || true
   else
     setf "$f" state mailfail; log "$ID built, mail failed"

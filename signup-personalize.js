@@ -57,7 +57,8 @@ function personalize(q, qf) {
   const w = P.welcome(q.name, p);
   const at = new Date().toISOString();
   const stamp = at.replace(/\D/g, '').slice(0, 12);
-  wr(path.join(dir, 'data', 'reports', 'reports', stamp + '-welcome.json'), { at, title: w.title, body: w.body }, q.id);
+  // 23.11.2026: the welcome plan is written in Hebrew only, so a Russian monitor does not get it (no Hebrew text inside it)
+  if (q.lang !== 'ru') wr(path.join(dir, 'data', 'reports', 'reports', stamp + '-welcome.json'), { at, title: w.title, body: w.body }, q.id);
   const pf = path.join(dir, 'data', 'profile.md');
   if (!DRY) {
     let locked = false;
@@ -79,13 +80,13 @@ function personalize(q, qf) {
       }
       if (p.start && !q.morningRoutine) {
         const R = require('./lib/routines.js');
-        const r = R.add(dataDir, { text: 'בוקר טוב. פותחים את המוניטור ורואים מה יש לך היום', kind: 'remind', sched: { freq: 'daily', hm: P.START[p.start] } });
+        const r = R.add(dataDir, { text: q.lang === 'ru' ? 'Доброе утро. Откройте монитор и посмотрите, что у вас на сегодня' : 'בוקר טוב. פותחים את המוניטור ורואים מה יש לך היום', kind: 'remind', sched: { freq: 'daily', hm: P.START[p.start] } });
         if (r.ok) { q.morningRoutine = r.rec.id; execFileSync('chown', ['-R', q.id + ':' + q.id, path.join(dataDir, 'routines')]); }
       }
     } catch (e) { log(q.id + ' personal/morning: ' + e.message.slice(0, 80)); }
     // 21.11.2026: how to address him and his trade go into his instance.json, before the rebuild below draws them
     try {
-      const add = P.instanceFields(p), ij = path.join(dir, 'instance.json');
+      const add = P.instanceFields(p, q.lang), ij = path.join(dir, 'instance.json');
       if (Object.keys(add).length && fs.existsSync(ij)) {
         let lk = false;
         try { lk = /i/.test(execFileSync('lsattr', ['-d', ij], { encoding: 'utf8' }).split(' ')[0]); } catch (e) {}
@@ -106,7 +107,7 @@ function personalize(q, qf) {
     try { execFileSync('sudo', ['-u', q.id, '-H', 'node', 'build.js'], { cwd: dir, stdio: 'ignore', timeout: 180000 }); } catch (e) { log(q.id + ' build: ' + e.message.slice(0, 80)); }
     try { execFileSync('sudo', ['-u', 'monitor', 'node', '-e', 'require("./lib/handle.js").complete({key:"signup-profile-"+process.argv[1],kind:"lead",who:process.argv[2],title:process.argv[3],link:"biz"})', q.id, q.name, P.summaryLine(q.name, p)], { cwd: REPO, stdio: 'ignore' }); } catch (e) {}
     // 23.11.2026, Itzik: every step of a monitor lead reaches his WhatsApp, a special request first of all.
-    try { execFileSync('sudo', ['-u', 'monitor', 'node', 'notify.js', (p.wish ? '⭐ בקשה מיוחדת מ ' : '📝 שאלון מ ') + q.name, P.summaryLine(q.name, p) + (p.talk === 'wa' && !p.waPhone ? '. בחר לדבר בוואטסאפ ולא השאיר מספר' : ''), '--lead'], { cwd: REPO, stdio: 'ignore', timeout: 60000 }); } catch (e) { log(q.id + ' notify: ' + e.message.slice(0, 80)); }
+    try { execFileSync('sudo', ['-u', 'monitor', 'node', 'notify.js', (p.wish ? '⭐ בקשה מיוחדת מ ' : '📝 שאלון מ ') + (q.lang === 'ru' ? '(רוסית) ' : '') + q.name, P.summaryLine(q.name, p) + (p.talk === 'wa' && !p.waPhone ? '. בחר לדבר בוואטסאפ ולא השאיר מספר' : ''), '--lead'], { cwd: REPO, stdio: 'ignore', timeout: 60000 }); } catch (e) { log(q.id + ' notify: ' + e.message.slice(0, 80)); }
   }
   q.personalized = p.at; wr(qf, q, 'monitor');
   log(q.id + ' welcome written' + (DRY ? ' (dry): ' + w.title : ''));
