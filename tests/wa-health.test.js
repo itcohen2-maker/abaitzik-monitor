@@ -105,3 +105,10 @@ test('manager 💬 line: done when clean, warn with the first problem, none on a
   const bad = M.waItem({ active: true, logRead: true, monitors: [{ name: 'pablo', missed: 2 }], fails: [] });
   assert.strictEqual(bad.st, 'warn'); assert.match(bad.t + bad.sub, /pablo: 2 תשובות/);
 });
+
+test('a log failure marked done is hidden; a failure after the mark still shows', () => {
+  const old = new Date(NOW - 2 * 3600e3).toISOString().replace('Z', '');
+  const line = old.slice(0, 23) + 'Z tenant send failed 97252123456: graph 422';
+  assert.strictEqual(H.logFailures([line], NOW, NOW - 3600e3).length, 0);
+  assert.strictEqual(H.logFailures([line], NOW, NOW - 3 * 3600e3).length, 1);
+});
