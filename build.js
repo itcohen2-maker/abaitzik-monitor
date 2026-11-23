@@ -1342,10 +1342,12 @@ function build() {
       .filter(Boolean);
   } catch (e) { /* no requests yet */ }
   const openPin = /^[0-9a-f]{64}$/.test(inst.openPin) ? inst.openPin : '';
+  // Up to three sample requests from the customer's field, shown in an empty chat.
+  const chatExamples = Array.isArray(inst.chatExamples) ? inst.chatExamples.slice(0, 3) : [];
   const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: monName.shown(inst.pageTitle),
     screens, unlocks,
     computer: inst.computer, phone: inst.phone, welcome: inst.welcome, homeTile: inst.homeTile || '', gender: inst.gender || '',
-    uploadUrl: inst.uploadUrl || '', clalit: !!inst.clalit, openPin, guides, links });
+    uploadUrl: inst.uploadUrl || '', clalit: !!inst.clalit, openPin, guides, links, chatExamples });
   const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson)
     .replace('__OPENPIN__', openPin);
 
@@ -8763,7 +8765,16 @@ function renderThread(){
    .concat(still.map(function(p){return{id:'',re:p.re||'',at:p.at,from:'itzik',text:p.text,pend:true};}));
  var host=document.getElementById('thread');
  if(!all.length){
-  host.innerHTML='<div class="empty">עוד לא דיברנו כאן. '+(FEM?'כתבי':'תכתוב')+' משהו למטה.</div>';
+  // A new customer who is not sure what to ask sees three examples from her own
+  // field (instance chatExamples, else general ones). A tap puts the text in the
+  // box to edit before sending; nothing is sent by the tap.
+  var exs=((INSTANCE&&INSTANCE.chatExamples)||[]).filter(function(s){return typeof s==='string'&&s.trim();}).slice(0,3);
+  if(!exs.length)exs=['להכין לי הודעה ללקוחות על המבצע של החודש','להזכיר לי מחר בעשר להתקשר לספק','לסכם לי מה קרה השבוע בעסק'];
+  host.innerHTML='<div class="empty">עוד לא דיברנו כאן. '+(FEM?'כתבי':'תכתוב')+' משהו למטה, או '+(FEM?'בחרי':'בחר')+' דוגמה:</div>'
+   +'<div class="pbar" role="group" aria-label="דוגמאות לבקשה">'+exs.map(function(s){return '<button type="button" class="pchip chEx">'+esc(s)+'</button>';}).join('')+'</div>';
+  Array.prototype.forEach.call(host.querySelectorAll('.chEx'),function(b){
+   b.onclick=function(){var box=document.getElementById('msgText');if(!box)return;box.value=b.textContent;box.focus();try{box.setSelectionRange(box.value.length,box.value.length);}catch(e){}};
+  });
   return;
  }
  var rows=ML.orderThreads(ML.splitThreads(all),threadState());
