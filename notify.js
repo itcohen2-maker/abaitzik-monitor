@@ -58,8 +58,10 @@ function line(b) {
   const urgent = lead || args.includes('--urgent');
   const k = (args.find(a => a.startsWith('--kind=')) || '').slice(7);
   const kind = k || require('./lib/alert-kinds.js').guess(title) || (urgent ? null : 'answers');
-  const r = await ch.notify(title, body, lead ? { urgent: true, kind: kind, priority: 5 } : { urgent: urgent, kind: kind });
-  if (r.muted) {
+  const r = await ch.notify(title, body, lead ? { urgent: true, kind: kind, priority: 5 } : { urgent: urgent, kind: kind, noHold: args.includes('--no-hold') });
+  if (r.faultHold) {
+    console.log('תקלה: עברה למנהל לתיקון. לאיציק היא תצא רק אם לא תוקנה תוך 10 דקות (lib/fault-hold.js).');
+  } else if (r.muted) {
     console.log('סוג ההתראה הזה כבוי בהגדרות: לא צלצל. התשובה כבר בשיחה.');
   } else if (r.held) {
     console.log('שעות שקטות: ההתראה נשמרה ותצא בבוקר בהתראה אחת. התשובה כבר בשיחה.');

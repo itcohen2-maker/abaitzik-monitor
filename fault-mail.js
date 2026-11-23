@@ -26,9 +26,8 @@ const DRY = process.argv.includes('--dry');
 const STATE = path.join(inst.dataPath, 'manager', 'fault-mail.json');
 const WORK_DIR = path.join(inst.dataPath, 'manager', 'work');
 const LINE = /^\[(\d+)\] (\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2}) \| (.*)$/;
-const FAULT = /(בודק המוניטורים|השומר מצא תקלה|נשארה בלי תשובה|לא עלה|לא עובד|לא עובדת|לא נפתח|לא נשלח|נכשל|נכשלה|תקלה|שגיאה|נפל|תקוע|נתקע|בלי תגובה|אבטחה)/;
-const NOT = /(הכל תקין|תקין שוב|^✅ |^המנהל|צריכת טוקנים)/;
-const SYSTEM = /info@it-solution\.co\.il/i;
+// the fault test is shared with lib/fault-hold.js, which holds the same alerts back from his phone until a fix answers
+const FH = require('./lib/fault-hold.js');
 const MAX_RUN = 3, MAX_DAY = 10;
 
 const day = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
@@ -60,12 +59,7 @@ function inbox() {
     .map((m) => ({ id: m.id, local: true, at: new Date(m.at).toLocaleString('sv-SE', { timeZone: 'Asia/Jerusalem' }).slice(0, 16), from: m.from, subject: m.subject, body: m.body }));
 }
 
-function isFault(m) {
-  const s = m.subject, all = s + ' ' + m.body;
-  if (NOT.test(s) || NOT.test(m.body.slice(0, 40))) return false;
-  if (SYSTEM.test(m.from)) return FAULT.test(s) || (FAULT.test(m.body) && /מוניטור|אריח|כפתור|מסך/.test(m.body));
-  return /מוניטור/.test(all) && FAULT.test(all); // a person writing about a fault in a monitor
-}
+const isFault = FH.isFault; // a person writing about a fault in a monitor counts too
 
 function job(m, server) {
   return [
@@ -81,7 +75,7 @@ function job(m, server) {
     '4. לוודא שזה עובד אחרי התיקון, לא רק בקוד.',
     'אסור: לשלם, לשלוח הודעה לאדם, לפרסם, למחוק מידע של לקוח, לשנות סיסמה או הגדרת אבטחה.',
     server ? 'אחרי תיקון: git commit ואז node push.js. התשובה: שתי שורות בעברית, מה היה ומה תוקן, או למה לא תוקן. אם לא תוקן, השורה הראשונה מתחילה ב "לא תוקן".'
-      : 'התשובה: שתי שורות בעברית, מה היה ומה תוקן, או למה לא תוקן.'
+      : 'התשובה: שתי שורות בעברית, מה היה ומה תוקן, או למה לא תוקן. אם לא תוקן, השורה הראשונה מתחילה ב "לא תוקן" (כך איציק מקבל התראה; תקלה שתוקנה לא מטרידה אותו).'
   ].join('\n');
 }
 
@@ -116,16 +110,48 @@ function serverFix() {
       fs.writeFileSync(path.join(chat, stamp + '-claude-faultfix.json'), JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: 'fault-mail-' + id, text: text.slice(0, 1500), status: 'done' }, null, 1));
       fs.renameSync(jf, jf.replace(/\.txt$/, '.done'));
       console.log(new Date().toISOString().slice(0, 16) + ' server fix ' + id + ': ' + noDash(text).slice(0, 120));
-      if (/^\s*לא תוקן/.test(text)) { try { execFileSync('node', ['notify.js', 'המנהל: תקלה לא תוקנה', noDash(text).slice(0, 300)], { cwd: __dirname, stdio: 'ignore', timeout: 60000 }); } catch (e) {} }
+      if (/^\s*לא תוקן/.test(text) && !FH.has(inst.dataPath, id)) { try { execFileSync('node', ['notify.js', 'המנהל: תקלה לא תוקנה', noDash(text).slice(0, 300)], { cwd: __dirname, stdio: 'ignore', timeout: 60000 }); } catch (e) {} }
       try { execFileSync('node', ['push.js', 'fault fix ' + id], { cwd: __dirname, stdio: 'ignore', timeout: 5 * 60 * 1000 }); } catch (e) {}
     }
   } finally { try { fs.unlinkSync(FIX_LOCK); } catch (e) {} }
 }
 if (process.argv.includes('--fix')) { fs.mkdirSync(FIX_DIR, { recursive: true }); serverFix(); return; }
 
+// 23.11.2026: the fault alerts held from his phone (lib/fault-hold.js). Cron every 2 minutes, no mail read, no model.
+function fixAnswers() {
+  const dir = path.join(inst.dataPath, 'chat', 'chat'), out = {}, cut = Date.now() - 2 * 864e5;
+  let fl = []; try { fl = fs.readdirSync(dir).filter((f) => /-claude-(pc-done|faultfix)/.test(f)); } catch (e) { return out; }
+  fl.forEach((f) => { const full = path.join(dir, f); try { if (fs.statSync(full).mtimeMs < cut) return; const d = JSON.parse(fs.readFileSync(full, 'utf8')); if (d && /^fault-mail-/.test(d.re || '')) out[d.re.slice(11)] = String(d.text || ''); } catch (e) {} });
+  return out;
+}
+function release() {
+  const list = FH.read(inst.dataPath);
+  if (!list.length) return;
+  const orders = rd(STATE, {}).orders || {}, ans = fixAnswers(), keep = [], lines = [];
+  for (const it of list) {
+    const r = Object.prototype.hasOwnProperty.call(ans, it.id) ? ans[it.id] : null;
+    const d = FH.decide(it, orders[it.id], r);
+    if (d.act === 'wait') { keep.push(it); continue; }
+    if (d.act === 'send') {
+      try { execFileSync('node', ['notify.js', '--urgent', '--no-hold', it.title, it.body + FH.note(d.why, r)], { cwd: __dirname, stdio: 'ignore', timeout: 60000 }); }
+      catch (e) { keep.push(it); continue; }
+    }
+    const said = d.act === 'send' ? 'נשלח לאיציק (' + d.why + '): ' : 'תוקן בלי להטריד את איציק: ';
+    lines.push({ when: new Date().toISOString(), kind: 'faulthold', text: 'התראת תקלה', status: d.act, line: said + noDash(it.title + ' ' + it.body).slice(0, 140) });
+    console.log(new Date().toISOString().slice(0, 16) + ' hold ' + it.id + ' ' + d.act + ' ' + (d.why || ''));
+  }
+  // an alert held while this ran is kept
+  const ids = new Set(list.map((x) => x.id));
+  FH.write(inst.dataPath, keep.concat(FH.read(inst.dataPath).filter((x) => !ids.has(x.id))));
+  if (lines.length) card(lines);
+}
+if (process.argv.includes('--release')) { release(); return; }
+
 (function main() {
   const st = rd(STATE, {});
-  st.seen = st.seen || {}; st.subj = st.subj || {};
+  st.seen = st.seen || {}; st.subj = st.subj || {}; st.orders = st.orders || {};
+  // fix orders by alert id, read by --release; two days are enough
+  Object.keys(st.orders).forEach((k) => { if (Date.parse(st.orders[k].at) < Date.now() - 2 * 864e5) delete st.orders[k]; });
   const d = day();
   if (st.day !== d) { st.day = d; st.n = 0; st.subj = {}; }
   // the seen list keeps a week
@@ -140,14 +166,14 @@ if (process.argv.includes('--fix')) { fs.mkdirSync(FIX_DIR, { recursive: true })
   for (const m of todo) {
     // the same fault once a day: subject plus the start of the body ("תקלה אצל לקוח" names a different customer each time)
     const key = noDash(m.subject + ' ' + m.body.replace(/\s+/g, ' ').slice(0, 60)).slice(0, 120);
-    if (st.subj[key] || sent >= MAX_RUN || st.n >= MAX_DAY) { st.seen[m.id] = new Date().toISOString(); continue; }
+    if (st.subj[key] || sent >= MAX_RUN || st.n >= MAX_DAY) { st.seen[m.id] = new Date().toISOString(); if (!DRY) st.orders[m.id] = { skip: true, at: new Date().toISOString() }; continue; }
     if (DRY) { console.log('DRY ' + m.id + ' ' + m.subject); continue; }
     if (!m.local) try { m.body = execFileSync('/usr/bin/python3', ['-I', path.join(__dirname, 'tools/mail-search.py'), '--id', m.id], { cwd: __dirname, encoding: 'utf8', timeout: 60000, stdio: ['ignore', 'pipe', 'ignore'] }).split('\n').slice(4).join('\n').trim() || m.body; } catch (e) { /* the snippet is enough */ }
     const onPc = pcOn();
     try {
       if (onPc) execFileSync('node', ['pc-task.js', 'add', '--re', 'fault-mail-' + m.id, job(m)], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
       else { fs.mkdirSync(FIX_DIR, { recursive: true }); fs.writeFileSync(path.join(FIX_DIR, m.id + '.txt'), job(m, true)); }
-      sent++; st.n++; st.subj[key] = m.id;
+      sent++; st.n++; st.subj[key] = m.id; st.orders[m.id] = { at: new Date().toISOString() };
       lines.push({ when: new Date().toISOString(), kind: 'faultmail', text: 'מייל תקלה', status: 'mail', line: (onPc ? 'נשלח למחשב לתיקון: ' : 'השרת מתקן (המחשב כבוי): ') + noDash(m.subject) });
       console.log(new Date().toISOString().slice(0, 16) + ' fix order ' + m.id + ' ' + key);
     } catch (e) { console.log(new Date().toISOString().slice(0, 16) + ' pc-task failed ' + m.id); continue; }

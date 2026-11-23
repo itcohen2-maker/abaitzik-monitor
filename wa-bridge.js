@@ -494,6 +494,11 @@ async function onMessage(m, contactName) {
     log('not on the allow list: ' + String(m.from).slice(0, 5) + '...'); return;
   }
   markRead(m.id);
+  // 23.11.2026: any message of his opens the 24 hour window, a button tap too (it returned before this line until now)
+  { const sl = loadState(); sl.lastIn = sl.lastIn || {}; sl.lastIn[m.from] = Date.now(); saveState(sl); }
+  // wa-keepalive.js: his tap on "המשך" only keeps the window open, no answer and no task
+  { const ip = m.type === 'interactive' ? String(((m.interactive || {}).button_reply || {}).id || '') : m.type === 'button' ? String((m.button && m.button.payload) || '') : '';
+    if (ip === 'keep|go') { log('keep alive tap: the 24 hour window is open again'); return; } }
   { const said = alarmTap(m, 'abaitzik'); if (said) { await waSend(m.from, said); return; } }
   // 22.11.2026 (idea 202611172144-quickconnect): his own number sending the quick connect phrase gets a fixed answer, no session.
   { const qt = textOf(m);
