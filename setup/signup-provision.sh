@@ -4,7 +4,7 @@
 # Run as root by monitor-signup.timer every minute. At most 5 a day; the rest wait and Itzik is told.
 #   bash setup/signup-provision.sh            one pass over the queue
 # Each one: setup/new-tenant.sh (the customers' API key, never Itzik's subscription), host <id>.m.it-solution.co.il
-# (wildcard DNS to this server), the trial package (40 actions, 7 days), then the mail "המוניטור שלך מוכן" with
+# (wildcard DNS to this server), the trial package (60 actions, 7 days), then the mail "המוניטור שלך מוכן" with
 # the link and the code, from info@it-solution.co.il. Log: /var/log/monitor-signup.log
 set -uo pipefail
 REPO=/home/monitor/abaitzik-monitor
@@ -69,7 +69,7 @@ for f in "$Q"/t*.json; do
     log "$ID ready, mail sent"
     # 23.11.2026, Itzik: every new monitor lead reaches his WhatsApp (notify.js --lead), with where he came from.
     sudo -u monitor node "$REPO/notify.js" "🆕 נרשם למוניטור: $NAME" "המוניטור שלו נפתח ($HOST)${SRC:+, הגיע מעמוד המקצועות}${REF:+, ref $REF}. שבוע ניסיון." --lead >/dev/null 2>&1 || true
-    sudo -u monitor node -e 'require("./lib/handle.js").complete({key:"signup-ready-"+process.argv[1],kind:"lead",who:process.argv[2],title:"המוניטור שלו נפתח ונשלח אליו במייל ("+process.argv[3]+"). שבוע ניסיון, 40 פעולות.",link:"biz"})' "$ID" "$NAME" "$HOST" 2>>"$LOG" || true
+    sudo -u monitor node -e 'require("./lib/handle.js").complete({key:"signup-ready-"+process.argv[1],kind:"lead",who:process.argv[2],title:"המוניטור שלו נפתח ונשלח אליו במייל ("+process.argv[3]+"). שבוע ניסיון, 60 פעולות.",link:"biz"})' "$ID" "$NAME" "$HOST" 2>>"$LOG" || true
   else
     setf "$f" state mailfail; log "$ID built, mail failed"
     sudo -u monitor node "$REPO/notify.js" "מייל לא יצא" "המוניטור של $NAME נפתח, אבל המייל עם הקישור לא יצא. הקוד ב /root/tenant-codes/$ID.txt" >/dev/null 2>&1
