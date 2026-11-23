@@ -35,7 +35,7 @@ test("a week is Sunday to Saturday, and now is always inside the hours", () => {
 
 test("23.11: with a calendar copy the icon never falls to Google (the payload opens a moment after the page on the phone)", () => {
   const b = fs.readFileSync(path.join(__dirname, "../build.js"), "utf8");
-  assert.ok(/id="icGcal"\$\{\(\(\) => \{ try \{ return fs\.existsSync\(path\.join\(inst\.dataPath \|\| "data", "cal", "events\.json"\)\)/.test(b));
+  assert.ok(/return c \? ' data-calcopy="1" href="#cal" role="button"' : /.test(b), "with a copy the icon has no Google address");
   assert.ok(/var copy=a\.getAttribute\('data-calcopy'\)==='1';if\(!copy&&!\(window\.D&&D\.cal\)\)return;e\.preventDefault\(\)/.test(b));
   const h = fs.readFileSync(path.join(__dirname, "../lib/home-ui.js"), "utf8");
   assert.ok(/cal:function\(\)\{if\(window\.D&&D\.cal&&typeof calSheet==='function'\)\{calSheet\(false\);return;\}/.test(h));
