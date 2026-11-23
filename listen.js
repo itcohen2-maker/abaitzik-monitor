@@ -1957,7 +1957,7 @@ function recordFilePin(m) {
 
 // 22.11.2026: the fixed lines of the appointments screen carry a client's name and phone. They are applied here, but never
 // written to the listener's log or the pull log in the clear.
-const BOOKING_LINE = /^\s*(?:משימה\s+)?(?:מגבלות קישור|פתיחת קישור|אישור תור לקוחה|תור לקוחה|הזזת תור לקוחה|ביטול תור לקוחה|סימון תור לקוחה|הוספת לקוחה|שירות חדש|שעות פעילות|מחיקת שירות|הסרת שירות|תנאי ביטול|הצהרת בריאות לשירות|אישור תורים:|חסימת לקוחה:|ביטול חסימה:)/;
+const BOOKING_LINE = /^\s*(?:משימה\s+)?(?:מגבלות קישור|פתיחת קישור|אישור תור לקוחה|תור לקוחה|הזזת תור לקוחה|ביטול תור לקוחה|סימון תור לקוחה|הוספת לקוחה|שירות חדש|שעות פעילות|מחיקת שירות|הסרת שירות|תנאי ביטול|הצהרת בריאות לשירות|אישור תורים:|חסימת לקוחה:|ביטול חסימה:|מכירת כרטיסייה:|תיקון כרטיסייה:|סגירת כרטיסייה:|יצירת כרטיס מתנה:|שימוש בכרטיס מתנה:|תמונות לפני ואחרי:)/;
 const noBookingNames = (t) => (BOOKING_LINE.test(String(t || '')) ? 'תור לקוחה (הפרטים לא נרשמים כאן)' : t);
 async function handleOne(m) {
   const seen = mark();
@@ -2041,6 +2041,12 @@ async function handleOne(m) {
   if (m.attachment) {
     const saved = await saveAttachment(m);
     if (saved && joinSlices(m) === 'waiting') { remember(m); await beat(); return; }
+  }
+  // 24.11.2026: a before and after photo of the booking diary (lib/book-beauty.js): it leaves the inbox for a private folder under the diary the
+  // moment it is saved, with no chat message and no worker. The owner's own signed line then finalizes the pair (lib/bookings-handler.js).
+  if (m.attachment && inst.bookings === true && !inst.publicDemo && require('./lib/book-beauty.js').PHOTO_RE.test(String(m.attachment.name || ''))) {
+    try { require('./lib/book-beauty.js').takePhoto(inst.dataPath, m.attachment.name); } catch (e) { say('!! תמונה: ' + e.message); }
+    remember(m); await beat(); return;
   }
   if (m.message) logPull('text', noBookingNames(m.message));
   // With the bridge off, a message that looks like a Codex request is an

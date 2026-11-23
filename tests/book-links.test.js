@@ -114,7 +114,7 @@ test('the page cleans d, s and t on its server side with only what the agent\'s 
 test('the owner\'s screen has the link choices, "לשלוח קישור" on free gaps, and the tomorrow block', () => {
   const w = world();
   const h = UI.html(w.inst, NOW);
-  assert.ok(h.includes('לשלוח קישור') && h.includes('קישור כללי') && h.includes('קישור ליום מסוים') && h.includes("data-a=\"gaplink\"") && h.includes('כל השירותים'));
+  assert.ok(h.includes('לשלוח קישור') && h.includes('קישור כללי') && h.includes('קישור לתאריך') && h.includes("data-a=\"gaplink\"") && h.includes('כל השירותים'));
   assert.ok(h.includes('class="bkTom"') && h.includes('aria-label="מחר"'));
   assert.ok(h.includes("'?' + q.join('&')")); // the link builder
   const D = UI.data(w.inst, NOW); assert.strictEqual(D.cfg.remindAt, '18:00'); assert.match(D.link, /^https:\/\/form\.it-solution\.co\.il\/b\/[a-f0-9]{24}$/);
