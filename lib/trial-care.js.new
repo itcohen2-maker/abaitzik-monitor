@@ -1,0 +1,100 @@
+'use strict';
+/*
+  23.11.2026, Itzik: "כל בקשה מיוחדת שהמשתמשים במוניטור שנרשמו לשבוע ניסיון, אני רוצה לדעת מה עשית ואיך פתרת להם
+  את הבקשה. הם חייבים להיות מרוצים בסוף השבוע. תמיד תדחוף את הלקוחות להשתמש בכמה שיותר פיצ'רים של המוניטור...
+  לחבר מייל למשל או לנסות חתימה דיגיטלית", "בשביל זה יש לנו שבוע ניסיון", "הכי חשוב זה לחבר לוואטסאפ וגם למייל".
+
+  Two parts, both pure here (trial-care.js reads and writes the files):
+  1. tip(): one line a day in the trial's answers screen (and on his WhatsApp when it is connected), pushing a feature
+     he has not used. Gmail first and three times until it is connected (6 hours, day 2, day 4); WhatsApp has its own
+     three lines in lib/trial-nudge.js (waDecide). Then, one a day, the features he never touched: digital signature,
+     a quote from the chat, reminders, voice, a recurring task, the booking page. 20 hours between tips, 3 hours
+     away from a WhatsApp line, 09:00 to 20:00 Israel time, never on Saturday, only inside the trial week.
+  2. digest(): for Itzik, what each trial asked and what the monitor answered. A burst of requests answered by one
+     reply is one item. A request with no answer after 30 minutes is listed as not answered.
+  No dashes in any customer text.
+*/
+const N = require('./trial-nudge.js');
+const H = 3600e3, DAY = 864e5;
+
+const G_AT = { g1: 6 * H, g2: 2 * DAY, g3: 4 * DAY };
+const FEATURES = ['sign', 'quote', 'remind', 'voice', 'routine', 'book'];
+
+// f: { start, google, used: { sign, quote, ... }, sent: { g1, ..., sign, ... , last }, lastWa }
+function tip(f, now) {
+  const s = f.sent || {};
+  if (!f.start || now >= f.start + 7 * DAY || now < f.start) return '';
+  if (!N.window(now)) return '';
+  if (s.last && now - Date.parse(s.last) < 20 * H) return '';
+  if (f.lastWa && now - f.lastWa < 3 * H) return '';
+  const age = now - f.start;
+  if (!f.google) {
+    for (const k of ['g3', 'g2', 'g1']) if (!s[k] && age >= G_AT[k]) return k; // the latest due one, never two in a row
+  }
+  if (age < DAY) return '';
+  const u = f.used || {};
+  return FEATURES.find((k) => !u[k] && !s[k]) || '';
+}
+
+function tipText(k, url, female) {
+  const g = (m, w) => (female ? w : m);
+  const conn = 'מחברים בדקה: נכנסים למוניטור, ' + g('לוחץ', 'לוחצת') + ' על 🔌 חיבורים ואז על גוגל.\n' + url;
+  const T = {
+    g1: '📧 עוד לא חיברנו את הג׳ימייל.\nכשהוא מחובר, אני ממיין בשבילך את המיילים לפי דחיפות, מסכם כל אחד בשורה ומכין טיוטת תשובה. שום דבר לא נשלח בלי ' + g('שאתה', 'שאת') + ' ' + g('לוחץ', 'לוחצת') + ' שלח.\n' + conn,
+    g2: '📧 הג׳ימייל עדיין לא מחובר, וזה החלק שחוסך הכי הרבה זמן: כל בוקר ' + g('אתה רואה', 'את רואה') + ' מה דחוף, ותשובה מוכנה מחכה כטיוטה.\n' + conn,
+    g3: '📧 נשארו כמה ימים לשבוע הניסיון, ושווה לראות איך המוניטור עובד עם המייל שלך לפני שהוא נגמר.\n' + conn,
+    sign: '✍️ ' + g('ניסית', 'ניסית') + ' כבר חתימה דיגיטלית? ' + g('כתוב', 'כתבי') + ' לי "תכין הצעת מחיר ל..." עם מה ובכמה, ואני מכין הצעה מסודרת. משם ' + g('שולחים', 'שולחים') + ' אותה ללקוח בכפתור ✍️ לשלוח לחתימה, והוא חותם מהטלפון. בשבוע הניסיון החתימות בלי הגבלה.',
+    quote: '🧾 הצעת מחיר בהודעה אחת: ' + g('כתוב', 'כתבי') + ' או ' + g('הקלט', 'הקליטי') + ' לי למי, על מה ובכמה, ואני מכין אותה עם שם העסק שלך, מוכנה לשליחה.',
+    remind: '⏰ ' + g('תגיד', 'תגידי') + ' לי "תזכיר לי מחר ב 9 להתקשר ל..." ואני מזכיר בזמן, עם כפתור "טופל". ככה שום דבר לא נופל בין הכיסאות.',
+    voice: '🎙️ אין צורך לכתוב: ' + g('לחץ', 'לחצי') + ' על המיקרופון ' + g('ודבר', 'ודברי') + ' כמו בהודעה קולית. אני מבין, מסכם ומבצע.',
+    routine: '🧑‍💼 משהו חוזר על עצמו כל שבוע? ' + g('ספר', 'ספרי') + ' ל"מנהלת IT Solution" במוניטור מה ומתי, והיא תזכיר או תכין את זה בשבילך כל פעם מחדש.',
+    book: '📅 אפשר לקבל דף לקביעת תורים: לקוחות בוחרים שעה פנויה בעצמם, ' + g('ואתה מקבל', 'ואת מקבלת') + ' הודעה. ' + g('כתוב', 'כתבי') + ' לי "תפעיל לי דף תורים" ואני מסדר אותו.',
+  };
+  return T[k] || '';
+}
+const TIP_NAME = { g1: 'חיבור ג׳ימייל', g2: 'חיבור ג׳ימייל (שוב)', g3: 'חיבור ג׳ימייל (אחרונה)', sign: 'חתימה דיגיטלית', quote: 'הצעת מחיר מהצ׳אט', remind: 'תזכורות', voice: 'הקלטה קולית', routine: 'מנהלת IT Solution', book: 'דף תורים' };
+
+const one = (s, n) => { const t = String(s || '').replace(/[-‐‑‒–—]/g, ' ').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
+const SYS = /^(wa-nudge|tip|push|admin|week|debts|leads|task)/;
+
+/*
+  msgs: the chat of one trial, [{ at (ms), from, text, kind, name }]. Returns { items, cursor }:
+  items [{ asked: [texts], answer|null, at }] for requests after `since` that were answered or waited 30 minutes;
+  cursor: up to where it is told (a request still waiting keeps the cursor before it).
+*/
+function pair(msgs, since, now) {
+  const all = msgs.slice().sort((a, b) => a.at - b.at);
+  const isAnswer = (m) => m.from === 'claude' && !SYS.test(m.kind || '') && !/-push|-wa-nudge|-tip/.test(m.name || '');
+  const reqs = all.filter((m) => m.from !== 'claude' && m.at > since && m.at <= now);
+  const items = [], byAnswer = new Map();
+  let cursor = now;
+  for (const r of reqs) {
+    const a = all.find((m) => m.at >= r.at && isAnswer(m));
+    if (!a && now - r.at < 30 * 60e3) { cursor = Math.min(cursor, r.at - 1); continue; }
+    if (a && byAnswer.has(a)) { byAnswer.get(a).asked.push(r.text); continue; }
+    const it = { asked: [r.text], answer: a ? a.text : null, at: r.at };
+    if (a) byAnswer.set(a, it);
+    items.push(it);
+  }
+  // an item that comes after a waiting request waits with it, so the order stays
+  return { items: items.filter((i) => i.at <= cursor), cursor };
+}
+
+function digestText(rows) {
+  const out = ['🧪 מתנסים: מה ביקשו ומה נעשה'];
+  rows.forEach((r) => {
+    out.push('');
+    out.push(r.name + ' · יום ' + r.day + ' מתוך 7 · ' + r.used + '/' + r.total + ' פעולות');
+    const more = r.items.length - 6;
+    if (more > 0) out.push('(ועוד ' + more + ' בקשות קודמות, הכל במוניטור שלו)');
+    r.items.slice(-6).forEach((i) => {
+      out.push('• בקשה: ' + one(i.asked.join(' | '), 170));
+      out.push(i.answer ? '  נעשה: ' + one(i.answer, 220) : '  ⚠️ עוד לא נענתה, 30 דקות ומעלה');
+    });
+    (r.tips || []).forEach((t) => out.push('💡 הצעתי לנסות: ' + t));
+    out.push(r.url);
+  });
+  return out.join('\n');
+}
+
+module.exports = { tip, tipText, TIP_NAME, FEATURES, pair, digestText, one };
