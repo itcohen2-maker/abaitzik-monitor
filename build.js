@@ -1683,6 +1683,9 @@ function tenantTiles(inst) {
   try { if (ids.indexOf('gReady') < 0 && readyList(inst.dataPath || 'data').length) ids.unshift('gReady'); } catch (e) { /* none, or lifted alone by a test */ }
   // 12.11.2026: ▶️ comes once a YouTube channel was given in 🔌 (data/yt/channel.json).
   try { if (ids.indexOf('gYtCom') < 0 && fs.existsSync(path.join(inst.dataPath || 'data', 'yt', 'channel.json'))) ids.push('gYtCom'); } catch (e) { /* none */ }
+  // 24.11.2026, Itzik ("אני עדיין לא רואה אייקון של מייל במוניטור"): 📧 comes first once mail-sync sorted his Gmail
+  // (data/biz-home/mail.json). Before this a connected customer had the sorted mail and no way to open it.
+  try { if (inst.bizHome && ids.indexOf('gBhMail') < 0 && fs.existsSync(path.join(inst.dataPath || 'data', 'biz-home', 'mail.json'))) ids.unshift('gBhMail'); } catch (e) { /* none */ }
   // 13.11.2026, Itzik: "תעשה אריח אחד של לידים ... על כל המוניטורים". Here when the business grid (which has it) is not drawn.
   if (ids.indexOf('gLeads') < 0 && !(inst.biz && !(Array.isArray(inst.screens) && inst.screens.length))) ids.unshift('gLeads');
   // 18.11.2026, Itzik: "לא מעניין אותה לידים". leadsOff (lib/features.js) takes the 🔔 tile off this customer's home.
