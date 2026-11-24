@@ -118,3 +118,13 @@ test('the public webhook is owner-instance only and reads its own 2MB body', () 
   assert.ok(block.includes('isOwnerInstance()'));
   assert.ok(block.includes('MAX_HOOK'));
 });
+
+// 24.11.2026 e2e: a second delivery of the same call, before the round took the first, overwrote it
+test(hook: a repeat delivery of the same call never overwrites the first file, () => {
+  const o = owner();
+  assert.strictEqual(A.hook(secretBBBBBBBBBBBB, { provider: pbx, extId: 7, at: 2026-11-24T10:00:00Z, transcript: הראשון }, o.od).status, 200);
+  assert.strictEqual(A.hook(secretBBBBBBBBBBBB, { provider: pbx, extId: 7, at: 2026-11-24T10:00:00Z, transcript: השני }, o.od).status, 200);
+  const dir = path.join(o.b, data, calls, inbox);
+  assert.deepStrictEqual(fs.readdirSync(dir).sort(), [pbx-7-2.json, pbx-7.json]);
+  assert.ok(fs.readFileSync(path.join(dir, pbx-7.json), utf8).includes(הראשון));
+});
