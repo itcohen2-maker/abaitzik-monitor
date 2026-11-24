@@ -44,12 +44,13 @@ function used(id, msgs) {
 function israelHour(now) { return Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', hour12: false }).format(new Date(now))) % 24; }
 
 // to Itzik, as monitor: his WhatsApp (lib/wa-out.js sendOwner) and a line in his answers screen
-function toItzik(text) {
+// wa false: only the line in his answers screen (a tip alone is not a request, Itzik 24.11: why do I get WhatsApp)
+function toItzik(text, wa) {
   const js = "const fs=require('fs'),p=require('path'),i=require('./lib/instance.js');let t='';process.stdin.on('data',c=>t+=c).on('end',async()=>{"
     + "const d=new Date(),f=p.join(i.dataPath,'chat','chat',d.toISOString().replace(/[-:.TZ]/g,'').slice(0,14)+'-claude-trial-digest.json');"
     + "fs.writeFileSync(f,JSON.stringify({at:d.toISOString(),from:'claude',text:t,kind:'trial-digest'},null,1));"
-    + "try{const r=await require('./lib/wa-out.js').sendOwner(i.dataPath,t,{kind:'alert'});console.log('wa '+r.via)}catch(e){console.log('wa failed '+e.message.slice(0,120))}})";
-  return execFileSync('sudo', ['-u', 'monitor', 'bash', '-c', 'set -a; . /etc/monitor.env; set +a; cd ' + HERE + ' && HOME=/home/monitor node -e "$0"', js],
+    + "if(process.env.TC_NO_WA){console.log('screen only');return}try{const r=await require('./lib/wa-out.js').sendOwner(i.dataPath,t,{kind:'alert'});console.log('wa '+r.via)}catch(e){console.log('wa failed '+e.message.slice(0,120))}})";
+  return execFileSync('sudo', ['-u', 'monitor', 'bash', '-c', 'set -a; . /etc/monitor.env; set +a; cd ' + HERE + ' && ' + (wa === false ? 'TC_NO_WA=1 ' : '') + 'HOME=/home/monitor node -e "$0"', js],
     { input: text, encoding: 'utf8', timeout: 90000 }).trim();
 }
 
@@ -115,7 +116,7 @@ function toItzik(text) {
     for (const x of rows) {
       const text = C.digestText([x]);
       if (DRY) { say('digest:\n' + text); continue; }
-      let r = ''; try { r = toItzik(text); } catch (e) { r = 'failed ' + String(e.message).slice(0, 120); }
+      let r = ''; try { r = toItzik(text, x.items.length > 0); } catch (e) { r = 'failed ' + String(e.message).slice(0, 120); }
       say('digest ' + x.id + ':' + x.items.length + ' ' + r);
       if (!/failed/.test(r)) { st.t[x.id].cursor = x.cursor; st.t[x.id].told = []; st.lastDigest = new Date(NOW).toISOString(); changed = true; }
     }
