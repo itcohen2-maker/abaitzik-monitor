@@ -656,9 +656,17 @@
   "ytd": "Shazam turns sound into a graph of frequencies, keeps the strongest points and builds a fingerprint from pairs of them: two frequencies and the time between them. The song whose codes line up with the same timing wins, so humming doesn't work. Source: Avery Wang, An Industrial Strength Audio Search Algorithm, 2003.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-15T06:00:45.408Z"
+  "posted": true,
+  "postedAt": "2026-11-24T18:04:42.875Z",
+  "approvedAt": "2026-11-15T06:00:45.408Z",
+  "auto": {
+   "reel": "18156065146496767",
+   "story": "18121394516325850",
+   "storyError": null,
+   "page": "1146223231143394",
+   "pageError": null,
+   "channel": "itsolution.global"
+  }
  },
  {
   "id": "deepfake-he",
