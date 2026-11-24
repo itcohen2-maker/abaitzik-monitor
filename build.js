@@ -933,7 +933,7 @@ function build() {
       const e = r('events.json'), st = r('status.json');
       if (!e && !st) return null;
       const from = Date.now() - 86400000;
-      return { at: (e && e.at) || '', ok: !st || !!st.ok, connect: (st && !st.ok && st.connect) || '',
+      return { at: (e && e.at) || '', who: (e && e.who) || '', ok: !st || !!st.ok, connect: (st && !st.ok && st.connect) || '',
         events: e ? e.events.filter((x) => Date.parse(x.end || x.start) >= from) : [] };
     })(),
     // 13.11.2026: the 🎁 tile, a carousel or video waiting to be uploaded (readyList).
@@ -20409,7 +20409,8 @@ function calSheet(all,mode,ym,sel){
   if(!all&&upcoming.length>shown.length)h+='<button type="button" class="yb" data-k="all">עוד '+(upcoming.length-shown.length)+' ימים</button>';
  }
  h+='<small>'+(C.at?'השינוי האחרון ביומן הגיע ב '+esc(hbDay(C.at))+'. ':'')+'נבדק כל 10 דקות.</small>';
- h+='<a class="yb" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">פתיחה ביומן של גוגל</a>';
+ // 24.11.2026: the connected account (cal-sync's who), not whichever Google account is first in this browser.
+ h+='<a class="yb" href="https://calendar.google.com/calendar/r/day'+(C.who?'?authuser='+encodeURIComponent(C.who):'')+'" target="_blank" rel="noopener">פתיחה ביומן של גוגל</a>';
  h+='<button type="button" class="yb yx" data-k="">סגירה</button></div>';
  var w=document.createElement('div');w.id='calSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','היומן');
  w.innerHTML=h;
