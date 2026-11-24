@@ -1354,6 +1354,7 @@ function build() {
   try { if (Array.isArray(screens) && screens.length && screens.indexOf('gBhQuote') < 0 && require('./lib/biz-home.js').monitorQuote(inst.dataPath)) screens.push('gBhQuote'); } catch (e) { /* none */ }
   // 21.11.2026: a trade with bookings always has 📅 התורים שלי, also where its screens came from the intake and not from lib/trades.js
   try { if (Array.isArray(screens) && screens.length && screens.indexOf('gBkAppts') < 0 && require('./lib/bookings-ui.js').enabled(inst)) screens.push('gBkAppts'); } catch (e) { /* none */ }
+  try { if (Array.isArray(screens) && screens.length && screens.indexOf('gCalls') < 0 && require('./lib/calls-ui.js').enabled(inst)) screens.push('gCalls'); } catch (e) { /* none */ }
   // 10.11.2026, Itzik: the campaigns tile appears by itself only once the customer gave his Facebook and numbers came in
   // (data/ads/status.json ok:true, written by ads-sync.js after setup-intake.js registered him). Until then nothing.
   if (Array.isArray(screens) && screens.length && screens.indexOf('gAds') < 0) {
@@ -1551,6 +1552,8 @@ const TENANT_TILES = {
   gBhCal: ['g15', '📅 פגישות ויומן', 'מה יש לי היום, ומה בהמשך'],
   // 21.11.2026, Itzik: a trade with bookings (lib/trades.js) is its owner's appointments diary (lib/bookings-ui.js, store lib/bookings.js).
   gBkAppts: ['g12', '📅 התורים שלי', 'מי מגיע מתי, מה פנוי, ותור חדש בלחיצה'],
+  // 24.11.2026: the calls and meetings archive (lib/calls-ui.js), only where instance.json says calls: true.
+  gCalls: ['g11', '🗂️ שיחות ופגישות', 'כל שיחה, מה סוכם, וחיפוש לפי שם'],
   gConn: ['g4', '🔌 חיבורים', 'מה מחובר, וחיבור בלחיצה'],
   gYtCom: ['g11', '▶️ תגובות ביוטיוב', 'מה כתבו לך בערוץ, שאלות ופניות למעלה'],
   gBhMail: ['g11', '📧 מייל', 'מה חשוב, ולמי לחזור'],
@@ -1699,6 +1702,7 @@ function tenantTiles(inst) {
   // 10.11.2026: a per tenant opt out (instance hideTiles, an array of tile ids). gConn and gAdminReq can never be hidden.
   // 11.11.2026, Itzik: the notes app is installed by default in every monitor, so gNotes can never be hidden either.
   try { if (ids.indexOf('gBkAppts') < 0 && require('./lib/bookings-ui.js').enabled(inst)) ids.unshift('gBkAppts'); } catch (e) { /* none */ }
+  try { if (ids.indexOf('gCalls') < 0 && require('./lib/calls-ui.js').enabled(inst)) ids.unshift('gCalls'); } catch (e) { /* none */ }
   if (Array.isArray(inst.hideTiles)) { const hide = inst.hideTiles.filter((id) => id !== 'gConn' && id !== 'gAdminReq' && id !== 'gNotes'); for (let i = ids.length - 1; i >= 0; i--) if (hide.indexOf(ids[i]) >= 0) ids.splice(i, 1); }
   // 16.11.2026, Itzik: "גם אם הוא מחק". A quote the monitor prepared brings 🧾 back, first, even if hideTiles took it off.
   try { if (ids.indexOf('gBhQuote') < 0 && require('./lib/biz-home.js').monitorQuote(inst.dataPath || 'data')) ids.unshift('gBhQuote'); } catch (e) { /* none */ }
@@ -5088,6 +5092,7 @@ ${require('./lib/trade-cards.js').html(inst)}
 ${require('./lib/trade-desk.js').html(inst)}
 ${require('./lib/cal-board.js').html(inst)}
 ${(() => { try { return require('./lib/bookings-ui.js').html(inst); } catch (e) { console.error('bookings off: ' + e.message); return ''; } })()}
+${(() => { try { return require('./lib/calls-ui.js').html(inst); } catch (e) { console.error('calls off: ' + e.message); return ''; } })()}
 ${(() => { try { return require('./lib/trade-free.js').html(inst); } catch (e) { return ''; } })()}
 ${require('./lib/home-ui.js').greet}
 ${require('./lib/approvals-ui.js').html}
