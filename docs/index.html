@@ -3355,7 +3355,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-24T09:20:09.177Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-24T09:21:57.179Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4182,7 +4182,7 @@ body.offHome .wrap:has(#pA:not([hidden]))>#pA{flex:1;min-height:0}
   <button type="button" class="ic icNew" data-grp="work" id="icPrices" data-new="1"><span class="c c-its">💰</span>מחירון</button>
   <button type="button" class="ic icNew" data-grp="work" id="icCampForm" data-new="1"><span class="c c-its">📣</span>טופס קמפיין</button>
   <button type="button" class="ic icNew" data-grp="work" id="icCamp" data-new="1"><span class="c c-camp">📣</span>קמפיין</button>
-  <button type="button" class="ic icNew" data-grp="proj" id="icSites" data-new="1" data-upd="20261123-monitor-page"><span class="c c-its"><em class="icN">2</em>🌐</span>האתרים שלי</button>
+  <button type="button" class="ic icNew" data-grp="proj" id="icSites" data-new="1" data-upd="20261124-monitor-ru"><span class="c c-its"><em class="icN">2</em>🌐</span>האתרים שלי</button>
   <button type="button" class="ic icNew" data-grp="day" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>
   <button type="button" class="ic icNew" data-grp="day" id="icFcCoach" data-new="1" style="display:none"><span class="c c-fcc">🧭</span>אימון עסקי</button>
   <button type="button" class="ic icNew" data-grp="day" id="icFcPersonal" data-new="1" style="display:none"><span class="c c-fcp">🌿</span>אימון אישי</button>
@@ -5885,7 +5885,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='32ea5fcb04';
+var CODE_ID='d4722093db';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","ownerLook":true,"uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[],"chatExamples":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15770,7 +15770,7 @@ function campShare(){
 }
 on('icCamp',function(){campShare();});
 function sitesSheet(){
- var S=[['🌍','אבא איציק','https://abaitzik.com/'],['💻','האתר שלי, IT Solution','https://it-solution.co.il'],['🖥️','דף המוניטור (נמצא בגוגל)','https://it-solution.co.il/monitor/'],['💬','צ׳אט באתר','https://it-solution.co.il/#chat'],['🕯️','נרות','https://candletimes.com/?me=1'],['📱','סלינדה','https://salinda-mobile.vercel.app/'],['🐎','פגסוס','https://pegasusgame.vercel.app']];
+ var S=[['🌍','אבא איציק','https://abaitzik.com/'],['💻','האתר שלי, IT Solution','https://it-solution.co.il'],['🖥️','דף המוניטור (נמצא בגוגל)','https://it-solution.co.il/monitor/'],['🇷🇺','דף המוניטור ברוסית','https://it-solution.co.il/monitor/?lang=ru'],['💬','צ׳אט באתר','https://it-solution.co.il/#chat'],['🕯️','נרות','https://candletimes.com/?me=1'],['📱','סלינדה','https://salinda-mobile.vercel.app/'],['🐎','פגסוס','https://pegasusgame.vercel.app']];
  var w=document.createElement('div');w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','האתרים שלי');
  w.innerHTML='<div class="ycard"><b>🌐 האתרים שלי</b><small>לחיצה פותחת את האתר</small>'
   +S.map(function(s,i){return '<a class="yb'+(i?'':' yb1')+'" style="display:block;text-align:center;text-decoration:none" href="'+s[2]+'" target="_blank" rel="noopener">'+s[0]+' '+s[1]+'</a>';}).join('')
