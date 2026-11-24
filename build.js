@@ -5183,6 +5183,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <!-- 1.11, Itzik: "ביקשתי אייקון של שחר במוניטור כבר כמה פעמים". First on the grid, so it is seen. -->
   <button type="button" class="gt gNer" data-grp="net" id="gShachar" data-new="1" data-upd="${shState().upd}"><b><img src="icons/shachar.png" alt="" style="height:1.1em;vertical-align:-0.2em;border-radius:4px"> שחר</b><small>${shTileSmall()}</small></button>
   <button type="button" class="gt gStory" data-grp="proj" id="gPegasus" data-new="1" data-upd="20261031-peg-status"><b>🐎 פגסוס</b><small>רק ההודעה האחרונה והשאלה שמחכה לך, הישנות נעלמות</small></button>
+  <button type="button" class="gt gStory" data-grp="proj" id="gRain" data-new="1" data-upd="20261124-raindrop"><b>🌧️ ריינדרופ</b><small>הדמו של פעימה 1: קישורים וקודים</small></button>
   <button type="button" class="gt gLec" data-grp="proj" id="gLec" data-upd="lec-${LEC_LAST?LEC_LAST.getTime():0}"><b>🎤 הרצאה</b><small>${LEC_WHAT?'עודכן '+lecFmt(LEC_LAST,1)+': '+LEC_WHAT:'03 לאימון, עודכן '+lecFmt(LEC_LAST,1)}</small></button>
   <!--
     14.10 Itzik: a new story goes into this tile, and the tile moves to the top
@@ -18704,6 +18705,49 @@ function tomSheet(){
  document.body.appendChild(w);
 }
 on('gTom',tomSheet);
+var RAIN_ITEMS=[
+ {t:'🏢 המערכת הפנימית, כפיר וצליל',u:'https://raindrop-demo-three.vercel.app/app/',c:'2611'},
+ {t:'🙋 פורטל לקוחות',u:'https://raindrop-demo-three.vercel.app/portal/',c:'4121'},
+ {t:'🧾 דף ספק, להעלאת חשבונית',u:'https://raindrop-demo-three.vercel.app/supplier/sp-paint-7k2',c:''}
+];
+function rainSheet(){
+ var old=document.getElementById('rainSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='rainSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','ריינדרופ הפקות');
+ w.innerHTML='<div class="ycard">'
+  +'<b>ריינדרופ הפקות · דמו פעימה 1</b>'
+  +'<small>נתוני דוגמה בלבד. בתוך המערכת יש דף "מה לבדוק בדמו" עם עשר משימות.</small>'
+  +RAIN_ITEMS.map(function(it,i){
+    return '<div style="margin:12px 0;padding:10px;border:1px solid var(--line);border-radius:12px">'
+     +'<b style="display:block">'+esc(it.t)+'</b>'
+     +'<span dir="ltr" style="display:block;font-size:12px;opacity:.7;word-break:break-all;margin:4px 0">'+esc(it.u)+'</span>'
+     +(it.c?'<span style="display:inline-block;margin:2px 0 8px;padding:2px 10px;border-radius:999px;background:#0b7f8f;color:#fff;font-weight:800">קוד: <span dir="ltr">'+esc(it.c)+'</span></span>':'<small style="display:block;margin-bottom:8px">בלי קוד</small>')
+     +'<button type="button" class="yb" data-o="'+i+'">פתיחה</button> <button type="button" class="yb" data-cp="'+i+'">העתקה</button>'
+     +'</div>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var t=e.target;if(!t.getAttribute)return;
+  var o=t.getAttribute('data-o'),cp=t.getAttribute('data-cp'),k=t.getAttribute('data-k');
+  if(o!==null){window.open(RAIN_ITEMS[+o].u,'_blank','noopener');return;}
+  if(cp!==null){
+   var it=RAIN_ITEMS[+cp];
+   var txt=it.u+(it.c?String.fromCharCode(10)+'קוד: '+it.c:'');
+   try{navigator.clipboard.writeText(txt);t.textContent='הועתק ✓';}catch(er){t.textContent='לא הצלחתי להעתיק';}
+   return;
+  }
+  if(k!==null)close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gRain',rainSheet);
 
 /* 5.11, Itzik: "תעשה סדר בכל הסרטונים... הכל רק באריח אחד, ובתוכו טאבים". Built from the
    existing lists (TOM_ITEMS, REEL_ITEMS, FUT_ITEMS), so anything added there shows here. */

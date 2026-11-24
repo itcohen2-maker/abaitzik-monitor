@@ -3355,7 +3355,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-24T15:30:09.460Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-24T15:39:39.058Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4147,6 +4147,7 @@ body.offHome .wrap:has(#pA:not([hidden]))>#pA{flex:1;min-height:0}
   <button type="button" class="gt g16 leadNew" id="gRemTop" hidden><b>⏰ תזכורת</b><small></small></button>
   <button type="button" class="gt gNer" data-grp="net" id="gShachar" data-new="1" data-upd="sh-14-8-2-4"><b><img src="icons/shachar.png" alt="" style="height:1.1em;vertical-align:-0.2em;border-radius:4px"> שחר</b><small>פתוח עכשיו · הצטרפו 14 · נכנסו 2 · משובים 4</small></button>
   <button type="button" class="gt gStory" data-grp="proj" id="gPegasus" data-new="1" data-upd="20261031-peg-status"><b>🐎 פגסוס</b><small>רק ההודעה האחרונה והשאלה שמחכה לך, הישנות נעלמות</small></button>
+  <button type="button" class="gt gStory" data-grp="proj" id="gRain" data-new="1" data-upd="20261124-raindrop"><b>🌧️ ריינדרופ</b><small>הדמו של פעימה 1: קישורים וקודים</small></button>
   <button type="button" class="gt gLec" data-grp="proj" id="gLec" data-upd="lec-1794647212082"><b>🎤 הרצאה</b><small>עודכן 14.11 11:06: שקף 47, שחר ירד, נשאר רק אתר הנרות</small></button>
   <button type="button" class="gt g8" data-grp="money" id="gLolos" data-upd="20261104-piraon-yoel"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
   <button type="button" class="gt g8" data-grp="home" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
@@ -5886,7 +5887,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='4707f72205';
+var CODE_ID='29161cd7f1';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","ownerLook":true,"uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[],"chatExamples":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -14842,6 +14843,49 @@ function tomSheet(){
  document.body.appendChild(w);
 }
 on('gTom',tomSheet);
+var RAIN_ITEMS=[
+ {t:'🏢 המערכת הפנימית, כפיר וצליל',u:'https://raindrop-demo-three.vercel.app/app/',c:'2611'},
+ {t:'🙋 פורטל לקוחות',u:'https://raindrop-demo-three.vercel.app/portal/',c:'4121'},
+ {t:'🧾 דף ספק, להעלאת חשבונית',u:'https://raindrop-demo-three.vercel.app/supplier/sp-paint-7k2',c:''}
+];
+function rainSheet(){
+ var old=document.getElementById('rainSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='rainSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','ריינדרופ הפקות');
+ w.innerHTML='<div class="ycard">'
+  +'<b>ריינדרופ הפקות · דמו פעימה 1</b>'
+  +'<small>נתוני דוגמה בלבד. בתוך המערכת יש דף "מה לבדוק בדמו" עם עשר משימות.</small>'
+  +RAIN_ITEMS.map(function(it,i){
+    return '<div style="margin:12px 0;padding:10px;border:1px solid var(--line);border-radius:12px">'
+     +'<b style="display:block">'+esc(it.t)+'</b>'
+     +'<span dir="ltr" style="display:block;font-size:12px;opacity:.7;word-break:break-all;margin:4px 0">'+esc(it.u)+'</span>'
+     +(it.c?'<span style="display:inline-block;margin:2px 0 8px;padding:2px 10px;border-radius:999px;background:#0b7f8f;color:#fff;font-weight:800">קוד: <span dir="ltr">'+esc(it.c)+'</span></span>':'<small style="display:block;margin-bottom:8px">בלי קוד</small>')
+     +'<button type="button" class="yb" data-o="'+i+'">פתיחה</button> <button type="button" class="yb" data-cp="'+i+'">העתקה</button>'
+     +'</div>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var t=e.target;if(!t.getAttribute)return;
+  var o=t.getAttribute('data-o'),cp=t.getAttribute('data-cp'),k=t.getAttribute('data-k');
+  if(o!==null){window.open(RAIN_ITEMS[+o].u,'_blank','noopener');return;}
+  if(cp!==null){
+   var it=RAIN_ITEMS[+cp];
+   var txt=it.u+(it.c?String.fromCharCode(10)+'קוד: '+it.c:'');
+   try{navigator.clipboard.writeText(txt);t.textContent='הועתק ✓';}catch(er){t.textContent='לא הצלחתי להעתיק';}
+   return;
+  }
+  if(k!==null)close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gRain',rainSheet);
 
 window.addEventListener('pageshow',function(){window.navAway=0;});
 function vidGo(url,hash){window.navAway=1;try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href=url+(url.indexOf('?')>-1?'&':'?')+'v='+Date.now()+(hash?'#'+encodeURIComponent(hash):'');}
