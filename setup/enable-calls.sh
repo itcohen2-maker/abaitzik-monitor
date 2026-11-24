@@ -72,5 +72,5 @@ touch /var/log/monitor-calls-$ID.log; chown "$U":"$U" /var/log/monitor-calls-$ID
 systemctl daemon-reload
 systemctl enable --now monitor-calls-$ID.timer
 echo "monitor-calls-$ID.timer: $(systemctl is-active monitor-calls-$ID.timer)"
-HOST=$(ID="$ID" MON="$MON" node -e 'const fs=require("fs");try{process.stdout.write(String(JSON.parse(fs.readFileSync(process.env.MON+"/data/tenants/tenants/"+process.env.ID+".json","utf8")).host||""))}catch(e){}')
-if [ -n "$HOST" ]; then echo "webhook: https://$HOST/api/calls/in/$SECRET"; else echo "webhook path: /api/calls/in/$SECRET (no host on record)"; fi
+# 24.11.2026: the bridge is public only on wa.abaitzik.com (/api/* in the Caddyfile); a customer host does not route /api to it
+echo "webhook: https://wa.abaitzik.com/api/calls/in/$SECRET"
