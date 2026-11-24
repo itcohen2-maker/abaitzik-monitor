@@ -168,7 +168,9 @@ function check(now) {
   // Only an answer that has sat ten minutes without the done mark is a fault.
   const firstAnswer = {};
   all.forEach((m) => { if (m.from === 'claude' && m.re) { const t = Date.parse(m.at); if (!(firstAnswer[m.re] <= t)) firstAnswer[m.re] = t; } });
-  const mine = all.filter((m) => m.from === 'itzik' && m.status !== 'done');
+  // 24.11: the same notice worker.js waiting() skips (18.11: a setup-page notice that needs no answer). Not a late message.
+  const noticeNoAnswer = (m) => { const t = String(m.text || '').trim(); return Boolean(m.auto) && t.endsWith('.') && t.includes(' פתח את ') && (t.endsWith('לחתימה.') || t.endsWith('דף ההקמה עכשיו.')); };
+  const mine = all.filter((m) => m.from === 'itzik' && m.status !== 'done' && !noticeNoAnswer(m));
   // 15.10: a message opened again (pc-task.js reopen, reopenAt) is a new question from
   // that moment: it waits like one, and its old answer does not make it "answered and still in work".
   const reopenedOpen = (m) => Boolean(m.reopenAt && m.id) &&
