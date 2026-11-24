@@ -44,3 +44,9 @@ test('whatsapp keep alive: once, at 23:55 after his last message', () => {
   assert.ok(!K.due(last, null, last + 24 * h));
   assert.ok(!K.due(null, null, last));
 });
+
+test('lead activity line that quotes the monitor is not a fault', () => {
+  // 24.11.2026: the tip said "שום דבר לא נשלח", which matched לא נשלח and sent a false fault mail
+  assert.ok(!FH.holdable('📍 יוסף טרבלסי', '07:05 🤖 המוניטור ענה: שום דבר לא נשלח בלי שאתה לוחץ שלח', {}));
+  assert.ok(FH.holdable('תקלה אצל לקוח', 'רינת: תמלול לא נשלח', { urgent: true }));
+});
