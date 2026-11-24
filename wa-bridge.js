@@ -1264,7 +1264,10 @@ async function api(q, s, u) {
       }
       const v = S.verify(DATA, b);
       if (!v.ok) return send(400, { error: v.error });
-      if (v.fresh) {
+      // 24.11.2026: a test signup (his own phone or mail, or a test ref like google-verify-test) is not a lead
+      const testSignup = (() => { try { return require('./lib/own-leads.js').isTestSignup(DATA, v); } catch (e) { return false; } })();
+      if (testSignup) log('signup ' + v.id + ': test, no lead');
+      if (v.fresh && !testSignup) {
         try { require('./lib/handle.js').complete({ key: 'signup-' + v.id, kind: 'lead', who: v.name, title: 'נרשם לשבוע ניסיון ואימת מייל (' + (v.phone || v.email) + ')' + (v.lang === 'ru' ? ', בגרסה הרוסית' : '') + (v.ref ? ', הגיע דרך הקישור של ' + v.ref : '') + '. המוניטור שלו נפתח עכשיו.', link: 'biz' }); } catch (e) { log('signup handle: ' + e.message); }
         // 13.11.2026, Itzik: "אני צריך שזה הכל יתנקז למקום אחד". Every trial signup is also a row in the leads table.
         try { require('./lib/leads.js').addFound(DATA, { src: 'signup', key: 'signup:' + v.id, name: v.name, phone: v.phone, email: v.email, text: 'נרשם לשבוע ניסיון ואימת מייל' + (v.ref ? ', דרך הקישור של ' + v.ref : '') }); } catch (e) { log('signup lead: ' + e.message); }

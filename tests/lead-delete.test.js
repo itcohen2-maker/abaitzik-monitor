@@ -127,15 +127,24 @@ test('own contacts: the constant list, the normalized allow list, phone formats 
   assert.ok(!OWN.isOwnText(d, 'ליד מהאתר\nשם: דנה\nאימייל: dana@example.com\nטלפון: 0521111111'));
 });
 
-test('own lead from the scanner is created with test:true and is not counted in the summary', () => {
+test('own lead from the scanner is not created at all (24.11), a real one is', () => {
   const d = tmp();
   const mine = L.addFound(d, { src: 'leadform', key: 'f1', name: 'איציק', text: 'בדיקה', at: AT, email: 'fam@test.example' });
   const real = L.addFound(d, { src: 'leadform', key: 'f2', name: 'דנה', text: 'שלום', at: AT, phone: '0521111111' });
-  assert.strictEqual(mine.test, true);
-  assert.ok(!real.test);
+  assert.strictEqual(mine, null, 'his own lead is not created');
+  assert.ok(real && !real.test);
+  assert.strictEqual(L.readAll(d).length, 1);
   const s = biz.summary(L.readAll(d), Date.parse(AT));
   assert.strictEqual(s.open, 1);
   assert.strictEqual(s.counts.lead, 1);
+});
+
+test('a test signup: a test ref or his own mail, a real signup is not', () => {
+  const d = tmp();
+  assert.ok(OWN.isTestSignup(d, { ref: 'google-verify-test', email: 'x@y.example' }));
+  assert.ok(OWN.isTestSignup(d, { ref: '', email: 'fam@test.example' }));
+  assert.ok(!OWN.isTestSignup(d, { ref: 'm-beauty', email: 'dana@y.example', phone: '0521111111' }));
+  assert.ok(!OWN.isTestSignup(d, { ref: 'contest-winners', email: 'dana@y.example' }));
 });
 
 test('own lead from the site: created and marked test, with no item, and manager and page counts skip it', () => {

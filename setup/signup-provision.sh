@@ -76,9 +76,12 @@ for f in "$Q"/t*.json; do
     setf "$f" state ready; setf "$f" host "$HOST"
     echo "$today $ID ready " >> "$LOG.days"; done_today=$((done_today+1))
     log "$ID ready, mail sent"
+    # 24.11.2026, Itzik "תתקן שליד לא יכנס": a test signup (his own mail or phone, or a test ref) is no lead, no WhatsApp
+    TESTSIG=$(sudo -u monitor node -e 'const q=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write(require(process.argv[2]+"/lib/own-leads.js").isTestSignup(process.argv[2]+"/data",q)?"1":"")' "$f" "$REPO" 2>/dev/null || true)
+    [ -n "$TESTSIG" ] && log "$ID test signup, no lead"
     # 23.11.2026, Itzik: every new monitor lead reaches his WhatsApp (notify.js --lead), with where he came from.
-    sudo -u monitor node "$REPO/notify.js" "🆕 נרשם למוניטור${SLANG:+ (רוסית)}: $NAME" "המוניטור שלו נפתח ($HOST)${SRC:+, הגיע מעמוד המקצועות}${REF:+, ref $REF}. שבוע ניסיון." --lead >/dev/null 2>&1 || true
-    sudo -u monitor node -e 'require("./lib/handle.js").complete({key:"signup-ready-"+process.argv[1],kind:"lead",who:process.argv[2],title:"המוניטור שלו נפתח ונשלח אליו במייל ("+process.argv[3]+"). שבוע ניסיון, 60 פעולות.",link:"biz"})' "$ID" "$NAME" "$HOST" 2>>"$LOG" || true
+    [ -z "$TESTSIG" ] && sudo -u monitor node "$REPO/notify.js" "🆕 נרשם למוניטור${SLANG:+ (רוסית)}: $NAME" "המוניטור שלו נפתח ($HOST)${SRC:+, הגיע מעמוד המקצועות}${REF:+, ref $REF}. שבוע ניסיון." --lead >/dev/null 2>&1 || true
+    [ -z "$TESTSIG" ] && sudo -u monitor node -e 'require("./lib/handle.js").complete({key:"signup-ready-"+process.argv[1],kind:"lead",who:process.argv[2],title:"המוניטור שלו נפתח ונשלח אליו במייל ("+process.argv[3]+"). שבוע ניסיון, 60 פעולות.",link:"biz"})' "$ID" "$NAME" "$HOST" 2>>"$LOG" || true
   else
     setf "$f" state mailfail; log "$ID built, mail failed"
     sudo -u monitor node "$REPO/notify.js" "מייל לא יצא" "המוניטור של $NAME נפתח, אבל המייל עם הקישור לא יצא. הקוד ב /root/tenant-codes/$ID.txt" >/dev/null 2>&1
