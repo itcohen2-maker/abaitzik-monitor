@@ -1229,6 +1229,17 @@ async function api(q, s, u) {
   if (originOk(origin)) { h['Access-Control-Allow-Origin'] = origin; h['Access-Control-Allow-Headers'] = 'Content-Type'; h['Access-Control-Allow-Methods'] = 'POST, OPTIONS'; }
   if (q.method === 'OPTIONS') { s.writeHead(204, h); return s.end(); }
   if (q.method !== 'POST') { s.writeHead(405, h); return s.end('{}'); }
+  // 24.11.2026, Itzik: the calls archive, POST /api/calls/in/<secret>. The customer's cloud PBX posts a finished call here, the secret in the path says
+  // whose it is (data/calls-hooks.json). Public, Itzik's own instance only. It carries a transcript, so it reads its own 2MB body
+  // before the generic 20KB read below. Nothing of the body, the secret or the call is logged.
+  const mh = /^\/api\/calls\/in\/([A-Za-z0-9_-]{1,200})$/.exec(u.pathname);
+  if (mh) {
+    if (!isOwnerInstance()) { s.writeHead(404, h); return s.end('{}'); }
+    const CA = require('./lib/calls-api.js');
+    let hb; try { hb = JSON.parse((await readBody(q, CA.MAX_HOOK)).toString('utf8')); } catch (e) { s.writeHead(400, h); return s.end('{}'); }
+    let hr; try { hr = CA.hook(mh[1], hb, DATA); } catch (e) { log('calls hook: ' + e.message); hr = { status: 500, json: { error: 'server' } }; }
+    s.writeHead(hr.status, h); return s.end(JSON.stringify(hr.json));
+  }
   let b; try { b = JSON.parse((await readBody(q, 20000)).toString('utf8')); } catch (e) { s.writeHead(400, h); return s.end('{}'); }
   // 17.11.2026: the "🚀 בוא נתחיל" questions inside a customer's monitor (lib/signup.js moreProfile), by his visit key.
   if (u.pathname === '/api/start/more') {
@@ -1375,6 +1386,15 @@ async function api(q, s, u) {
     let ownBiz = ''; if (own) { try { ownBiz = JSON.parse(fs.readFileSync(path.join(ROOT, 'instance.json'), 'utf8')).business || ''; } catch (e) {} }
     const r = await require('./lib/camp-ask.js').ask(cst.llm, b, { name: own ? 'owner' : tn.name, business: own ? ownBiz : (tn.business || '') });
     s.writeHead(r.status, h); return s.end(JSON.stringify(r.json));
+  }
+  // 24.11.2026: the calls archive of a customer, by his own key only. The owner code is refused here on purpose: Itzik sees no
+  // content of a customer's calls. The data path comes from the key, never from the body. Nothing of the body is logged.
+  const mc = /^\/api\/calls\/(search|item|contact|delete|name|topics|private|retag)$/.exec(u.pathname);
+  if (mc) {
+    const tn = tenantByKey(b.code);
+    if (!tn || codeOk(b.code)) { codeFail(q, b.code); s.writeHead(403, h); return s.end('{"error":"code"}'); }
+    const cr = require('./lib/calls-api.js').handle(mc[1], b, path.join(tn.dir, 'data'));
+    s.writeHead(cr.status, h); return s.end(JSON.stringify(cr.json));
   }
   if (/^\/api\/chat(\/thread|\/todo)?$/.test(u.pathname) && !codeOk(b.code)) {
     const tn = tenantByKey(b.code);
