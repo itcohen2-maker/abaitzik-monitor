@@ -380,6 +380,8 @@ function prompt(list) {
     */
     // 14.11.2026 (lib/alarms.js): "תזכיר לי" at an exact time on WhatsApp, and offering it when a message has a date.
     ...require('./lib/alarms.js').promptLines(inst.dataPath),
+    // 24.11.2026 (lib/calls-index.js): a customer with the calls archive asks it from the chat ("מה סיכמתי עם יוסי?")
+    ...(inst.calls === true ? require('./lib/calls-index.js').promptLines(inst.dataPath) : []),
     // 22.11.2026 (lib/bookings.js): a trade with bookings is its owner's appointments diary: free text and voice go through node booking.js
     ...(() => { try { return inst.bookings === true && require('./lib/bookings-ui.js').enabled(inst) ? require('./lib/bookings.js').promptLines() : []; } catch (e) { return []; } })(),
     // 14.11.2026 (partner-sync.js): publishing to his own Instagram and Facebook Page, only on his explicit request.
@@ -836,7 +838,7 @@ function run(list) {
     args.splice(args.indexOf('--dangerously-skip-permissions'), 1);
     args.push('--allowedTools', 'Read', 'Grep', 'Glob', 'Write', 'Edit',
       'Bash(node pc-task.js:*)', 'Bash(node quote-draft.js:*)', 'Bash(node push.js:*)', 'Bash(node change-request.js:*)',
-      'Bash(node transcribe.js:*)', 'Bash(node lib/personal.js:*)', ...(inst.bookings === true ? ['Bash(node booking.js:*)'] : []), 'Bash(node build.js:*)', 'Bash(npm test:*)', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(date:*)');
+      'Bash(node transcribe.js:*)', 'Bash(node lib/personal.js:*)', ...(inst.bookings === true ? ['Bash(node booking.js:*)'] : []), ...(inst.calls === true ? ['Bash(node lib/calls-index.js:*)'] : []), 'Bash(node build.js:*)', 'Bash(npm test:*)', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(date:*)');
     say('מחשב הלקוח מחובר: הסשן כאן רק מעביר מלל ומשימות');
   }
   // 14.10: a shell only on Windows (claude.cmd). On Linux the shell split the
