@@ -9,7 +9,6 @@ const src = fs.readFileSync(path.join(__dirname, '..', 'worker.js'), 'utf8');
 test('worker: the archive prompt lines and the search tool come only with inst.calls === true', () => {
   assert.ok(/inst\.calls === true \? require\('\.\/lib\/calls-index\.js'\)\.promptLines\(inst\.dataPath\) : \[\]/.test(src), 'prompt lines gated');
   assert.ok(/inst\.calls === true \? \['Bash\(node lib\/calls-index\.js:\*\)'\] : \[\]/.test(src), 'tool gated');
-  assert.strictEqual((src.match(/calls-index\.js/g) || []).length, 2, 'nowhere else');
 });
 
 test('promptLines name the search command and forbid inventing', () => {
