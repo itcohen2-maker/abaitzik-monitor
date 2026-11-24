@@ -238,5 +238,53 @@
   "caption": "Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Cheery Monday\" by Kevin MacLeod (incompetech.com), CC BY 4.0.",
   "approved": true,
   "approvedBy": "itzik-23.11-auto"
+ },
+ {
+  "name": "story-he-mon-3011",
+  "date": "2026-11-30",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "he",
+  "city": "יקנעם עילית",
+  "file": "media/story-he-mon-3011.mp4",
+  "caption": "",
+  "approved": true,
+  "approvedBy": "itzik-24.11-auto"
+ },
+ {
+  "name": "story-en-mon-3011",
+  "date": "2026-11-30",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "en",
+  "city": "Lyon",
+  "file": "media/story-en-mon-3011.mp4",
+  "caption": "",
+  "approved": true,
+  "approvedBy": "itzik-24.11-auto"
+ },
+ {
+  "name": "post-he-mon-3011",
+  "date": "2026-11-30",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "he",
+  "city": "ראשון לציון",
+  "file": "media/post-he-mon-3011.mp4",
+  "caption": "חדש באתר: נר נשמה, לזכור את מי שאהבנו.\nוזמני הדלקת נרות לכל עיר בעולם, בחינם.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Clean Soul, Kevin MacLeod (incompetech.com), CC BY 3.0.",
+  "approved": true,
+  "approvedBy": "itzik-24.11-auto"
+ },
+ {
+  "name": "post-en-mon-3011",
+  "date": "2026-11-30",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "en",
+  "city": "Oslo",
+  "file": "media/post-en-mon-3011.mp4",
+  "caption": "New on the site: Ner Neshama, to remember the ones we loved.\nCandle lighting times for every city, free.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Cheery Monday\" by Kevin MacLeod (incompetech.com), CC BY 4.0.",
+  "approved": true,
+  "approvedBy": "itzik-24.11-auto"
  }
 ]
