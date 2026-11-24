@@ -7197,7 +7197,8 @@ function ensure(keys, fn){
  list.forEach(function(k){
   if(lazyWait[k]){lazyWait[k].push(step);return;}
   lazyWait[k]=[step];
-  var url='data/'+k+'.json?b='+encodeURIComponent(D.buildId||'');
+  // 24.11.2026: the leads are always asked fresh (a lead that came while the page was open was missing, Itzik: "לא מופיע בלידים שלי").
+  var url='data/'+k+'.json?b='+encodeURIComponent(D.buildId||'')+(k==='biz'?'&t='+Date.now():'');
   var end=function(){
    var q=lazyWait[k]||[];lazyWait[k]=null;
    q.forEach(function(g){try{g();}catch(e){}});
@@ -20796,6 +20797,8 @@ function bzRow(r,extra){
 // 18.11.2026 (review): a nextAt as he reads it, in Israel time ("19.11 09:00"). A date only one (older leads, a customer's) stays as it was.
 function bzNextAtTxt(x){x=String(x||'').trim();if(!x||/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(x))return x;var m=/^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2})$/.exec(x);if(m)return (+m[3])+'.'+(+m[2])+' '+m[4]+':'+m[5];var n=Date.parse(x);if(isNaN(n))return x;var p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date(n)).forEach(function(q){p[q.type]=q.value;});return (+p.day)+'.'+(+p.month)+' '+(p.hour==='24'?'00':p.hour)+':'+p.minute;}
 function bizSheet(t0){
+ // 24.11.2026: every opening pulls the leads again, so a lead that came in while the page stayed open shows.
+ if(LAZY&&LAZY.biz)lazyDone.biz=false;
  ensure('biz',function(){
   var S=D.bizSum||null,recs=(D.biz||[]).filter(function(r){return typeof ldGone!=='function'||(ldGone()||[]).indexOf(r.id)<0;/* 17.11.2026: a customer copy has the empty stand in ldGone(){}, and the leads tile threw */}),tab=t0||'leads';
   var bzOwner=false;/*ITZIK:BEGIN*/bzOwner=true;if(!t0)tab='its';/*ITZIK:END*/
