@@ -15,6 +15,8 @@ test('fault alerts are held, leads and the manager own lines are not', () => {
   assert.ok(!FH.holdable('המנהל: תקלה לא תוקנה', 'x', {}));
   assert.ok(!FH.holdable('תקלה אצל לקוח', 'x', { noHold: true }));
   assert.ok(!FH.holdable('תזכורת', 'לקנות חלב', {}));
+  // 24.11.2026: the morning brief is not a fault even when its text says תקוע and כפתור
+  assert.ok(!FH.holdable('דוח הבוקר מוכן', 'דוח בוקר 24.11: תשלום מטא תקוע, במוניטור, כפתור תשובות למטה', {}));
 });
 
 test('fixed in time: dropped, he is not bothered', () => {
