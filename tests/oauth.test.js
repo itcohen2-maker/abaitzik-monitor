@@ -78,7 +78,8 @@ test('google start: offline, consent, PKCE, our redirect, the card scopes', () =
   assert.equal(u.searchParams.get('redirect_uri'), 'https://form.it-solution.co.il/oauth/google/callback');
   const sc = u.searchParams.get('scope').split(' ');
   assert.ok(sc.includes('https://www.googleapis.com/auth/gmail.readonly'));
-  assert.ok(sc.includes('https://www.googleapis.com/auth/calendar.events'));
+  assert.ok(sc.includes('https://www.googleapis.com/auth/calendar.events.owned'));
+  assert.ok(!sc.includes('https://www.googleapis.com/auth/calendar.events'), 'the narrower calendar scope only');
   assert.ok(!sc.some((x) => /mail\.google\.com|gmail\.modify|gmail\.send/.test(x)), 'never full mail access');
 });
 
@@ -233,9 +234,13 @@ test('a fireflies callback saves its refresh token', async () => {
 });
 
 // 11.11.2026: drive is drive.file (only files the Monitor creates or the client picks), see lib/oauth.js
-test('drive and youtube short names map to Google scopes', () => {
-  const sc = oa.scopesFor('google', ['gmail', 'drive', 'youtube']);
-  assert.ok(sc.includes('https://www.googleapis.com/auth/drive.file') && sc.includes('https://www.googleapis.com/auth/youtube.upload'));
+test('drive maps to drive.file, youtube and drive.readonly are never requested (24.11 verification)', () => {
+  const sc = oa.scopesFor('google', ['gmail', 'drive', 'youtube', 'https://www.googleapis.com/auth/drive.readonly', 'https://www.googleapis.com/auth/calendar.events']);
+  assert.ok(sc.includes('https://www.googleapis.com/auth/drive.file'));
+  assert.ok(sc.includes('https://www.googleapis.com/auth/calendar.events.owned'));
+  assert.ok(!sc.some((x) => /youtube|drive\.readonly|calendar\.events$/.test(x)));
+  assert.ok(sc.every((x) => oa.VERIFIED.has(x)), 'only what the Cloud Console lists');
+  assert.ok(oa.deadGoogle(['youtube']) && !oa.deadGoogle(['gmail']));
 });
 
 test('linkedin and tiktok use our secret only on the server, never in the start address', async () => {

@@ -56,6 +56,8 @@ function def(tok) {
   let d; try { d = JSON.parse(fs.readFileSync(path.join(DIR, tok + '.def.json'), 'utf8')); } catch (e) { return null; }
   // 16.11.2026: TikTok approved the app (production keys), Itzik: "תפתח ללקוחות". Only a page with "tiktok": false still drops the card.
   if (d && Array.isArray(d.steps) && tok !== OWN_SETUP && d.tiktok === false) d.steps = d.steps.filter((st) => !(st && st.oauth && st.oauth.provider === 'tiktok'));
+  // 24.11.2026: a Google card whose scopes all left the verified set (the YouTube card) is not shown anywhere (lib/oauth.js deadGoogle).
+  if (d && Array.isArray(d.steps)) d.steps = d.steps.filter((st) => !(st && st.oauth && (st.oauth.provider || 'google') === 'google' && st.oauth.scopes && require('./lib/oauth.js').deadGoogle(st.oauth.scopes)));
   return d;
 }
 function state(tok) { try { return JSON.parse(fs.readFileSync(path.join(DIR, tok + '.json'), 'utf8')); } catch (e) { return { steps: {} }; } }
