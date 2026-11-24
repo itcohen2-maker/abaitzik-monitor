@@ -6928,7 +6928,8 @@ function fileView(name){
   var prt=(t==='application/pdf'||t.indexOf('image/')===0)?'<button type="button" class="ask fv-print">🖨️ שליחה להדפסה</button>'+((/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1))?'<div class="empty" style="font-size:13px">בחלון שנפתח: גלול למטה ובחר הדפסה</div>':''):'';
   if(t==='application/pdf')h=prt+h;else h+=prt;
   var sf=null;try{sf=new File([b],short,{type:(t.split(';')[0])||'application/octet-stream'});}catch(x){}
-  if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה בוואטסאפ, במסנג׳ר או במייל</button>';
+  // A text file keeps only "send as message" above: the iPhone will not pass the file itself to WhatsApp, and two near identical send buttons left the customer guessing.
+  if(t.indexOf('text/')!==0&&sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה בוואטסאפ, במסנג׳ר או במייל</button>';
   // Itzik, 1.10: "עשיתי שמירה לגלריה ואני לא מוצא". On the iPhone a blob
   // download lands in Files, not in Photos. For a picture or a video the share
   // sheet is the only road to the gallery (its "Save Video" line), so there the
