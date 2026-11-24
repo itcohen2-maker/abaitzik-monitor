@@ -631,9 +631,17 @@
   "ytd": "שאזאם הופך את הצליל לגרף תדרים, שומר את הנקודות החזקות ובונה מזוגות שלהן טביעת אצבע: שני תדרים והמרחק בזמן ביניהם. השיר שהקודים שלו מסתדרים באותו תזמון מנצח, ולכן זמזום לא עובד. מקור: אייברי וואנג, An Industrial Strength Audio Search Algorithm, 2003.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-15T06:00:45.408Z"
+  "posted": true,
+  "postedAt": "2026-11-24T18:02:39.799Z",
+  "approvedAt": "2026-11-15T06:00:45.408Z",
+  "auto": {
+   "reel": "17990728611089930",
+   "story": "18102835688420609",
+   "storyError": null,
+   "page": "1904221747607162",
+   "pageError": null,
+   "channel": "itsolution.ai"
+  }
  },
  {
   "id": "shazam-en",
