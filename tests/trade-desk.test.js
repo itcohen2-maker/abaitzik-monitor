@@ -178,3 +178,10 @@ test('the one-time mic check is a flow block of the desktop work area, never a f
   const js = TD.html(inst('beauty'));
   assert.ok(js.includes("$('micFirst')"), 'the page moves the card into the work area and back');
 });
+
+test('25.11: on the desk the ring is square: its height follows its width, the mobile fixed height does not stay (the ellipse)', () => {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'lib', 'trade-desk.js'), 'utf8');
+  const rule = src.split('\n').find((l) => l.includes("'body #tradeRing{flex:none;width:clamp("));
+  assert.ok(rule, 'the ring rule is there');
+  assert.ok(/height:auto/.test(rule) && /max-height:none/.test(rule) && /aspect-ratio:1/.test(rule), 'height auto, no max-height, square');
+});
