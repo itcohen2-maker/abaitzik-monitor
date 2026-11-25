@@ -1631,6 +1631,21 @@ const server = http.createServer(function (q, s) {
     }, function () { s.writeHead(400); s.end(); });
     return;
   }
+  // 25.11.2026: notes from the Raindrop demo (lib/rd-notes.js), kept on our side. One origin only.
+  if (u.pathname === '/api/rd-notes') {
+    const RN = require('./lib/rd-notes.js');
+    const origin = q.headers.origin || '';
+    const h = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', Vary: 'Origin' };
+    if (origin === RN.ORIGIN) { h['Access-Control-Allow-Origin'] = origin; h['Access-Control-Allow-Headers'] = 'Content-Type'; h['Access-Control-Allow-Methods'] = 'POST, OPTIONS'; }
+    if (q.method === 'OPTIONS') { s.writeHead(204, h); return s.end(); }
+    if (q.method !== 'POST' || origin !== RN.ORIGIN) { s.writeHead(405, h); return s.end('{}'); }
+    readBody(q, 30000).then(function (raw) {
+      let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400, h); return s.end('{}'); }
+      const r = RN.handlePost(DATA, b, realIp(q));
+      s.writeHead(r.status, h); s.end(JSON.stringify(r.body));
+    }).catch(function () { try { s.writeHead(400, h); s.end('{}'); } catch (e) {} });
+    return;
+  }
   // 1.11: client intake forms on form.it-solution.co.il (forms.js).
   const fm = u.pathname.match(/^\/f\/([a-f0-9]{16,40})(\/view)?\/?$/);
   if (fm && q.method === 'GET') { if (fm[2]) require('./owner-mark.js').setCookie(s, q); if (fm[2]) require('./form-view.js').serve('./forms.js', fm[1], s); else require('./forms.js').servePage(fm[1], s); return; }
@@ -1875,5 +1890,6 @@ if (require.main === module) {
   setInterval(function () { try { sweep(); } catch (e) { log('sweep: ' + e.message); } }, 5000);
   setInterval(function () { try { require('./forms.js').sweep(formNotify); } catch (e) { log('forms sweep: ' + e.message); } }, 60000);
   setInterval(function () { try { require('./setup.js').sweep(formNotify); } catch (e) { log('setup sweep: ' + e.message); } }, 60000);
+  setInterval(function () { try { require('./lib/rd-notes.js').sweep(DATA, formNotify, { wa: function (t) { return require('./lib/wa-out.js').sendOwner(DATA, t, { kind: 'answer' }); } }); } catch (e) { log('rd-notes sweep: ' + e.message); } }, 60000);
 }
 module.exports = { api, connectCodeOk, waConnect, kapsoProject, kapsoEvent, textOf, sigOk, voiceCommand, speakable, shortOf, isAllCommand, route, onMessage, sweep, outboxSweep, _set: function (o) { if (o.push) pushItzik = o.push; if (o.waSend) waSend = o.waSend; if (o.markRead) markRead = o.markRead; if (o.stranger !== undefined) strangerDeps = o.stranger; if (o.owner !== undefined) ownerForTest = o.owner; } };
