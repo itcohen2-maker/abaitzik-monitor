@@ -59,6 +59,7 @@ test('a call is saved, listed newest first and read back; bad ids and huge bodie
   await K.handle(D, { tok: TOK, op: 'save', id: 'c20261125-bbbbbb', call: { a: { name: 'רון' } } }, llm, { now: t0 + 60e3 });
   const l = (await K.handle(D, { tok: TOK, op: 'list' }, llm)).json.calls;
   assert.deepStrictEqual(l.map((c) => c.name), ['רון', 'דנה']);
+  assert.strictEqual(l[1].tool, 'Lovable'); assert.strictEqual(l[1].stuck, 'תשלומים');
   const g = await K.handle(D, { tok: TOK, op: 'get', id: 'c20261125-aaaaaa' }, llm);
   assert.strictEqual(g.json.call.a.name, 'דנה');
   assert.strictEqual((await K.handle(D, { tok: TOK, op: 'save', id: '../x', call: {} }, llm)).status, 400);

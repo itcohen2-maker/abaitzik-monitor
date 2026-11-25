@@ -87,6 +87,11 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
     <div class="say"><b>פתיחה:</b> היי, כאן איציק מ IT Solution. ראיתי שכתבת לנו על הפרויקט. יש לך עשר דקות? אני רוצה להבין מה בנית ואיפה זה נתקע, ואז נדע איך אפשר לעזור.</div>
     <div class="muted">לוחצים על התשובות המוכנות או כותבים. כשלא יודעים מה לענות, לוחצים "לא יודע" ליד השאלה, והיא נכנסת לרשימה הפתוחה למטה.</div>
   </div>
+  <div class="card" id="freeCard">
+    <h2>📝 רשימות מהשיחה</h2>
+    <div class="muted">כל מה שעולה תוך כדי, בלי סדר. העוזר והסיכום רואים גם את זה.</div>
+    <textarea id="freeNotes" rows="4" placeholder="כותבים כאן הכל"></textarea>
+  </div>
   <div id="form"></div>
   <div class="card">
     <h2>שאלות פתוחות</h2>
@@ -179,6 +184,7 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
 <div id="ai">
   <div id="ans"></div>
   <div class="quick">
+    <button class="chip" id="noteBtn">📝 רשימות</button>
     <button class="chip" id="nextBtn">🤖 מה עוד לשאול?</button>
     <button class="chip" data-ask="הלקוח שאל אם השירות בתשלום, מה אני עונה?">בתשלום?</button>
     <button class="chip" data-ask="הלקוח שאל כמה זה יעלה, מה אני עונה?">כמה זה עולה?</button>
@@ -280,6 +286,7 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
     $('#form').innerHTML = h;
     renderOpen();
     $('#openFree').value = call.openFree || '';
+    $('#freeNotes').value = call.free || '';
     renderAsks();
     var so = $('#sumOut'); if (call.summary) { so.hidden = false; so.textContent = call.summary; } else { so.hidden = true; so.textContent = ''; }
   }
@@ -298,6 +305,7 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
   // the notes the assistant sees
   function notes() {
     var out = [];
+    if ((call.free || '').trim()) out.push('רשימות חופשיות מהשיחה: ' + call.free.trim());
     SECTIONS.forEach(function (sec) {
       sec.qs.forEach(function (q) {
         var c = [].concat(call.a[q.k + '_c'] || []).join(', ');
@@ -329,6 +337,7 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
     var k = e.target.getAttribute && e.target.getAttribute('data-k');
     if (k) { call.a[k] = e.target.value; touch(); }
     if (e.target.id === 'openFree') { call.openFree = e.target.value; touch(); }
+    if (e.target.id === 'freeNotes') { call.free = e.target.value; touch(); }
     if (e.target.tagName === 'TEXTAREA') { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 2 + 'px'; }
   });
 
@@ -373,6 +382,10 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
   $('#askForm').addEventListener('submit', function (e) {
     e.preventDefault(); var v = $('#askIn').value.trim(); if (!v) return;
     $('#askIn').value = ''; ask(v);
+  });
+  $('#noteBtn').addEventListener('click', function () {
+    document.querySelector('.tab[data-v="call"]').click();
+    var t = $('#freeNotes'); t.scrollIntoView({ block: 'center' }); t.focus();
   });
   $('#nextBtn').addEventListener('click', function () { ask('מה עוד לשאול?', 'next'); });
 
