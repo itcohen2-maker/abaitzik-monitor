@@ -1117,6 +1117,24 @@ function recordIncoming(m) {
       try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
       return true;
     }
+    // 25.11.2026: the old contacts screen's status buttons, saved on the server (lib/contact-status.js), no model, silent.
+    const csD = codeOk && require('./lib/contact-status.js').parse(text);
+    if (csD) {
+      let res;
+      try { res = require('./lib/contact-status.js').apply(inst.dataPath, csD.name, csD.status); say('סטטוס ליד: ' + csD.name + ' | ' + res.reply); }
+      catch (e) { res = { ok: false, reply: 'לא הצלחתי לשמור את הסטטוס (' + e.message + ')' }; say('!! סטטוס ליד: ' + e.message); }
+      rec.status = 'done';
+      try {
+        if (res.ok) fs.unlinkSync(path.join(CHAT, name));
+        else {
+          fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+          fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-cstat-ack.json')),
+            JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: res.reply, status: 'done' }, null, 1), 'utf8');
+        }
+      } catch (e) { /* the next build carries it */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
     const ldD = codeOk && (inst.biz || inst.name !== 'abaitzik') && require('./lib/lead-delete.js').parse(text); // 18.11: a customer's board deletes too
     if (ldD) {
       let res;

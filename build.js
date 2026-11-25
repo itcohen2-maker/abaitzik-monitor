@@ -7933,7 +7933,12 @@ var SRC={site:'טופס יצירת קשר באתר',tiktok:'הודעה פרטי�
 var STAT={open:'לטיפול',standby:'בהמתנה',done:'טופל'};
 function leadStatus(c){
  var k=c.name||'';
- try{var o=JSON.parse(localStorage.getItem('leadStatus')||'{}');if(o[k])return o[k];}catch(e){}
+ // 25.11: the server value wins; a local entry counts only while the server has not caught up (then it is dropped)
+ try{var o=JSON.parse(localStorage.getItem('leadStatus')||'{}');
+  if(o[k]){
+   if(c.status&&c.status===o[k]){delete o[k];localStorage.setItem('leadStatus',JSON.stringify(o));}
+   else if(!c.status||c.status==='open'||o[k]!==c.status)return o[k];
+  }}catch(e){}
  return c.status||'open';
 }
 function setLeadStatus(name,st){
@@ -7941,6 +7946,15 @@ function setLeadStatus(name,st){
  o[name]=st;
  try{localStorage.setItem('leadStatus',JSON.stringify(o));}catch(e){}
  sendLine('סטטוס ליד: '+name+' · '+(STAT[st]||st));
+}
+// one time: what was set on this device before the server kept it goes up now
+function leadStatusMigrate(){
+ try{
+  if(localStorage.getItem('leadStatusSent')==='1')return;
+  var o=JSON.parse(localStorage.getItem('leadStatus')||'{}'),ks=Object.keys(o);
+  localStorage.setItem('leadStatusSent','1');
+  ks.forEach(function(k){if(STAT[o[k]]&&k)sendLine('סטטוס ליד: '+k+' · '+STAT[o[k]]);});
+ }catch(e){}
 }
 function leadRow(c){
  var st=leadStatus(c);
@@ -22958,6 +22972,7 @@ on('pillCancel',closePillSheet);
 /*ITZIK:END*/
 on('gAsk',function(){askInChat('');});
 paintReportDot();
+setTimeout(leadStatusMigrate,5000);
 document.getElementById('leads').addEventListener('click',function(e){
  var a=e.target.closest?e.target.closest('[data-askc]'):null;
  if(a){
