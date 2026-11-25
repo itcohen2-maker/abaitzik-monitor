@@ -12,7 +12,7 @@
 @media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#181b21;--ink:#eef0f3;--mute:#98a2b3;--line:#2a2f38;--acc:#6b95ff;--acc2:#1c2640;--ok:#4cc38a;--warn:#f5a524;--warnbg:#2d2111;--chip:#222730}}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Heebo,system-ui,sans-serif;font-size:16px;line-height:1.5}
-body{padding-bottom:150px}
+body{padding-bottom:300px}
 header{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 16px 0;border-bottom:1px solid var(--line)}
 h1{font-size:19px;margin:0 0 8px;font-weight:800}
 .tabs{display:flex;gap:4px}
@@ -56,10 +56,28 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
 .call b{display:block}
 #ai{position:fixed;bottom:0;left:0;right:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px rgba(0,0,0,.08)}
 #ai .in{display:flex;gap:6px;max-width:720px;margin:0 auto}
+#noteBox{max-width:720px;margin:0 auto 6px}
+.nh{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.nh b{font-size:15px}.nhs{margin-inline-start:auto;font-size:12px}
+#freeNotes{height:24vh;min-height:90px;resize:none;font-size:16px;background:var(--bg)}
+#ai.small #freeNotes{height:44px;min-height:44px}
 #ai input{flex:1}
 #ai .quick{display:flex;gap:6px;max-width:720px;margin:0 auto 6px;overflow-x:auto}
 #ai .quick .chip{white-space:nowrap}
-#ans{max-width:720px;margin:0 auto;max-height:42vh;overflow-y:auto}
+#ans{max-width:720px;margin:0 auto;max-height:22vh;overflow-y:auto}
+@media (min-width:900px){
+  body{padding-bottom:0}
+  header,main{margin-right:400px}
+  main{max-width:none;padding:16px 24px}
+  main>section{max-width:760px;margin:0 auto}
+  #ai{top:0;bottom:0;right:0;left:auto;width:400px;display:flex;flex-direction:column;border-top:0;border-left:1px solid var(--line);box-shadow:-6px 0 20px rgba(0,0,0,.06);padding:14px 14px 14px}
+  #noteBox{flex:1;display:flex;flex-direction:column;margin:0 0 10px;max-width:none;min-height:0}
+  #freeNotes,#ai.small #freeNotes{flex:1;height:auto;min-height:200px}
+  #noteSize{display:none}
+  #ans{max-height:38vh;max-width:none;margin:0 0 6px}
+  #ai .quick,#ai .in{max-width:none;margin-left:0;margin-right:0}
+  #ai .quick{flex-wrap:wrap;overflow:visible}
+}
 .a{background:var(--acc2);border-radius:12px;padding:10px 12px;margin:0 0 6px;white-space:pre-wrap;font-size:15px}
 .a .qq{color:var(--mute);font-size:13px;margin-bottom:4px}
 .a .add{margin-top:6px}
@@ -86,11 +104,6 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
     </div>
     <div class="say"><b>פתיחה:</b> היי, כאן איציק מ IT Solution. ראיתי שכתבת לנו על הפרויקט. יש לך עשר דקות? אני רוצה להבין מה בנית ואיפה זה נתקע, ואז נדע איך אפשר לעזור.</div>
     <div class="muted">לוחצים על התשובות המוכנות או כותבים. כשלא יודעים מה לענות, לוחצים "לא יודע" ליד השאלה, והיא נכנסת לרשימה הפתוחה למטה.</div>
-  </div>
-  <div class="card" id="freeCard">
-    <h2>📝 רשימות מהשיחה</h2>
-    <div class="muted">כל מה שעולה תוך כדי, בלי סדר. העוזר והסיכום רואים גם את זה.</div>
-    <textarea id="freeNotes" rows="4" placeholder="כותבים כאן הכל"></textarea>
   </div>
   <div id="form"></div>
   <div class="card">
@@ -182,9 +195,12 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
 </main>
 
 <div id="ai">
+  <div id="noteBox">
+    <div class="nh"><b>📝 רשימות מהשיחה</b><span class="muted nhs">נשמר לבד</span><button class="flag" id="noteSize" type="button">הקטן</button></div>
+    <textarea id="freeNotes" placeholder="כותבים כאן הכל, בלי סדר. העוזר והסיכום רואים גם את זה."></textarea>
+  </div>
   <div id="ans"></div>
   <div class="quick">
-    <button class="chip" id="noteBtn">📝 רשימות</button>
     <button class="chip" id="nextBtn">🤖 מה עוד לשאול?</button>
     <button class="chip" data-ask="הלקוח שאל אם השירות בתשלום, מה אני עונה?">בתשלום?</button>
     <button class="chip" data-ask="הלקוח שאל כמה זה יעלה, מה אני עונה?">כמה זה עולה?</button>
@@ -337,7 +353,7 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
     if (k) { call.a[k] = e.target.value; touch(); }
     if (e.target.id === 'openFree') { call.openFree = e.target.value; touch(); }
     if (e.target.id === 'freeNotes') { call.free = e.target.value; touch(); }
-    if (e.target.tagName === 'TEXTAREA') { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 2 + 'px'; }
+    if (e.target.tagName === 'TEXTAREA' && e.target.id !== 'freeNotes') { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 2 + 'px'; }
   });
 
   document.addEventListener('click', function (e) {
@@ -382,10 +398,16 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
     e.preventDefault(); var v = $('#askIn').value.trim(); if (!v) return;
     $('#askIn').value = ''; ask(v);
   });
-  $('#noteBtn').addEventListener('click', function () {
-    document.querySelector('.tab[data-v="call"]').click();
-    var t = $('#freeNotes'); t.scrollIntoView({ block: 'center' }); t.focus();
+  // the dock: on a phone it sits at the bottom and the questionnaire scrolls above it; on a computer it is the right column
+  var ai = $('#ai');
+  function pad() { document.body.style.paddingBottom = window.innerWidth >= 900 ? '0' : (ai.offsetHeight + 16) + 'px'; }
+  $('#noteSize').addEventListener('click', function () {
+    var small = ai.classList.toggle('small');
+    this.textContent = small ? 'הגדל' : 'הקטן'; ls('ck-small', small ? '1' : ''); pad();
   });
+  if (ls('ck-small')) { ai.classList.add('small'); $('#noteSize').textContent = 'הגדל'; }
+  window.addEventListener('resize', pad);
+  if (window.ResizeObserver) new ResizeObserver(pad).observe(ai);
   $('#nextBtn').addEventListener('click', function () { ask('מה עוד לשאול?', 'next'); });
 
   $('#sumBtn').addEventListener('click', function () {
