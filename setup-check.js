@@ -77,6 +77,8 @@ async function checkCard(tok, st) {
 
 async function checkPage(tok) {
   const def = JSON.parse(fs.readFileSync(path.join(DIR, tok + '.def.json'), 'utf8'));
+  // 24.11.2026: the same filter as setup.js def(): a Google card whose scopes left the verified set is not shown on the page, so it is not checked either.
+  def.steps = def.steps.filter((st) => !(st && st.oauth && (st.oauth.provider || 'google') === 'google' && st.oauth.scopes && oa.deadGoogle(st.oauth.scopes)));
   const page = await (await fetch(BASE + '/s/' + tok, { headers: gateCk(tok) ? { Cookie: gateCk(tok) } : {}, signal: AbortSignal.timeout(20000) })).text();
   const res = { tok, client: def.client, cards: [], problems: [] };
   for (const st of def.steps) {
