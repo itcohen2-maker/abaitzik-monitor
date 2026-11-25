@@ -3832,7 +3832,21 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 /* 20.11.2026, Itzik: "אם אפשר לסובב את המסך, אז ה CRM ייראה נורמלי". A phone on its side: the sheet takes the whole width,
    so the board (a container query) turns into the table with the column titles. */
 @media (orientation:landscape) and (min-width:640px){#bizSheet .ycard{max-width:none!important;width:calc(100vw - 16px)!important;box-sizing:border-box}}
+/* 25.11.2026, Itzik: "הלוח של הלידים בנייד לא נח ואני מתבלבל... תסדר לי את הלידים מהחדש לישן". On a phone held upright the board is
+   ONE list, newest first (.lbFlat); the today box, the reminders box and the stage groups (the same lead in two or three places)
+   hide. The rows stay in the page, so editing a lead still updates every copy. On its side (a wide board) the table comes back. */
+.lbFlat .lbTh{color:inherit}
+.lbWhen{font:700 12px Heebo,sans-serif;opacity:.8;white-space:nowrap}
+@container (max-width:639.98px){
+ .lbNow,.lbToday,.lbGrp{display:none}
+ .lbFlat .lbRow.ldRow{margin-bottom:8px}
+ .lbFlat .lbRow.ldRow>summary{padding:11px 12px}
+ .lbFlat .lbRow.ldRow>summary>.lbNone,.lbFlat .lbRow.ldRow>summary>.lbSrc{display:none}
+ .lbFlat .lbName b{font-size:16px}
+ .lbFlat .lbRow.ldRow>summary>.lbLast{flex:1 0 100%}
+}
 @container (min-width:640px){
+ .lbFlat,.lbWhen{display:none}
  .lbHd,.lbBoard .lbRow.ldRow>summary{display:grid;grid-template-columns:minmax(8.5em,2fr) 5.5em minmax(5.5em,1.4fr) 7.5em minmax(3em,.5fr) minmax(4.5em,.8fr) minmax(6em,2.4fr);gap:8px;align-items:center}
  /* 20.11.2026 (2), on its side: the name and the reminder broke over two lines, and an empty site took a wide column */
  .lbBoard .lbRow.ldRow>summary>.lbSite.lbNone{display:block}
@@ -21086,6 +21100,12 @@ function bizSheet(t0){
   var lbSign=function(r){return r.source==='signup'&&lbStage(r)==='חדש';};
   var lbWeek=function(r){if(!lbSign(r)||String(r.nextAt||'').trim())return '';var t=ldT(r.at);if(!t)return '';var k=lbKey(t),y=+k.slice(0,4),m=+k.slice(5,7),d=+k.slice(8,10);return new Date(Date.UTC(y,m-1,d+7)).toISOString().slice(0,10)+' 09:00';};
   var lbRemOf=function(r){return lbRemKey(r.nextAt)||lbWeek(r);};
+  // 25.11.2026: the phone's flat list, "היום 14:32" / "אתמול 09:10" / "21.11 18:05", in Israel time.
+  function lbWhenTxt(at,todayK){
+   var n=ldT(at);if(!n)return '';var k=lbKey(n),d=k.slice(0,10),y=+todayK.slice(0,4),m=+todayK.slice(5,7),dd=+todayK.slice(8,10);
+   var yest=new Date(Date.UTC(y,m-1,dd-1)).toISOString().slice(0,10),hm=k.slice(11);
+   return d===todayK?'היום '+hm:(d===yest?'אתמול '+hm:(+d.slice(8,10))+'.'+(+d.slice(5,7))+' '+hm);
+  }
   var LB_TAGS='<em class="lbTag lbTagCall">📞 לחזור אליו</em><em class="lbTag lbTagSign">✅ נרשם למוניטור</em>';
   var lbNowSub=function(nC,nS){var p=[];if(nC)p.push(nC===1?'📞 אחד לחזור אליו':'📞 '+nC+' לחזור אליהם');if(nS)p.push(nS===1?'✅ אחד נרשם למוניטור, לא צריך לחזור אליו עכשיו':'✅ '+nS+' נרשמו למוניטור, לא צריך לחזור אליהם עכשיו');return p.join(' · ');};
   var lbRemTxt=function(k){return '⏰'+(k?' '+(+k.slice(8,10))+'.'+(+k.slice(5,7))+' '+k.slice(11):'');};
@@ -21123,6 +21143,7 @@ function bizSheet(t0){
     return '<details class="lbRow ldRow'+(r.test?' ldTest':(st==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'" data-at="'+esc(r.at||'')+'" data-s="'+esc(st)+'" data-src="'+(r.source==='signup'?'signup':'other')+'" data-q="'+esc((String(r.name||'')+' '+String(r.email||'')).toLowerCase()+' '+tel)+'"><summary>'
      +'<span class="lbName"><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+'</b><small><bdi>'+esc(r.phone||i.em||'אין טלפון')+'</bdi></small>'+LB_TAGS+'</span>'
      +'<span data-bz="lbed" data-k="st"'+mk('st')+' class="lbSt ldSt" data-s="'+esc(st)+'">'+esc(st)+'</span>'
+     +'<span class="lbWhen">'+esc(lbWhenTxt(r.at,todayK))+'</span>'
      +'<span data-bz="lbed" data-k="next"'+mk('next')+' class="lbNext'+(r.next?'':' lbNone')+'" data-v="'+esc(r.next||'')+'">'+esc(r.next||(lbSign(r)?'לחזור אחרי שבוע':'צעד הבא'))+'</span>'
      +'<span data-bz="lbed" data-k="rem"'+mk('rem')+' class="lbRem'+(due?' lbDue':'')+(k?'':' lbNone')+'" data-at="'+esc(r.nextAt||'')+'">'+lbRemTxt(k)+'</span>'
      +'<span data-bz="lbed" data-k="site"'+mk('site')+' class="lbSite'+(site?'':' lbNone')+'" data-v="'+esc(site)+'">'+lbSiteIn(site)+'</span>'
@@ -21133,6 +21154,7 @@ function bizSheet(t0){
    // the filter is for trial week signups (IT Solution's); a board with none has only the search
    h+='<div class="lbBar">'+(A.some(function(r){return r.source==='signup';})?'<div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל <i>'+LC.length+'</i></button><button type="button" data-bz="lbflt" data-f="other">📞 פניות <i>'+LC.filter(function(r){return r.source!=='signup';}).length+'</i></button><button type="button" data-bz="lbflt" data-f="signup">✅ נרשמו למוניטור <i>'+LC.filter(function(r){return r.source==='signup';}).length+'</i></button></div>':'')
     +'<input class="lbQ" type="search" placeholder="🔎 חיפוש לפי שם או טלפון" enterkeyhint="search"></div>';
+   h+='<div class="lbFlat"><div class="lbTh lbFh">🕒 כל הלידים, מהחדש לישן</div>'+A.map(row).join('')+'</div>';
    var N=A.filter(function(r){return lbKey(ldT(r.at)).slice(0,10)===todayK;});
    if(N.length){
     var rk=function(r){return r.source==='signup'?2:(lbStage(r)==='חדש'?0:1);};
