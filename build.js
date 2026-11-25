@@ -21556,6 +21556,8 @@ function bizSheet(t0){
   var dueN=((S&&S.staleLeads)||[]).length+((S&&S.due)||[]).length+((S&&S.tomorrow)||[]).length;
   var liN=(D.liPosts||[]).length;
   var tabs=[['its','💻','IT Solution'],['leads','🔔','לידים ולקוחות'],['money','💰','כסף החודש'],['due','⏰','צריך לחזור',dueN],['li','🔗','לינקדין',liN]/* 14.11.2026, Itzik: "תסיר את שחר מהעסק שלי" (the 🌅 tab is out; its code stays) *//*ITZIK:BEGIN*/,['ner','🕯️','נרות']/*ITZIK:END*/,['anim','🧠','המשרד']];
+  // 25.11.2026, Itzik: "תוריד את הטאב של למי לחזור, ותוריד את הכסף... רק 2 טאבים". His own copy only; customers keep them.
+  if(bzOwner){tabs=tabs.filter(function(t){return t[0]!=='money'&&t[0]!=='due';});if(tab==='money'||tab==='due')tab='its';}
   if(tab==='shachar')tab='its'; // 14.11: the Shachar tab is out; a saved way back to it opens IT Solution
   // 13.11.2026: a customer's copy showed Itzik's own tabs (IT Solution, Shachar, the office). Only his own business here.
   if(!bzOwner)tabs=tabs.filter(function(t){return ['leads','money','due'].indexOf(t[0])>=0;});
@@ -21591,7 +21593,7 @@ function bizSheet(t0){
    }
    // The drawer that opens is the tab this sheet was opened on (a lead alert opens leads), not only the last one used.
    (function(){var ct=tabs.filter(function(x){return x[0]===tab;})[0];if(ct){try{localStorage.setItem('dwOpen:biz',ct[2]);}catch(x){}}})();
-   drawerize(el.querySelector('#bzDw'),{key:'biz',keys:4,counts:'data',
+   drawerize(el.querySelector('#bzDw'),{key:'biz',keys:bzOwner?2:4,counts:'data',
     short:{'IT Solution':'IT Solution','לידים ולקוחות':'לידים','כסף החודש':'כסף','צריך לחזור':'לחזור','שחר':'שחר','המשרד':'המשרד','מסמכים':'מסמכים'}});
    el.querySelectorAll('#bzDw .dw').forEach(function(d){
     var p=d.querySelector('.bzPane');if(!p)return;var t2=p.getAttribute('data-t');
