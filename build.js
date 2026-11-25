@@ -10189,7 +10189,11 @@ function repaintAll(){
   box with text in it is put down before any reload and filled back in after.
 */
 var lastTypeAt=0,CARRY='carryState',carried=null,carriedUntil=0;
-document.addEventListener('input',function(){lastTypeAt=Date.now();},true);
+// 25.11.2026, Itzik (screenshot, the home box): "כל פעם אני כותב והוא נשאר שם, הוא לא נמחק". The carried text was
+// put back into every empty box on every repaint for two minutes after a reload, so a box he had just sent or
+// cleared filled itself again. Now the carried text is used once: any key or any send ends it.
+document.addEventListener('input',function(){lastTypeAt=Date.now();carried=null;},true);
+document.addEventListener('submit',function(){carried=null;},true);
 /*
   Scrolling blocks both refreshes too (30.9, voice note: "גם כשאני גולל
   בתשובות ... אין צורך לרענן, זה מקפיץ את כל השורות"). A finger on the screen,
@@ -10264,7 +10268,10 @@ function takeCarried(){
   if(raw){carried=JSON.parse(raw);carriedUntil=Date.now()+120000;sessionStorage.removeItem(CARRY);}
  }catch(e){}
  if(carried&&Date.now()>carriedUntil)carried=null;
- if(carried)try{putState(carried);}catch(e){}
+ if(carried)try{putState(carried);
+  // a box that got its text back is done; it is never refilled after he empties it
+  Array.prototype.forEach.call(document.querySelectorAll('textarea,input'),function(el){var k=fieldKey(el);if(carried.drafts[k]&&el.value)delete carried.drafts[k];});
+ }catch(e){}
 }
 window.addEventListener('pagehide',carryState);
 /*

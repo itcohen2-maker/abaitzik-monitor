@@ -3371,7 +3371,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-25T20:50:02.552Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-25T21:08:08.461Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5901,7 +5901,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='0674188936';
+var CODE_ID='2b309f0372';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","ownerLook":true,"uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[],"chatExamples":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8087,7 +8087,8 @@ function repaintAll(){
  if(Math.abs(window.scrollY-y)>2)window.scrollTo(0,y);
 }
 var lastTypeAt=0,CARRY='carryState',carried=null,carriedUntil=0;
-document.addEventListener('input',function(){lastTypeAt=Date.now();},true);
+document.addEventListener('input',function(){lastTypeAt=Date.now();carried=null;},true);
+document.addEventListener('submit',function(){carried=null;},true);
 var lastScrollAt=0,touching=false,scrollWait=null;
 function markScroll(){lastScrollAt=Date.now();}
 window.addEventListener('scroll',markScroll,{capture:true,passive:true});
@@ -8143,7 +8144,9 @@ function takeCarried(){
   if(raw){carried=JSON.parse(raw);carriedUntil=Date.now()+120000;sessionStorage.removeItem(CARRY);}
  }catch(e){}
  if(carried&&Date.now()>carriedUntil)carried=null;
- if(carried)try{putState(carried);}catch(e){}
+ if(carried)try{putState(carried);
+  Array.prototype.forEach.call(document.querySelectorAll('textarea,input'),function(el){var k=fieldKey(el);if(carried.drafts[k]&&el.value)delete carried.drafts[k];});
+ }catch(e){}
 }
 window.addEventListener('pagehide',carryState);
 var wokeAt=Date.now(),pendingCode='';
