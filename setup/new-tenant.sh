@@ -46,7 +46,8 @@ id "$U" >/dev/null 2>&1 || useradd -m -s /usr/sbin/nologin "$U"
 # 12.11 security: other customers cannot pass through; only Caddy (docs) and the owner instance can.
 chmod 711 /home/$U; setfacl -m u:caddy:x,u:monitor:x /home/$U; chmod o-rwx /home/$U
 # Shallow: a full clone carried 3.4G of Itzik's history into every customer and filled the disk (7.10).
-[ -d "$DIR" ] || sudo -H -u "$U" git clone -q --depth 1 "$PUB" "$DIR"
+# 25.11.2026: and without file contents. The checkout skips docs/, so the owner media (1.8G) never lands here.
+[ -d "$DIR" ] || { sudo -H -u "$U" git clone -q --depth 1 --filter=blob:none --no-checkout "$PUB" "$DIR" && sudo -H -u "$U" git -C "$DIR" -c gc.auto=0 checkout -q HEAD -- . ":(exclude)docs"; }
 cd "$DIR"
 sudo -H -u "$U" git remote rename origin code 2>/dev/null || true
 # The branch must track a private "origin" that does not exist (as Ilay's does), never the public
