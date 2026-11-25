@@ -90,8 +90,9 @@ function sync(t) {
     his monitor had 0 faults. The local name stays code/main, so the rest of this file is unchanged.
     Urgent fix without waiting for the checker: git push origin main:stable (as user monitor).
   */
-  try { git(cwd, ['fetch', '-q', '--depth=1', 'code', '+stable:refs/remotes/code/main']); }
-  catch (e) { git(cwd, ['fetch', '-q', '--depth=1', 'code', '+main:refs/remotes/code/main']); }
+  // 25.11.2026: without file contents (partial clone). Each customer .git held 1.8G of Itzik media it never checks out; now about 10M.
+  try { git(cwd, ['fetch', '-q', '--depth=1', '--filter=blob:none', 'code', '+stable:refs/remotes/code/main']); }
+  catch (e) { git(cwd, ['fetch', '-q', '--depth=1', '--filter=blob:none', 'code', '+main:refs/remotes/code/main']); }
   tidy(cwd);
   const head = git(cwd, ['rev-parse', 'code/main']);
   /*
