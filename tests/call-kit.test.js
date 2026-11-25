@@ -74,3 +74,17 @@ test('the page carries the token, names no team member and has no dashes in its 
   const text = html.replace(/<style[\s\S]*?<\/style>/, '').replace(/<script[\s\S]*?<\/script>/, '').replace(/<[^>]+>/g, ' ');
   assert.doesNotMatch(text, /\s[-–—]\s/);
 });
+
+test('the NDA warning shows until IT Solution has signed its side', () => {
+  const D = env();
+  assert.match(K.page(TOK, D), /id="ndaWarn" style="margin-top:10px" >/);
+  fs.mkdirSync(path.join(D, 'ndasign', 'nda'), { recursive: true });
+  fs.writeFileSync(path.join(D, 'ndasign', 'nda', 'owner.json'), JSON.stringify({ name: 'x', sig: 'data:image/png;base64,AA' }));
+  assert.match(K.page(TOK, D), /id="ndaWarn" style="margin-top:10px" hidden>/);
+});
+
+test('the page script parses', () => {
+  const html = K.page(TOK);
+  const js = /<script>([\s\S]*?)<\/script>/.exec(html)[1];
+  assert.doesNotThrow(() => new Function(js));
+});

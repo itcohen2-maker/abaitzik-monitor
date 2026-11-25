@@ -132,6 +132,15 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
     <div class="say"><b>מי אתה בתמונה:</b> אני מוביל את הקשר עם הלקוחות ואת הצד העסקי, ואת הצד הטכני מוביל המהנדס הראשי שלנו. לכן כשיש שאלה טכנית, אני רושם ובודק, ולא מנחש.</div>
     <p><b>איך אנחנו עובדים</b> (כמו שכתוב באתר): היכרות והבנת היעדים, אב טיפוס כדי לבדוק שהחוויה עובדת, פיתוח עם הדגמה כל שבוע, ואז השקה ותמיכה. "אנחנו לא נעלמים אחרי ההשקה."</p>
     <p><b>איך מתמחרים</b> (גם מהאתר): אחרי שיחה ראשונה מקבלים הצעת מחיר קבועה לפי שלבים, בלי הפתעות. יש גם ריטיינר לעבודה שוטפת.</p>
+    <div class="card" style="margin:10px 0">
+      <h2>לשלוח ללקוח</h2>
+      <div class="muted">אם מילאת טלפון בשיחה, הוואטסאפ נפתח ישר אצלו. אחרת בוחרים למי לשלוח.</div>
+      <p style="margin:10px 0 4px"><b>🌐 האתר שלנו</b></p>
+      <div class="btns" style="margin:0"><button class="btn" data-share="site" data-how="wa">💬 לשלוח בוואטסאפ</button><button class="btn ghost" data-share="site" data-how="copy">📋 להעתיק קישור</button></div>
+      <p style="margin:12px 0 4px"><b>🔒 הסכם סודיות</b> <span class="muted">הלקוח ממלא פרטים וחותם באצבע מהטלפון</span></p>
+      <div class="btns" style="margin:0"><button class="btn" data-share="nda" data-how="wa">💬 לשלוח בוואטסאפ</button><button class="btn ghost" data-share="nda" data-how="copy">📋 להעתיק קישור</button></div>
+      <div class="slot" id="ndaWarn" style="margin-top:10px" __NDA_HIDE__>לפני השליחה הראשונה: IT Solution צריכה לחתום על ההסכם פעם אחת, אחרת הלקוח לא יוכל לחתום. במוניטור: 💼 העסק שלי, 💻 IT Solution, 📄 מסמך סודיות, הכפתור האדום.</div>
+    </div>
     <p><b>מה להראות:</b> את האתר it-solution.co.il, ובו "עבודות נבחרות" ו"המוניטור". ספר רק על עבודות שאתה מכיר מקרוב, כדי שתוכל לענות על שאלה המשך.</p>
     <p class="muted">באתר כתוב גם ש MVP יכול לעלות תוך 4 שבועות, ושרוב הפרויקטים לוקחים 6 עד 12 שבועות. זה כללי. על הפרויקט של הלקוח לא מתחייבים לזמן בשיחה.</p>
   </div></details>
@@ -403,8 +412,25 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
     }
     if (b.dataset.ask) { ask(b.dataset.ask); return; }
     if (b.dataset.open) { openCall(b.dataset.open); return; }
+    if (b.dataset.share) { share(b.dataset.share, b.dataset.how, b); return; }
   });
 
+  var SHARE = {
+    site: { url: 'https://it-solution.co.il', text: 'זה האתר שלנו, יש בו עבודות שעשינו ואת המוניטור:' },
+    nda: { url: 'https://form.it-solution.co.il/n/41312ebcd181f07ac545', text: 'לפני שמשתפים אותנו בפרטי הפרויקט, זה הסכם הסודיות של IT Solution. ממלאים כמה פרטים וחותמים באצבע מהטלפון:' }
+  };
+  function copyText(t, b, label) {
+    function done() { b.textContent = '✓ הועתק'; setTimeout(function () { b.textContent = label; }, 1800); }
+    function fallback() { var ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) {} ta.remove(); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fallback); else fallback();
+  }
+  function share(k, how, b) {
+    var s = SHARE[k]; if (!s) return;
+    if (how === 'copy') { copyText(s.url, b, b.textContent); return; }
+    var p = String(call.a.phone || '').replace(/[^0-9]/g, '');
+    if (/^0[0-9]{8,9}$/.test(p)) p = '972' + p.slice(1);
+    window.open('https://wa.me/' + (/^[0-9]{11,15}$/.test(p) ? p : '') + '?text=' + encodeURIComponent(s.text + String.fromCharCode(10) + s.url), '_blank', 'noopener');
+  }
   function ask(q, op) {
     var item = { q: q, a: '', wait: true };
     call.asks.push(item); renderAsks();
