@@ -21154,7 +21154,6 @@ function bizSheet(t0){
    // the filter is for trial week signups (IT Solution's); a board with none has only the search
    h+='<div class="lbBar">'+(A.some(function(r){return r.source==='signup';})?'<div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל <i>'+LC.length+'</i></button><button type="button" data-bz="lbflt" data-f="other">📞 פניות <i>'+LC.filter(function(r){return r.source!=='signup';}).length+'</i></button><button type="button" data-bz="lbflt" data-f="signup">✅ נרשמו למוניטור <i>'+LC.filter(function(r){return r.source==='signup';}).length+'</i></button></div>':'')
     +'<input class="lbQ" type="search" placeholder="🔎 חיפוש לפי שם או טלפון" enterkeyhint="search"></div>';
-   h+='<div class="lbFlat"><div class="lbTh lbFh">🕒 כל הלידים, מהחדש לישן</div>'+A.map(row).join('')+'</div>';
    var N=A.filter(function(r){return lbKey(ldT(r.at)).slice(0,10)===todayK;});
    if(N.length){
     var rk=function(r){return r.source==='signup'?2:(lbStage(r)==='חדש'?0:1);};
@@ -21173,6 +21172,8 @@ function bizSheet(t0){
      +(sg?'<small class="lbSgHint">לא צריך לחזור אליהם מיד. שבוע אחרי ההרשמה כל אחד עולה לבד ל ⏰ היום.</small>':'')
      +(rs.length?LB_HD+rs.map(row).join(''):'<small class="lbEmpty">אין כאן לידים.</small>')+'</details>';
    });
+   // after the groups in the page, so every "first row of this lead" is still the group's; on a phone it is all that shows
+   h+='<div class="lbFlat"><div class="lbTh lbFh">🕒 כל הלידים, מהחדש לישן</div>'+A.map(row).join('')+'</div>';
    return h+LB_ASK+'</div>';
   }
   /*

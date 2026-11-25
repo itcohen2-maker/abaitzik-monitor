@@ -3366,7 +3366,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-25T05:29:38.863Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-25T05:30:03.210Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5895,7 +5895,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='707e43d0f7';
+var CODE_ID='384c2c1369';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","ownerLook":true,"uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[],"chatExamples":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -17019,7 +17019,6 @@ function bizSheet(t0){
    }
    h+='<div class="lbBar">'+(A.some(function(r){return r.source==='signup';})?'<div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל <i>'+LC.length+'</i></button><button type="button" data-bz="lbflt" data-f="other">📞 פניות <i>'+LC.filter(function(r){return r.source!=='signup';}).length+'</i></button><button type="button" data-bz="lbflt" data-f="signup">✅ נרשמו למוניטור <i>'+LC.filter(function(r){return r.source==='signup';}).length+'</i></button></div>':'')
     +'<input class="lbQ" type="search" placeholder="🔎 חיפוש לפי שם או טלפון" enterkeyhint="search"></div>';
-   h+='<div class="lbFlat"><div class="lbTh lbFh">🕒 כל הלידים, מהחדש לישן</div>'+A.map(row).join('')+'</div>';
    var N=A.filter(function(r){return lbKey(ldT(r.at)).slice(0,10)===todayK;});
    if(N.length){
     var rk=function(r){return r.source==='signup'?2:(lbStage(r)==='חדש'?0:1);};
@@ -17038,6 +17037,7 @@ function bizSheet(t0){
      +(sg?'<small class="lbSgHint">לא צריך לחזור אליהם מיד. שבוע אחרי ההרשמה כל אחד עולה לבד ל ⏰ היום.</small>':'')
      +(rs.length?LB_HD+rs.map(row).join(''):'<small class="lbEmpty">אין כאן לידים.</small>')+'</details>';
    });
+   h+='<div class="lbFlat"><div class="lbTh lbFh">🕒 כל הלידים, מהחדש לישן</div>'+A.map(row).join('')+'</div>';
    return h+LB_ASK+'</div>';
   }
   function lbWhen(kind,nowMs){
