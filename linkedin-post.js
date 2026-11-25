@@ -26,6 +26,8 @@ const TZ = 'Asia/Jerusalem';
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
 const rd = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } };
+// 25.11.2026, Itzik: standing approval until AUTO.until (data/linkedin/auto.json), no card and no push
+const AUTO = rd(path.join(DIR, 'auto.json'), {});
 const say = (s) => console.log(new Date().toISOString().slice(0, 16) + ' ' + s);
 function save(q) { if (DRY) return; fs.mkdirSync(DIR, { recursive: true }); fs.writeFileSync(QUEUE + '.tmp', JSON.stringify(q, null, 1)); fs.renameSync(QUEUE + '.tmp', QUEUE); }
 function notify(t, b) { if (DRY) return; try { execFileSync('node', [path.join(HERE, 'notify.js'), t, b || ''], { stdio: 'ignore', timeout: 60000 }); } catch (e) {} }
@@ -49,6 +51,20 @@ function card(it) {
     preview: it.text,
     why: 'פוסט בפרופיל שלך בלינקדין. אחרי "אשר" הוא עולה לבד בזמן שכתוב. "ערוך" מעלה את הנוסח שלך במקומו. "לא עכשיו" לא מעלה כלום.' }, null, 1));
   return true;
+}
+
+// a card for a post approved in advance is closed, so it leaves the open lines and the strip
+function closeCard(it) {
+  if (DRY) return;
+  for (const n of fs.readdirSync(CHOICES)) {
+    if (n.indexOf('linkedin-' + it.id) !== 0) continue;
+    const f = path.join(CHOICES, n);
+    const c = rd(f, null);
+    if (!c || c.answer) continue;
+    c.answer = 'אושר מראש (איציק 25.11)';
+    c.answeredAt = new Date().toISOString();
+    fs.writeFileSync(f, JSON.stringify(c, null, 1));
+  }
 }
 
 // his answer from the strip, found by the id in brackets
@@ -113,7 +129,11 @@ function mirror(q, now) {
     // 15.11.2026, Itzik: "בפוסטים של הלינקדין, אל תרשום יותר ותדבר על שחר, אני כרגע לא מפתח את זה".
     // A post that names Shachar never goes out, even if approved; it leaves the queue with a reason.
     if (/שחר/.test((it.editedText || '') + ' ' + (it.text || ''))) { it.failed = 'שחר בהשהיה (איציק 15.11), לא עולה'; changed = true; say(it.id + ': נעצר, מזכיר את שחר'); notify('לינקדין: פוסט נעצר', 'הוא מזכיר את שחר: ' + firstLine(it.editedText || it.text).slice(0, 60)); continue; }
-    if (card(it)) cards++;
+    // 25.11.2026: a standing approval up to AUTO.until, no card and no push
+    if (!it.approved && !it.later && AUTO.until && it.date <= AUTO.until) {
+      it.approved = now.toISOString(); it.auto = AUTO.re || true; changed = true;
+      say(it.id + ': אושר מראש'); closeCard(it);
+    } else if (card(it)) cards++;
     if (!it.approved) {
       const a = answer(it);
       if (a && a.kind === 'ok') { it.approved = a.at || now.toISOString(); if (a.edited) it.editedText = a.edited; changed = true; say(it.id + ': אושר' + (a.edited ? ' עם תיקון' : '')); }
