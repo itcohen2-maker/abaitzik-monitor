@@ -576,6 +576,8 @@ function saveSiteLead(text, at, own) {
   const id = 'biz-' + at.replace(/\D/g, '').slice(0, 14) + '-site';
   const r = require('./lib/biz.js').leadFromSite(text, at, id);
   if (!r) return;
+  // 25.11.2026, Itzik: a lead from abroad is phishing, never on the list (lib/foreign-phone.js)
+  if (require('./lib/foreign-phone.js').isForeign(r.phone)) { require('./lib/foreign-phone.js').note(inst.dataPath, 'site', r.phone); say('ליד מחוץ לארץ לא נכנס'); return; }
   const lab = siteLeadLabel(text);
   if (lab) { r.source = 'aff'; r.note = lab + '\n' + r.note; r.next = 'לחזור אליו, על המוניטור'; }
   const dir = path.join(inst.dataPath, 'biz', 'biz');
