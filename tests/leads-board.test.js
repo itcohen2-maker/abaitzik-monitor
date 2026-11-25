@@ -104,7 +104,7 @@ test('board: the site is a safe link, a bad site is never a link', () => {
 
 test('board: the DOM hooks of Task 4 are there on every row', () => {
   const h = itzik(L).board();
-  const rows = h.split('<details class="lbRow ldRow').slice(1);
+  const rows = h.split('<div class="lbFlat">')[0].split('<details class="lbRow ldRow').slice(1);
   assert.equal(rows.length, 5 + 2, 'every lead in its group, and the two due ones again in ⏰ היום');
   rows.forEach((r) => {
     assert.ok(/^[^>]*data-id="biz-[0-9]"[^>]*data-n="[^"]+"/.test(r), 'data-id and data-n');
@@ -138,7 +138,7 @@ test('board: zero leads opens with the card and ➕ להוסיף ליד, 300 lea
   const many = [];
   for (let i = 0; i < 300; i++) many.push({ id: 'biz-' + i, kind: 'lead', name: 'ליד ' + i, status: ORDER[i % 6] || 'zz', at: '2026-11-1' + (i % 9) + 'T08:00:00.000Z', nextAt: i % 3 ? '' : '2020-01-01' });
   const h = itzik(many).board();
-  assert.equal(h.split('<details class="lbRow ldRow').length - 1, 300 + 100 - many.filter((r, i) => i % 3 === 0 && (r.status === 'נסגר' || r.status === 'אבד')).length);
+  assert.equal(h.split('<div class="lbFlat">')[0].split('<details class="lbRow ldRow').length - 1, 300 + 100 - many.filter((r, i) => i % 3 === 0 && (r.status === 'נסגר' || r.status === 'אבד')).length);
 });
 
 /*
@@ -161,7 +161,7 @@ test('board: a customer copy has the board, and the old table is gone from both 
   assert.equal(B.table, null);
   const h = B.board();
   assert.equal(h.split('<details class="lbGrp').length - 1, 6, 'five groups and נרשמו (L has a signup) in a customer copy');
-  assert.equal(h.split('<details class="lbRow ldRow').length - 1, 5 + 2);
+  assert.equal(h.split('<div class="lbFlat">')[0].split('<details class="lbRow ldRow').length - 1, 5 + 2);
 });
 
 test('board: what is his stays out of a customer copy', () => {
@@ -339,11 +339,12 @@ function mount(recs, over, who) {
   assert.equal(typeof B.lbTap, 'function', 'lbTap is in the copy');
   const root = new El('div'); root.innerHTML = B.board();
   const tap = (n) => { assert.ok(n, 'there is something to tap'); const ev = { target: n, prevented: false, preventDefault() { this.prevented = true; } }; ev.handled = B.lbTap(ev, root); return ev; };
-  const rows = (id) => root.querySelectorAll('.lbRow').filter((r) => r.getAttribute('data-id') === id);
+  const inFlat = (r) => r.parentNode.classList.contains('lbFlat'); // 25.11: the phone's flat list is a copy of every row
+  const rows = (id) => root.querySelectorAll('.lbRow').filter((r) => !inFlat(r) && r.getAttribute('data-id') === id);
   const grp = (g) => root.querySelector('.lbGrp[data-g="' + g + '"]');
   const gcount = (g) => grp(g).querySelector('.lbGh small').textContent;
   const today = () => root.querySelector('.lbToday');
-  const shown = () => root.querySelectorAll('.lbRow').filter((r) => !r.classList.contains('lbHide')).map((r) => r.getAttribute('data-id'));
+  const shown = () => root.querySelectorAll('.lbRow').filter((r) => !inFlat(r) && !r.classList.contains('lbHide')).map((r) => r.getAttribute('data-id'));
   return { B, E, root, tap, rows, grp, gcount, today, shown, recs };
 }
 const inGrp = (M, id) => { const r = M.rows(id).find((x) => x.parentNode.classList.contains('lbGrp')); return r && r.parentNode.getAttribute('data-g'); };
@@ -800,4 +801,16 @@ test('board 22.11: a delete fixes the tab counts and the red pill', () => {
   assert.equal(M.root.querySelector('.lbCallPill').textContent, '📞 2 לחזור אליהם');
   assert.equal(M.root.querySelector('.lbFlt [data-f="other"] i').textContent, '3');
   assert.equal(M.root.querySelector('.lbFlt [data-f="all"] i').textContent, '5');
+});
+
+test('board: a phone gets one flat list, newest first, with when each came in (25.11)', () => {
+  const h = itzik(L).board();
+  const flat = h.split('<div class="lbFlat">')[1];
+  assert.ok(flat, 'the flat list is there');
+  const ats = [...flat.matchAll(/data-at="([^"]*)"/g)].map((m) => Date.parse(m[1])).filter((n) => n);
+  assert.ok(ats.length >= 5, 'every lead is in it');
+  assert.deepEqual(ats.slice(), ats.slice().sort((a, b) => b - a), 'from the newest to the oldest');
+  assert.ok(/class="lbWhen">[^<]+</.test(flat), 'each row says when it came in');
+  assert.ok(h.includes('@container (max-width:639.98px){
+ .lbNow,.lbToday,.lbGrp{display:none}'), 'on a phone the groups hide');
 });
