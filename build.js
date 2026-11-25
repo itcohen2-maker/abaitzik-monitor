@@ -374,6 +374,8 @@ function slim(html) {
 }
 
 const gate = require('./gate.js');
+// 25.11.2026: the call sheet for new leads (lib/call-kit.js). Its token stays in data/ (gitignored) and reaches only the gated page.
+const CALLKIT_URL = (function () { try { const t = require('fs').readFileSync(require('path').join(__dirname, 'data', 'call-kit', 'token.txt'), 'utf8').trim(); return /^[a-f0-9]{20}$/.test(t) ? 'https://form.it-solution.co.il/k/' + t : ''; } catch (e) { return ''; } })();
 const lolosShare = require('./lib/lolos-share.js');
 let RIVSHARE = '';
 
@@ -5396,6 +5398,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <!-- 21.11.2026, Itzik: "שים לי אייקון במוניטור, מחירון". The price list of the two products, his eyes only. -->
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icPrices" data-new="1"><span class="c c-its">💰</span>מחירון</button>' : ''}
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icCampForm" data-new="1"><span class="c c-its">📣</span>טופס קמפיין</button>' : ''}
+  ${inst.name === 'abaitzik' && CALLKIT_URL ? '<button type="button" class="ic icNew" data-grp="work" id="icCallKit" data-new="1"><span class="c c-its">📞</span>שיחה עם לקוח</button>' : ''}
   <!-- 19.11.2026, Itzik: "תעשה לי אייקון במוניטור, תרשום עליו קמפיין ותיתן לי אופציה לשתף אותו" (round, not a tile). Opens campShare():
        the page of every active ad per campaign plus the videos waiting to replace them, built by /root/campaign-page.js. -->
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icCamp" data-new="1"><span class="c c-camp">📣</span>קמפיין</button>' : ''}
@@ -19732,6 +19735,7 @@ function boardMore(){
 on('icSignup',function(){signupShare();});
 on('icPrices',function(){window.open('https://form.it-solution.co.il/p/e9e946f35a0bea1868a5.html','_blank','noopener');});
 on('icCampForm',function(){window.open('https://form.it-solution.co.il/p/5100c3b8e29eea71ebb2.html','_blank','noopener');});
+${CALLKIT_URL ? "on('icCallKit',function(){window.open('" + CALLKIT_URL + "','_blank','noopener');});" : ''}
 // 19.11.2026: the campaign page (form.it-solution.co.il/p/..., private link), to open or to share.
 var CAMP_URL='https://form.it-solution.co.il/p/c851a7a3231353fa6107.html';
 function campShare(){

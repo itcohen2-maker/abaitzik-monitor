@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>שיחה עם לקוח</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#16181d;--mute:#667085;--line:#e4e7ec;--acc:#2f6bff;--acc2:#e8efff;--ok:#12805c;--warn:#b54708;--warnbg:#fff4e5;--chip:#f2f4f7}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#181b21;--ink:#eef0f3;--mute:#98a2b3;--line:#2a2f38;--acc:#6b95ff;--acc2:#1c2640;--ok:#4cc38a;--warn:#f5a524;--warnbg:#2d2111;--chip:#222730}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Heebo,system-ui,sans-serif;font-size:16px;line-height:1.5}
+body{padding-bottom:150px}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 16px 0;border-bottom:1px solid var(--line)}
+h1{font-size:19px;margin:0 0 8px;font-weight:800}
+.tabs{display:flex;gap:4px}
+.tab{flex:1;border:0;background:none;color:var(--mute);font:inherit;font-weight:700;padding:10px 4px;border-bottom:3px solid transparent;cursor:pointer}
+.tab.on{color:var(--acc);border-color:var(--acc)}
+main{max-width:720px;margin:0 auto;padding:12px 16px}
+.view{display:none}.view.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 0 12px}
+.card h2{font-size:17px;margin:0 0 4px;font-weight:800}
+.say{background:var(--acc2);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:15px}
+.say b{color:var(--acc)}
+.q{padding:10px 0;border-top:1px solid var(--line)}
+.q:first-of-type{border-top:0}
+.qt{font-weight:700;display:flex;gap:8px;align-items:flex-start}
+.qt span{flex:1}
+.why{color:var(--mute);font-size:13.5px;margin:2px 0 6px}
+.flag{border:1px solid var(--line);background:var(--card);color:var(--mute);border-radius:8px;font:inherit;font-size:13px;padding:2px 8px;cursor:pointer;white-space:nowrap}
+.flag.on{background:var(--warnbg);color:var(--warn);border-color:var(--warn)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chip{border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:14px;cursor:pointer}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+textarea,input[type=text],input[type=tel]{width:100%;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;padding:9px 11px;resize:vertical}
+textarea{min-height:44px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{border:0;border-radius:10px;background:var(--acc);color:#fff;font:inherit;font-weight:700;padding:10px 14px;cursor:pointer}
+.btn.ghost{background:var(--chip);color:var(--ink)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.muted{color:var(--mute);font-size:13.5px}
+.status{font-size:12.5px;color:var(--mute);margin-inline-start:auto}
+.open li{margin:4px 0}
+.out{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px}
+details{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:0 0 10px;padding:0 14px}
+summary{font-weight:800;padding:12px 0;cursor:pointer;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"＋";float:left;color:var(--mute)}
+details[open] summary::after{content:"－"}
+details>div{padding:0 0 12px}
+dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink)}
+.slot{border:2px dashed var(--warn);background:var(--warnbg);border-radius:10px;padding:10px 12px;color:var(--warn)}
+.call{display:block;width:100%;text-align:right;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:12px;margin:0 0 8px;font:inherit;cursor:pointer}
+.call b{display:block}
+#ai{position:fixed;bottom:0;left:0;right:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px rgba(0,0,0,.08)}
+#ai .in{display:flex;gap:6px;max-width:720px;margin:0 auto}
+#ai input{flex:1}
+#ai .quick{display:flex;gap:6px;max-width:720px;margin:0 auto 6px;overflow-x:auto}
+#ai .quick .chip{white-space:nowrap}
+#ans{max-width:720px;margin:0 auto;max-height:42vh;overflow-y:auto}
+.a{background:var(--acc2);border-radius:12px;padding:10px 12px;margin:0 0 6px;white-space:pre-wrap;font-size:15px}
+.a .qq{color:var(--mute);font-size:13px;margin-bottom:4px}
+.a .add{margin-top:6px}
+.wait{opacity:.7}
+.x{float:left;border:0;background:none;color:var(--mute);font-size:18px;cursor:pointer}
+</style>
+</head>
+<body>
+<header>
+  <h1>📞 שיחה עם לקוח</h1>
+  <div class="tabs">
+    <button class="tab on" data-v="call">השיחה</button>
+    <button class="tab" data-v="learn">ללמוד</button>
+    <button class="tab" data-v="calls">שיחות שמורות</button>
+  </div>
+</header>
+<main>
+
+<section class="view on" id="v-call">
+  <div class="card">
+    <div class="btns" style="margin:0;align-items:center">
+      <button class="btn ghost" id="newCall">שיחה חדשה</button>
+      <span class="status" id="saved"></span>
+    </div>
+    <div class="say"><b>פתיחה:</b> היי, כאן איציק מ IT Solution. ראיתי שכתבת לנו על הפרויקט. יש לך עשר דקות? אני רוצה להבין מה בנית ואיפה זה נתקע, ואז נדע איך אפשר לעזור.</div>
+    <div class="muted">לוחצים על התשובות המוכנות או כותבים. כשלא יודעים מה לענות, לוחצים "לא יודע" ליד השאלה, והיא נכנסת לרשימה הפתוחה למטה.</div>
+  </div>
+  <div id="form"></div>
+  <div class="card">
+    <h2>שאלות פתוחות</h2>
+    <div class="muted">מה שלא ידעת לענות. תגיד ללקוח: "שאלה טובה, אני רושם אותה ובודק עם הצוות הטכני שלנו, ואחזור אליך עם תשובה מדויקת."</div>
+    <ul class="open" id="openList"></ul>
+    <textarea id="openFree" placeholder="עוד שאלה פתוחה, שורה לכל שאלה"></textarea>
+  </div>
+  <div class="card">
+    <div class="say"><b>סגירה:</b> תודה, עכשיו יש לי תמונה. אני עובר על זה עם הצוות הטכני, ואחזור אליך עם תשובות ועם הצעה מסודרת. אם יש לך צילום מסך של השגיאה או קישור לאפליקציה, תשלח לי בוואטסאפ.</div>
+    <div class="btns">
+      <button class="btn" id="sumBtn">📝 סכם לי את השיחה</button>
+      <button class="btn ghost" id="copyBtn">📋 העתק סיכום</button>
+    </div>
+    <div class="out" id="sumOut" hidden></div>
+  </div>
+</section>
+
+<section class="view" id="v-learn">
+  <details open><summary>בשתי דקות: מה קורה ללקוחות האלה</summary><div>
+    <p>יש היום כלים כמו Lovable ו Base44 שבונים אתר או אפליקציה מתוך צ׳אט. כותבים "תבנה לי מערכת תורים" ותוך שעה יש משהו יפה שעובד.</p>
+    <p>הבעיה מתחילה כשרוצים שזה יעבוד באמת: משתמשים אמיתיים, התחברות, תשלומים, נתונים שנשמרים, מהירות. שם הסוכן מתחיל לתקן דבר אחד ולשבור אחר, כל ניסיון עולה קרדיטים, והלקוח מוצא את עצמו אחרי שבועות עם דמו יפה שלא מוכן לעולם.</p>
+    <p>מה שהוא צריך מאיתנו: מישהו שמבין מה יש בפנים, מחליט אם לתקן או לבנות מחדש את החלק השבור, ומביא את זה לאוויר. אתה לא צריך לדעת לתקן. אתה צריך להבין מה הוא בנה, איפה נתקע ומה הוא רוצה. בשביל זה השאלון.</p>
+  </div></details>
+
+  <details><summary>המילון: מילים שהלקוח יגיד</summary><div><dl>
+    <dt>Lovable</dt><dd>כלי שבונה אתרים ואפליקציות ווב מצ׳אט. היתרון: הקוד שלו רגיל ואפשר להוציא אותו (דרך GitHub) ולהמשיך איתו בכל מקום.</dd>
+    <dt>Base44</dt><dd>כלי דומה, אבל הכל יושב אצלם: השרת, הנתונים וההתחברות. קשה יותר להוציא משם, ולפעמים צריך לבנות מחדש את החלק שמאחורי הקלעים.</dd>
+    <dt>Bolt, Replit, v0</dt><dd>עוד כלים מאותה משפחה. Cursor ו Claude Code הם כלים של מתכנתים.</dd>
+    <dt>קרדיטים</dt><dd>היחידות שמשלמים עליהן בכלי. כל בקשה לסוכן עולה קרדיטים. "שרפתי קרדיטים" אומר שהוא ניסה לתקן הרבה פעמים ולא הצליח.</dd>
+    <dt>פרונט (חזית)</dt><dd>מה שרואים: המסכים, הכפתורים, העיצוב.</dd>
+    <dt>בקאנד (צד שרת)</dt><dd>מה שקורה מאחורי הקלעים: שמירת נתונים, חישובים, שליחת מיילים, חיבור לתשלום.</dd>
+    <dt>מסד נתונים, Supabase</dt><dd>המקום שבו נשמרים המשתמשים, ההזמנות, כל המידע. Supabase הוא השירות ש Lovable מחבר בדרך כלל.</dd>
+    <dt>התחברות, Auth</dt><dd>הרשמה, כניסה, שכחתי סיסמה, כניסה עם גוגל. אחד המקומות שהכי הרבה נתקעים בהם.</dd>
+    <dt>הרשאות, RLS</dt><dd>מי רשאי לראות ולשנות כל דבר במסד הנתונים. כשזה מוגדר לא נכון, הנתונים "נעלמים" או שמופיעה שגיאה 403.</dd>
+    <dt>API</dt><dd>הדרך שבה מערכת אחת מדברת עם מערכת אחרת. "לחבר ל API של..." אומר לחבר לשירות חיצוני.</dd>
+    <dt>GitHub</dt><dd>המקום שבו שומרים את הקוד. אם הפרויקט מחובר ל GitHub, יש לו עותק של הקוד, וזה חדשות טובות.</dd>
+    <dt>דומיין, אחסון</dt><dd>דומיין הוא הכתובת (www.שם.co.il). אחסון הוא איפה האתר רץ, למשל Vercel או Netlify.</dd>
+    <dt>תשלומים, סליקה</dt><dd>Stripe הוא הנפוץ בעולם, אבל לעסק ישראלי בדרך כלל צריך סליקה ישראלית (משולם, טרנזילה, קארדקום ודומיהם).</dd>
+    <dt>אפליקציה לחנויות</dt><dd>אפליקציה באפ סטור ובגוגל פליי. הכלים האלה בונים אתר, לא אפליקציה לחנויות. זה פרויקט נפרד.</dd>
+    <dt>לולאת תיקונים</dt><dd>הסוכן מתקן באג אחד ושובר משהו אחר, שוב ושוב. הסימן הכי נפוץ שצריך יד של מהנדס.</dd>
+    <dt>MVP</dt><dd>גרסה ראשונה קטנה שעובדת, רק עם מה שחייבים כדי להתחיל.</dd>
+  </dl></div></details>
+
+  <details><summary>למה הם נתקעים</summary><div>
+    <p>1. הסוכן נכנס ללולאת תיקונים ושורף קרדיטים.</p>
+    <p>2. ביקשו הרבה שינויים בבקשה אחת, והכל התערבב.</p>
+    <p>3. התחברות והרשאות: משתמשים לא נכנסים, או רואים נתונים של אחרים, או לא רואים כלום.</p>
+    <p>4. תשלומים וחיבור לשירותים חיצוניים.</p>
+    <p>5. המעבר מדמו יפה למוצר עם משתמשים אמיתיים.</p>
+    <p>6. רוצים אפליקציה לחנויות, והכלי בונה רק אתר.</p>
+    <p>7. העלאה לאוויר עם דומיין, ומהירות.</p>
+  </div></details>
+
+  <details><summary>שאלות שהלקוח שואל, ומה עונים</summary><div><dl>
+    <dt>"השירות בתשלום?"</dt><dd>"כן. השיחה הזאת בלי עלות. אחרי שנבין מה צריך, תקבל הצעת מחיר מסודרת לפני שמתחילים משהו."</dd>
+    <dt>"כמה זה עולה?"</dt><dd>"אני לא רוצה לנחש לך מספר. המחיר תלוי במה שנמצא בפנים. אחרי שנראה את הפרויקט תקבל הצעה מסודרת."</dd>
+    <dt>"כמה זמן זה ייקח?"</dt><dd>"גם את זה נדע אחרי שנראה את הפרויקט. ספר לי אם יש לך תאריך שאתה חייב לעמוד בו."</dd>
+    <dt>"אפשר להמשיך לעבוד בלאבבל אחרי זה?"</dt><dd>"אני רושם את זה. זה תלוי במה שנתקן, ואחזור אליך עם תשובה מדויקת."</dd>
+    <dt>"הקוד שלי? אני לא אאבד את מה שבניתי?"</dt><dd>"המטרה היא להציל את מה שבנית, לא לזרוק. כדי לדעת בדיוק, צריך לראות את הפרויקט."</dd>
+    <dt>"אתם מתכנתים אמיתיים או גם עם AI?"</dt><dd>"יש לנו צוות טכני עם מהנדס ראשי, שעובד עם הכלים האלה ויודע מה קורה בתוכם."</dd>
+    <dt>כל שאלה טכנית אחרת</dt><dd>"שאלה טובה, אני רושם אותה ובודק עם הצוות הטכני שלנו, ואחזור אליך עם תשובה מדויקת." ולוחצים "לא יודע".</dd>
+  </dl></div></details>
+
+  <details><summary>מחיר: מה קובע אותו</summary><div>
+    <p>בשיחה לא נותנים מחיר. אוספים את מה שקובע אותו, והשאלון כבר שואל על כל אחד:</p>
+    <p>1. כמה מסכים ופעולות יש בפרויקט.</p>
+    <p>2. מצב מה שנבנה: אפשר לתקן, או שצריך לבנות מחדש חלק.</p>
+    <p>3. חיבורים: תשלומים, מייל, וואטסאפ, מערכות אחרות.</p>
+    <p>4. נתונים קיימים שצריך להעביר.</p>
+    <p>5. דדליין.</p>
+    <p>6. מי ממשיך לתחזק אחרי שזה עולה.</p>
+    <div class="slot">טווחי המחיר שלך: עוד לא נקבעו. כשתחליט, הם ייכנסו לכאן ולעוזר.</div>
+  </div></details>
+
+  <details><summary>משפטים שמחזיקים שיחה</summary><div>
+    <p>"ספר לי במילים שלך מה המוצר עושה, כאילו אני לקוח שלך."</p>
+    <p>"מה הדבר האחרון שעבד, לפני שזה נתקע?"</p>
+    <p>"אם זה היה עובד מחר בבוקר, מה היית עושה איתו?"</p>
+    <p>"אני לא רוצה לנחש לך. אני רושם ובודק."</p>
+    <p>"יש לך צילום מסך של השגיאה? תשלח לי בוואטסאפ."</p>
+  </div></details>
+</section>
+
+<section class="view" id="v-calls">
+  <div class="muted" style="margin-bottom:8px">כל שיחה נשמרת לבד תוך כדי. לוחצים כדי לפתוח.</div>
+  <div id="callList"></div>
+</section>
+</main>
+
+<div id="ai">
+  <div id="ans"></div>
+  <div class="quick">
+    <button class="chip" id="nextBtn">🤖 מה עוד לשאול?</button>
+    <button class="chip" data-ask="הלקוח שאל אם השירות בתשלום, מה אני עונה?">בתשלום?</button>
+    <button class="chip" data-ask="הלקוח שאל כמה זה יעלה, מה אני עונה?">כמה זה עולה?</button>
+    <button class="chip" data-ask="תסביר לי במילים פשוטות מה הבעיה שהלקוח תיאר עד עכשיו">מה הבעיה שלו?</button>
+  </div>
+  <form class="in" id="askForm">
+    <input type="text" id="askIn" placeholder="שאל את העוזר תוך כדי שיחה" autocomplete="off" enterkeyhint="send">
+    <button class="btn" type="submit">שאל</button>
+  </form>
+</div>
+
+<script>
+(function () {
+  var TOK = '__TOK__';
+  var SECTIONS = [
+    { t: 'הלקוח', qs: [
+      { k: 'name', q: 'איך קוראים לך?', type: 'text', half: 1 },
+      { k: 'phone', q: 'טלפון', type: 'tel', half: 1 },
+      { k: 'src', q: 'מאיפה הגעת אלינו?', chips: ['מודעה: שרפתי קרדיטים', 'מודעה: תקוע בלאבבל', 'מודעה: האתר יפה אבל', 'מודעה: עובד 12 שעות', 'המלצה', 'אחר'] },
+      { k: 'biz', q: 'מה אתה עושה? יש לך עסק?', why: 'כדי להבין אם המוצר הוא בשביל העסק שלו, או שהמוצר הוא העסק.' }
+    ]},
+    { t: 'המוצר', qs: [
+      { k: 'what', q: 'ספר לי במילים שלך מה המוצר עושה', why: 'תן לו לדבר. רושמים במשפט אחד.' },
+      { k: 'who', q: 'למי הוא מיועד? מי ישתמש בו?' },
+      { k: 'users', q: 'יש כבר משתמשים?', chips: ['עוד אין', 'אני ועוד כמה שבודקים', 'יש משתמשים אמיתיים', 'יש לקוחות משלמים'] },
+      { k: 'size', q: 'כמה מסכים או חלקים יש בערך?', why: 'משפיע על המחיר.', chips: ['עמוד אחד', 'עד 5 מסכים', '5 עד 15', 'יותר מ 15', 'לא יודע'] }
+    ]},
+    { t: 'איפה זה נבנה', qs: [
+      { k: 'tool', q: 'באיזה כלי בנית?', chips: ['Lovable', 'Base44', 'Bolt', 'Replit', 'v0', 'Cursor', 'מתכנת בנה', 'אחר'] },
+      { k: 'time', q: 'כמה זמן אתה עובד על זה?', chips: ['ימים', 'שבועות', 'חודשים'] },
+      { k: 'spent', q: 'כמה כסף או קרדיטים הלך עד עכשיו?', why: 'מראה כמה זה כואב לו. לא שופטים.' },
+      { k: 'github', q: 'הפרויקט מחובר ל GitHub?', why: 'אם כן, יש לו עותק של הקוד. חדשות טובות.', chips: ['כן', 'לא', 'לא יודע מה זה'] },
+      { k: 'db', q: 'איפה נשמרים הנתונים?', chips: ['Supabase', 'Lovable Cloud', 'אצל Base44', 'Firebase', 'לא יודע'] },
+      { k: 'live', q: 'זה כבר באוויר עם כתובת?', chips: ['כן, עם דומיין משלי', 'כן, בכתובת של הכלי', 'עוד לא'] },
+      { k: 'link', q: 'אפשר לקבל קישור לראות?', type: 'text' }
+    ]},
+    { t: 'איפה נתקע', qs: [
+      { k: 'stuck', q: 'איפה זה נתקע?', chips: ['הסוכן מתקן ושובר', 'התחברות והרשמה', 'תשלומים', 'נתונים לא נשמרים', 'חיבור לשירות חיצוני', 'איטי', 'אפליקציה לחנויות', 'העלאה לאוויר ודומיין', 'עיצוב', 'הקרדיטים נגמרו'] },
+      { k: 'what_happens', q: 'מה בדיוק קורה כשזה נתקע?', why: 'מבקשים צילום מסך של השגיאה בוואטסאפ.' },
+      { k: 'tried', q: 'מה כבר ניסית?' },
+      { k: 'works', q: 'מה כן עובד היום?' }
+    ]},
+    { t: 'מה הוא רוצה', qs: [
+      { k: 'done', q: 'מה צריך לעבוד כדי שתגיד "זה מוכן"?', why: 'השאלה הכי חשובה בשיחה. ממנה יוצאת ההצעה.' },
+      { k: 'integrations', q: 'צריך חיבור למשהו?', why: 'משפיע על המחיר.', chips: ['תשלומים', 'מייל', 'וואטסאפ', 'יומן', 'הנהלת חשבונות', 'מערכת קיימת', 'כלום'] },
+      { k: 'data', q: 'יש נתונים קיימים שצריך להעביר?', chips: ['לא', 'קצת', 'הרבה'] },
+      { k: 'mode', q: 'איך אתה רוצה שנעבוד?', chips: ['שתתקנו ואמשיך לבד', 'שתבנו את הכל', 'ליווי, שאלמד', 'עוד לא יודע'] },
+      { k: 'deadline', q: 'יש תאריך שאתה חייב לעמוד בו?', type: 'text' },
+      { k: 'maint', q: 'מי מתחזק אחרי שזה עולה?', chips: ['אני', 'אתם', 'לא חשבתי על זה'] }
+    ]},
+    { t: 'תקציב והחלטה', qs: [
+      { k: 'budget', q: 'יש לך תקציב בראש?', why: 'אם הוא שואל אותך כמה, עונים: "המחיר תלוי במה שנמצא בפנים, תקבל הצעה מסודרת."', chips: ['עד 1,000 ₪', '1,000 עד 5,000', '5,000 עד 15,000', 'מעל 15,000', 'לא אמר'] },
+      { k: 'decider', q: 'אתה מחליט לבד, או שיש עוד מישהו?', chips: ['לבד', 'עם שותף', 'עם משקיע'] },
+      { k: 'next', q: 'הצעד הבא', chips: ['ישלח קישור וצילומי מסך', 'ייתן גישה לפרויקט', 'מחכה להצעה', 'יחשוב ויחזור'] },
+      { k: 'notes', q: 'עוד משהו שחשוב לזכור' }
+    ]}
+  ];
+
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  function newId() { var d = new Date(); return 'c' + d.getFullYear() + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2) + '-' + Math.random().toString(36).slice(2, 8); }
+  function blank() { return { id: newId(), a: {}, open: [], openFree: '', asks: [], summary: '' }; }
+
+  var call = blank();
+  try { var c0 = JSON.parse(ls('ck-call') || 'null'); if (c0 && c0.id) call = c0; } catch (e) {}
+
+  function api(o) {
+    o.tok = TOK;
+    return fetch('/api/callkit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(o) })
+      .then(function (r) { return r.json().catch(function () { return { ok: false }; }); });
+  }
+
+  // the form
+  function render() {
+    var h = '';
+    SECTIONS.forEach(function (sec) {
+      h += '<div class="card"><h2>' + esc(sec.t) + '</h2>';
+      var halves = sec.qs.filter(function (q) { return q.half; });
+      if (halves.length) {
+        h += '<div class="q"><div class="row2">' + halves.map(function (q) {
+          return '<div><div class="qt"><span>' + esc(q.q) + '</span></div><input type="' + (q.type || 'text') + '" data-k="' + q.k + '" value="' + esc(call.a[q.k] || '') + '"></div>';
+        }).join('') + '</div></div>';
+      }
+      sec.qs.filter(function (q) { return !q.half; }).forEach(function (q) {
+        var isOpen = call.open.indexOf(q.q) > -1;
+        h += '<div class="q"><div class="qt"><span>' + esc(q.q) + '</span><button class="flag' + (isOpen ? ' on' : '') + '" data-flag="' + esc(q.q) + '">' + (isOpen ? '❓ ברשימה' : 'לא יודע') + '</button></div>';
+        if (q.why) h += '<div class="why">' + esc(q.why) + '</div>';
+        if (q.chips) {
+          var sel = [].concat(call.a[q.k + '_c'] || []);
+          h += '<div class="chips">' + q.chips.map(function (c) { return '<button class="chip' + (sel.indexOf(c) > -1 ? ' on' : '') + '" data-ck="' + q.k + '" data-c="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div>';
+        }
+        if (q.type === 'text' || q.type === 'tel') h += '<input type="' + q.type + '" data-k="' + q.k + '" value="' + esc(call.a[q.k] || '') + '">';
+        else h += '<textarea rows="1" data-k="' + q.k + '" placeholder="' + (q.chips ? 'פרטים' : 'מה הוא אמר') + '">' + esc(call.a[q.k] || '') + '</textarea>';
+        h += '</div>';
+      });
+      h += '</div>';
+    });
+    $('#form').innerHTML = h;
+    renderOpen();
+    $('#openFree').value = call.openFree || '';
+    renderAsks();
+    var so = $('#sumOut'); if (call.summary) { so.hidden = false; so.textContent = call.summary; } else { so.hidden = true; so.textContent = ''; }
+  }
+  function renderOpen() {
+    $('#openList').innerHTML = call.open.length ? call.open.map(function (t, i) { return '<li>' + esc(t) + ' <button class="x" data-del="' + i + '" aria-label="הסר">×</button></li>'; }).join('') : '<li class="muted">עוד אין.</li>';
+  }
+  function renderAsks() {
+    $('#ans').innerHTML = call.asks.slice(-4).map(function (x, i, arr) {
+      var idx = call.asks.length - arr.length + i;
+      return '<div class="a' + (x.wait ? ' wait' : '') + '"><button class="x" data-hide="' + idx + '" aria-label="סגור">×</button><div class="qq">' + esc(x.q) + '</div>' + esc(x.a || 'חושב...')
+        + (x.a && !x.wait && x.q.indexOf('מה עוד לשאול') !== 0 ? '<div class="add"><button class="chip" data-addq="' + idx + '">➕ לשאלות הפתוחות</button></div>' : '') + '</div>';
+    }).filter(function (s, i, arr) { return !call.asks[call.asks.length - arr.length + i].hidden; }).join('');
+    var a = $('#ans'); a.scrollTop = a.scrollHeight;
+  }
+
+  // the notes the assistant sees
+  function notes() {
+    var out = [];
+    SECTIONS.forEach(function (sec) {
+      sec.qs.forEach(function (q) {
+        var c = [].concat(call.a[q.k + '_c'] || []).join(', ');
+        var t = (call.a[q.k] || '').trim();
+        var v = [c, t].filter(Boolean).join('. ');
+        if (v) out.push(q.q + ' ' + v);
+      });
+    });
+    var op = call.open.concat((call.openFree || '').split('\n').filter(function (s) { return s.trim(); }));
+    if (op.length) out.push('שאלות פתוחות: ' + op.join('; '));
+    return out.join('\n');
+  }
+
+  // saving: on the phone at once, on the server after a short pause
+  var timer = null;
+  function touch() {
+    ls('ck-call', JSON.stringify(call));
+    $('#saved').textContent = 'שומר...';
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      var c = JSON.parse(JSON.stringify(call)); c.asks = c.asks.filter(function (x) { return !x.wait; }).slice(-20);
+      api({ op: 'save', id: call.id, call: c }).then(function (r) {
+        $('#saved').textContent = r.ok ? 'נשמר ✓' : 'לא נשמר בשרת, נשמר בטלפון';
+      }, function () { $('#saved').textContent = 'אין רשת, נשמר בטלפון'; });
+    }, 1500);
+  }
+
+  document.addEventListener('input', function (e) {
+    var k = e.target.getAttribute && e.target.getAttribute('data-k');
+    if (k) { call.a[k] = e.target.value; touch(); }
+    if (e.target.id === 'openFree') { call.openFree = e.target.value; touch(); }
+    if (e.target.tagName === 'TEXTAREA') { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 2 + 'px'; }
+  });
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.classList.contains('tab')) {
+      document.querySelectorAll('.tab').forEach(function (t) { t.classList.toggle('on', t === b); });
+      document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'v-' + b.dataset.v); });
+      if (b.dataset.v === 'calls') loadCalls();
+      window.scrollTo(0, 0); return;
+    }
+    if (b.dataset.ck) {
+      var k = b.dataset.ck + '_c', arr = [].concat(call.a[k] || []), c = b.dataset.c, i = arr.indexOf(c);
+      if (i > -1) arr.splice(i, 1); else arr.push(c);
+      call.a[k] = arr; b.classList.toggle('on'); touch(); return;
+    }
+    if (b.dataset.flag) {
+      var t = b.dataset.flag, j = call.open.indexOf(t);
+      if (j > -1) call.open.splice(j, 1); else call.open.push(t);
+      b.classList.toggle('on', j < 0); b.textContent = j < 0 ? '❓ ברשימה' : 'לא יודע';
+      renderOpen(); touch(); return;
+    }
+    if (b.dataset.del) { call.open.splice(+b.dataset.del, 1); renderOpen(); render(); touch(); return; }
+    if (b.dataset.hide) { call.asks[+b.dataset.hide].hidden = true; renderAsks(); touch(); return; }
+    if (b.dataset.addq) {
+      var x = call.asks[+b.dataset.addq], m = /לרשימה:\s*(.+)/.exec(x.a || '');
+      var qq = m ? m[1].trim() : x.q;
+      if (call.open.indexOf(qq) < 0) call.open.push(qq);
+      renderOpen(); b.textContent = '✓ נוסף'; b.disabled = true; touch(); return;
+    }
+    if (b.dataset.ask) { ask(b.dataset.ask); return; }
+    if (b.dataset.open) { openCall(b.dataset.open); return; }
+  });
+
+  function ask(q, op) {
+    var item = { q: q, a: '', wait: true };
+    call.asks.push(item); renderAsks();
+    api({ op: op || 'ask', q: op ? '' : q, notes: notes() }).then(function (r) {
+      item.a = (r && r.text) || 'העוזר לא ענה. נסה שוב.'; item.wait = false; renderAsks(); touch();
+    }, function () { item.a = 'אין חיבור. נסה שוב.'; item.wait = false; renderAsks(); });
+  }
+  $('#askForm').addEventListener('submit', function (e) {
+    e.preventDefault(); var v = $('#askIn').value.trim(); if (!v) return;
+    $('#askIn').value = ''; ask(v);
+  });
+  $('#nextBtn').addEventListener('click', function () { ask('מה עוד לשאול?', 'next'); });
+
+  $('#sumBtn').addEventListener('click', function () {
+    var so = $('#sumOut'), b = $('#sumBtn');
+    so.hidden = false; so.textContent = 'מסכם, זה לוקח עד דקה...'; b.disabled = true;
+    api({ op: 'sum', notes: notes() }).then(function (r) {
+      b.disabled = false;
+      call.summary = (r && r.text) || ''; so.textContent = call.summary || 'הסיכום לא יצא. נסה שוב.'; touch();
+    }, function () { b.disabled = false; so.textContent = 'אין חיבור. נסה שוב.'; });
+  });
+
+  function plainSummary() {
+    var op = call.open.concat((call.openFree || '').split('\n').filter(function (s) { return s.trim(); }));
+    var base = call.summary || notes();
+    if (!call.summary && op.length) base += '';
+    else if (call.summary && op.length && call.summary.indexOf('שאלות פתוחות') < 0) base += '\n\nשאלות פתוחות:\n' + op.join('\n');
+    return base;
+  }
+  $('#copyBtn').addEventListener('click', function () {
+    var t = plainSummary(), b = $('#copyBtn');
+    function done() { b.textContent = '✓ הועתק'; setTimeout(function () { b.textContent = '📋 העתק סיכום'; }, 1800); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fallback); else fallback();
+    function fallback() { var ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) {} ta.remove(); }
+  });
+
+  $('#newCall').addEventListener('click', function () {
+    if (Object.keys(call.a).length && !confirmNew()) return;
+    call = blank(); ls('ck-call', JSON.stringify(call)); $('#saved').textContent = ''; render(); window.scrollTo(0, 0);
+  });
+  var armed = 0;
+  function confirmNew() {
+    if (Date.now() - armed < 4000) return true;
+    armed = Date.now(); $('#newCall').textContent = 'לחץ שוב לשיחה חדשה';
+    setTimeout(function () { $('#newCall').textContent = 'שיחה חדשה'; }, 4000);
+    return false;
+  }
+
+  function loadCalls() {
+    var el = $('#callList'); el.innerHTML = '<div class="muted">טוען...</div>';
+    api({ op: 'list' }).then(function (r) {
+      if (!r.ok || !r.calls.length) { el.innerHTML = '<div class="muted">עוד אין שיחות שמורות.</div>'; return; }
+      el.innerHTML = r.calls.map(function (c) {
+        var d = new Date(c.saved);
+        var when = d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' }) + ' ' + d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+        return '<button class="call" data-open="' + esc(c.id) + '"><b>' + esc(c.name || 'בלי שם') + '</b><span class="muted">' + esc([when, c.tool, c.stuck].filter(Boolean).join(' · ')) + '</span></button>';
+      }).join('');
+    }, function () { el.innerHTML = '<div class="muted">אין חיבור.</div>'; });
+  }
+  function openCall(id) {
+    api({ op: 'get', id: id }).then(function (r) {
+      if (!r.ok) return;
+      call = r.call; call.id = id; call.a = call.a || {}; call.open = call.open || []; call.asks = call.asks || [];
+      ls('ck-call', JSON.stringify(call)); render();
+      document.querySelector('.tab[data-v="call"]').click();
+    });
+  }
+
+  render();
+  if (Object.keys(call.a).length) $('#saved').textContent = 'ממשיך מהשיחה האחרונה';
+})();
+</script>
+</body>
+</html>

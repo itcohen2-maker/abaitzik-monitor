@@ -1642,6 +1642,18 @@ const server = http.createServer(function (q, s) {
     }).catch(function () { try { s.writeHead(413, { 'Content-Type': 'application/json' }); s.end('{"ok":false,"error":"big"}'); } catch (e) {} });
     return;
   }
+  // 25.11.2026: Itzik's call sheet for new leads with an AI helper (lib/call-kit.js), /k/<token> and /api/callkit. Same origin.
+  const km = u.pathname.match(/^\/k\/([a-f0-9]{20})\/?$/);
+  if (km && q.method === 'GET') { require('./lib/call-kit.js').serve(DATA, km[1], s); return; }
+  if (u.pathname === '/api/callkit') {
+    if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
+    readBody(q, 80000).then(async function (raw) {
+      let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400, { 'Content-Type': 'application/json' }); return s.end('{}'); }
+      const r = await require('./lib/call-kit.js').handle(DATA, b, require('./lib/sales-train.js').llm);
+      s.writeHead(r.status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); s.end(JSON.stringify(r.json));
+    }).catch(function (e) { log('callkit: ' + e.message); try { s.writeHead(413, { 'Content-Type': 'application/json' }); s.end('{"ok":false}'); } catch (x) {} });
+    return;
+  }
   // 25.11.2026: notes from the Raindrop demo (lib/rd-notes.js), kept on our side. One origin only.
   if (u.pathname === '/api/rd-notes') {
     const RN = require('./lib/rd-notes.js');
