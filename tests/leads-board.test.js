@@ -811,6 +811,5 @@ test('board: a phone gets one flat list, newest first, with when each came in (2
   assert.ok(ats.length >= 5, 'every lead is in it');
   assert.deepEqual(ats.slice(), ats.slice().sort((a, b) => b - a), 'from the newest to the oldest');
   assert.ok(/class="lbWhen">[^<]+</.test(flat), 'each row says when it came in');
-  assert.ok(h.includes('@container (max-width:639.98px){
- .lbNow,.lbToday,.lbGrp{display:none}'), 'on a phone the groups hide');
+  assert.ok(h.includes('@container (max-width:639.98px)') && h.includes('.lbNow,.lbToday,.lbGrp{display:none}'), 'on a phone the groups hide');
 });
