@@ -622,7 +622,7 @@ function build() {
   const appts = loadDocs('appts')
     .map(x => ({ id: x.id, when: x.when || '', what: x.what || '',
                  where: x.where || '', note: x.note || '', img: haveFile(x.img) ? x.img : '',
-                 doc: x.doc || '', docLabel: x.docLabel || '' }))
+                 doc: haveFile(x.doc) ? x.doc : '', docLabel: x.docLabel || '' }))
     // No date yet ("רופא תעסוקתי", 1.10) goes last, not first.
     .sort((a, b) => ((a.when || '~') < (b.when || '~') ? -1 : 1));
   const replies = loadDocs('replies')
