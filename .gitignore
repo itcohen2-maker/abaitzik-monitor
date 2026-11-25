@@ -46,3 +46,6 @@ __pycache__/
 *.pyc
 promo/first-client-playbook.html
 data/ms-app.json
+
+# 25.11.2026: AI channel reels live in /srv/ai/media (served by wa.abaitzik.com/ai/media). GitHub Pages went over its 1GB limit.
+/docs/ai/media
