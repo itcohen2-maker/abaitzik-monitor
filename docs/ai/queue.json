@@ -706,9 +706,17 @@
   "ytd": "AI fakes are getting crazy good, but they still have bugs our eyes can catch: gibberish text in the background, weird reflections in the eyes, plastic skin with no pores, and a face that does not sync with the head movement. Source: Full Fact and Sightengine, 2025.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-15T06:00:45.408Z"
+  "posted": true,
+  "postedAt": "2026-11-25T18:04:29.632Z",
+  "approvedAt": "2026-11-15T06:00:45.408Z",
+  "auto": {
+   "reel": "18241985512319357",
+   "story": "18150118312669777",
+   "storyError": null,
+   "page": "1850418446095444",
+   "pageError": null,
+   "channel": "itsolution.global"
+  }
  },
  {
   "id": "tokenpay-he",
