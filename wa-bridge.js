@@ -1903,5 +1903,6 @@ if (require.main === module) {
   setInterval(function () { try { require('./setup.js').sweep(formNotify); } catch (e) { log('setup sweep: ' + e.message); } }, 60000);
   setInterval(function () { try { require('./lib/rd-notes.js').sweep(DATA, formNotify, { wa: function (t) { return require('./lib/wa-out.js').sendOwner(DATA, t, { kind: 'answer' }); } }); } catch (e) { log('rd-notes sweep: ' + e.message); } }, 60000);
   setInterval(function () { try { require('./lib/rd-upload.js').sweep(DATA, formNotify, { wa: function (t) { return require('./lib/wa-out.js').sendOwner(DATA, t, { kind: 'answer' }); } }); } catch (e) { log('rd-upload sweep: ' + e.message); } }, 60000);
+  setInterval(function () { require('./lib/rd-upload.js').toDrive(DATA, require('./lib/my-drive.js')).then(function (n) { if (n) log('rd-upload drive ' + n); }, function (e) { log('rd-upload drive: ' + e.message); }); }, 60000);
 }
 module.exports = { api, connectCodeOk, waConnect, kapsoProject, kapsoEvent, textOf, sigOk, voiceCommand, speakable, shortOf, isAllCommand, route, onMessage, sweep, outboxSweep, _set: function (o) { if (o.push) pushItzik = o.push; if (o.waSend) waSend = o.waSend; if (o.markRead) markRead = o.markRead; if (o.stranger !== undefined) strangerDeps = o.stranger; if (o.owner !== undefined) ownerForTest = o.owner; } };
