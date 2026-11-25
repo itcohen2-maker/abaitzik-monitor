@@ -3839,6 +3839,11 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
    hide. The rows stay in the page, so editing a lead still updates every copy. On its side (a wide board) the table comes back. */
 .lbFlat .lbTh{color:inherit}
 .lbWhen{font:700 12px Heebo,sans-serif;opacity:.8;white-space:nowrap}
+/* 25.11.2026: the long press on a lead (lbHold). No text selection or callout under the finger; one blink when it opens. */
+.lbBoard .lbRow.ldRow>summary{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.lbHint{display:block;opacity:.65;font:500 12px Heebo,sans-serif;margin:-4px 2px 8px}
+.lbBoard .lbRow.lbHold{animation:lbHoldB .9s ease-out}
+@keyframes lbHoldB{0%{box-shadow:0 0 0 0 rgba(0,115,234,.6)}40%{box-shadow:0 0 0 8px rgba(0,115,234,.25)}100%{box-shadow:0 0 0 0 rgba(0,115,234,0)}}
 @container (max-width:639.98px){
  .lbNow,.lbToday,.lbGrp{display:none}
  .lbFlat .lbRow.ldRow{margin-bottom:8px}
@@ -21156,7 +21161,8 @@ function bizSheet(t0){
    }
    // the filter is for trial week signups (IT Solution's); a board with none has only the search
    h+='<div class="lbBar">'+(A.some(function(r){return r.source==='signup';})?'<div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="other">📞 פניות <i>'+LC.filter(function(r){return r.source!=='signup';}).length+'</i></button><button type="button" data-bz="lbflt" data-f="signup">✅ נרשמו למוניטור <i>'+LC.filter(function(r){return r.source==='signup';}).length+'</i></button></div>':'')
-    +'<input class="lbQ" type="search" placeholder="🔎 חיפוש לפי שם או טלפון" enterkeyhint="search"></div>';
+    +'<input class="lbQ" type="search" placeholder="🔎 חיפוש לפי שם או טלפון" enterkeyhint="search"></div>'
+    +'<small class="lbHint">💡 לחיצה ארוכה על ליד: לשנות לו סטטוס וצבע</small>';
    var N=A.filter(function(r){return lbKey(ldT(r.at)).slice(0,10)===todayK;});
    if(N.length){
     var rk=function(r){return r.source==='signup'?2:(lbStage(r)==='חדש'?0:1);};
@@ -21346,13 +21352,24 @@ function bizSheet(t0){
   }
   function lbEdHtml(row,k){
    var B='<button type="button" data-tdy="1" class="yb';
-   if(k==='st'){var c=row.getAttribute('data-s');return BZ_ORDER.map(function(st){return B+(st===c?' yb2':'')+'" data-bz="lbst" data-s="'+st+'">'+st+'</button>';}).join('');}
+   if(k==='st'){var c=row.getAttribute('data-s');return BZ_ORDER.map(function(st){return B+(st===c?' yb2':'')+'" data-bz="lbst" data-s="'+st+'">'+(LB_STL[st]||st)+'</button>';}).join('');}
    if(k==='next')return '<input class="lbIn" maxlength="200" enterkeyhint="done" placeholder="מה הצעד הבא? למשל להתקשר ביום שלישי" value="'+esc(row.querySelector('.lbNext').getAttribute('data-v')||'')+'">'+B+' yb2" data-bz="lbnext">שמירה</button>';
    if(k==='site'){var sv=row.querySelector('.lbSite').getAttribute('data-v')||'';return '<input class="lbIn" type="url" inputmode="url" enterkeyhint="done" placeholder="כתובת האתר, למשל eran.co.il" value="'+esc(sv)+'">'+B+' yb2" data-bz="lbsite">שמירה</button>'+(sv?B+'" data-bz="lbsite" data-x="1">בלי אתר</button>':'');}
    if(k==='pick')return '<input class="lbIn" type="datetime-local" value="'+lbWhen('tom',Date.now()).replace(' ','T')+'">'+B+' yb2" data-bz="lbrem" data-r="set">שמירה</button>';
    var now=Date.now(),eve=lbWhen('eve',now).slice(0,10)===lbKey(now).slice(0,10)?'הערב 19:00':'מחר 19:00';
    return B+'" data-bz="lbrem" data-r="eve">'+eve+'</button>'+B+'" data-bz="lbrem" data-r="tom">מחר 9:00</button>'+B+'" data-bz="lbrem" data-r="week">בעוד שבוע</button>'+B+'" data-bz="lbrem" data-r="pick">📅 תאריך ושעה</button>'
     +(row.querySelector('.lbRem').getAttribute('data-at')?B+'" data-bz="lbrem" data-r="off">בלי תזכורת</button>':'');
+  }
+  // 25.11.2026, Itzik: "אם יש ליד שלחצתי עליו ואני רוצה לשנות את הסטטוס שלו, שלא חזרתי אליו או להפוך אותו חזרה לאדום, או שעדיין אין לי תשובה
+  // ... תן לי את האופציה בלחיצה ארוכה". A long press on a lead opens its stage buttons, with the colour in the name; the row blinks once.
+  var LB_STL={'חדש':'🔴 חדש, לחזור אליו','בשיחה':'🟠 בשיחה, מחכה לתשובה','הצעה':'🟣 הצעה','נסגר':'🟢 נסגר','אבד':'⚪ אבד'};
+  function lbHold(el,row){
+   if(!row||!row.getAttribute||!row.getAttribute('data-id'))return;
+   var old=row.querySelector('.lbEd');if(old&&old.getAttribute('data-k')==='st')old.parentNode.removeChild(old); // a long press always opens, never closes
+   lbEdOpen(row,'st');
+   row.classList.add('lbHold');setTimeout(function(){row.classList.remove('lbHold');},900);
+   try{if(navigator.vibrate)navigator.vibrate(25);}catch(x){}
+   var ed=row.querySelector('.lbEd');try{(ed||row).scrollIntoView({block:'center',behavior:'smooth'});}catch(x){}
   }
   function lbEdOpen(row,k){
    var old=row.querySelector('.lbEd'),same=old&&old.getAttribute('data-k')===k;
@@ -21574,6 +21591,20 @@ function bizSheet(t0){
     d.addEventListener('toggle',function(){if(!d.open||bzQuiet||t2===tab)return;bizHist.push(tab);tab=t2;bzMarkSeen(tab);p.innerHTML=body();});
    });
    window.bizStep=function(){if(!bizHist.length)return false;bizShow(bizHist.pop(),true);return true;};
+   if(!el._lbLp){el._lbLp=1;(function(){
+    var tm=0,x0=0,y0=0,r0=null;
+    function stop(){if(tm){clearTimeout(tm);tm=0;}}
+    el.addEventListener('pointerdown',function(e){
+     var sm=e.target.closest?e.target.closest('.lbRow>summary'):null;
+     if(!sm||(e.button&&e.button!==0)||e.target.closest('a,input,textarea,[data-mk="bad"]'))return;
+     stop();x0=e.clientX;y0=e.clientY;r0=sm.parentNode;
+     tm=setTimeout(function(){tm=0;el._lbHeld=Date.now();lbHold(el,r0);},550);
+    });
+    el.addEventListener('pointermove',function(e){if(tm&&(Math.abs(e.clientX-x0)>8||Math.abs(e.clientY-y0)>8))stop();});
+    ['pointerup','pointercancel'].forEach(function(n){el.addEventListener(n,stop);});
+    el.addEventListener('click',function(e){if(el._lbHeld&&Date.now()-el._lbHeld<900){e.preventDefault();e.stopPropagation();el._lbHeld=0;}},true);
+    el.addEventListener('contextmenu',function(e){if(e.target.closest&&e.target.closest('.lbRow>summary'))e.preventDefault();});
+   })();}
    el.addEventListener('click',function(e){if(lbTap(e,el))return;
     var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
     var a=t.getAttribute('data-bz');

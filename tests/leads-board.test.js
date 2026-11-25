@@ -38,7 +38,7 @@ function load(html, recs, E) {
   E = E || env();
   const fn = new Function('recs', 'D', 'esc', 'bzTel', 'BZ_ORDER', 'window', 'sendText', 'toast', 'leadDelAsk', 'setTimeout', 'clearTimeout', 'Date', leadsPart(html)
     + '\n;return {board:typeof ldBoardHtml==="function"?ldBoardHtml:null,table:typeof itsLeadsHtml==="function"?itsLeadsHtml:null,flag:typeof LD_BOARD==="undefined"?undefined:LD_BOARD,main:typeof ldMain==="function"?ldMain:null,'
-    + 'lbWhen:typeof lbWhen==="function"?lbWhen:null,lbTap:typeof lbTap==="function"?lbTap:null,lbFilter:typeof lbFilter==="function"?lbFilter:null};');
+    + 'lbWhen:typeof lbWhen==="function"?lbWhen:null,lbTap:typeof lbTap==="function"?lbTap:null,lbHold:typeof lbHold==="function"?lbHold:null,lbFilter:typeof lbFilter==="function"?lbFilter:null};');
   return fn(recs, { biz: recs }, esc, bzTel, ORDER, {}, E.sendText, E.toast, E.leadDelAsk, E.setTimeout, E.clearTimeout, E.Date);
 }
 function env(over) {
@@ -816,4 +816,22 @@ test('board: a phone gets one flat list, newest first, with when each came in (2
   assert.ok(/class="lbWhen">[^<]+</.test(flat), 'each row says when it came in');
   const pg = page(L);
   assert.ok(pg.includes('@container (max-width:639.98px)') && pg.includes('.lbNow,.lbToday,.lbGrp{display:none}'), 'on a phone the groups hide');
+});
+
+test('board 25.11: a long press opens the stage buttons with the colours, and a pick changes the stage (lbHold)', () => {
+  const M = mount(fx());
+  const row = M.grp('בשיחה').querySelector('.lbRow'), id = row.getAttribute('data-id');
+  assert.ok(M.B.lbHold, 'lbHold is in the page');
+  M.B.lbHold(M.root, row);
+  const ed = row.querySelector('.lbEd');
+  assert.ok(ed && ed.getAttribute('data-k') === 'st', 'the stage buttons open');
+  assert.equal(ed.querySelectorAll('[data-bz="lbst"]').length, 5);
+  assert.ok(ed.innerHTML.includes('🔴 חדש, לחזור אליו') && ed.innerHTML.includes('🟠 בשיחה, מחכה לתשובה'), 'the colour is in the name');
+  M.B.lbHold(M.root, row);
+  assert.ok(row.querySelector('.lbEd'), 'a second long press does not close it');
+  M.tap(row.querySelector('.lbEd [data-bz="lbst"][data-s="חדש"]'));
+  assert.deepEqual(M.E.sent, ['ליד [' + id + ']: סטטוס חדש']);
+  assert.ok(M.rows(id).every((r) => r.getAttribute('data-s') === 'חדש'), 'every copy of the lead is red again');
+  const pg = page(L);
+  assert.ok(pg.includes("'pointerdown'") && pg.includes('lbHold(el,r0)') && pg.includes('💡 לחיצה ארוכה על ליד'));
 });
