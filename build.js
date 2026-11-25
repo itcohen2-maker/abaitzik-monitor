@@ -19737,6 +19737,9 @@ on('icSignup',function(){signupShare();});
 on('icPrices',function(){window.open('https://form.it-solution.co.il/p/e9e946f35a0bea1868a5.html','_blank','noopener');});
 on('icCampForm',function(){window.open('https://form.it-solution.co.il/p/5100c3b8e29eea71ebb2.html','_blank','noopener');});
 ${CALLKIT_URL ? "on('icCallKit',function(){window.open('" + CALLKIT_URL + "','_blank','noopener');});" : ''}
+// 25.11.2026, Itzik: every lead opens the call sheet already filled with his name and phone (lib/call-kit.html reads the hash).
+window.CK_URL=${JSON.stringify(CALLKIT_URL)};
+window.ckBtn=function(r,st){if(!window.CK_URL||!r||!r.id)return '';return '<a class="yb yb2"'+(st?' style="'+st+'"':'')+' href="'+esc(window.CK_URL+'#lead='+encodeURIComponent(r.id)+'&name='+encodeURIComponent(r.name||'')+'&phone='+encodeURIComponent(r.phone||''))+'" target="_blank" rel="noopener">📋 שאלון שיחה</a>';};
 // 19.11.2026: the campaign page (form.it-solution.co.il/p/..., private link), to open or to share.
 var CAMP_URL='https://form.it-solution.co.il/p/c851a7a3231353fa6107.html';
 function campShare(){
@@ -19832,7 +19835,7 @@ function leadBoard(wk){
   return '<div class="ai s-'+lbState(r)+'"><span class="tm">'+esc(lbHm(r.at))+'<small style="display:block">'+esc(dm(lbDay(r.at)||T0))+'</small></span>'
    +'<div class="mid"><b>'+src.ic+' '+esc(r.name||'בלי שם')+'</b>'+(r.last?'<span class="wh">"'+esc(String(r.last).slice(0,90))+'"</span>':'')
    +'<small>'+esc(src.n)+(r.next?' · '+esc(r.next):'')+'</small>'
-   +(r.phone?'<div style="margin-top:4px"><a class="yb" style="display:inline-block;min-height:0;padding:4px 10px;margin:2px" href="tel:'+esc(String(r.phone).replace(/[^0-9+]/g,''))+'">📞 להתקשר</a><a class="yb" style="display:inline-block;min-height:0;padding:4px 10px;margin:2px" href="'+lbWa(r.phone)+'" target="_blank" rel="noopener">💬 וואטסאפ</a></div>':'')
+   +(r.phone?'<div style="margin-top:4px"><a class="yb" style="display:inline-block;min-height:0;padding:4px 10px;margin:2px" href="tel:'+esc(String(r.phone).replace(/[^0-9+]/g,''))+'">📞 להתקשר</a><a class="yb" style="display:inline-block;min-height:0;padding:4px 10px;margin:2px" href="'+lbWa(r.phone)+'" target="_blank" rel="noopener">💬 וואטסאפ</a>'+(window.ckBtn?window.ckBtn(r,'display:inline-block;min-height:0;padding:4px 10px;margin:2px'):'')+'</div>':'')
    +'</div><div class="side"><span class="chip k-'+(lbState(r)==='no'?'bad':lbState(r)==='ok'?'ok':'hand')+'">'+IC[lbState(r)]+' '+esc(r.status||'חדש')+'</span></div></div>';
  }
  h+='<div id="bdAgenda"><div style="font:800 15px Heebo,sans-serif;margin:12px 0 2px">🙋 מחכים לך עכשיו ('+wait.length+')</div>'
@@ -20810,7 +20813,7 @@ function bzRow(r,extra){
  var k=BZ_KIND[r.kind]||'',nw=window.leadNewAt?leadNewAt(r):'';
  return '<div class="bzRow'+(r.test?' bzTest':'')+(nw?' bzNew" data-new-at="'+nw:'')+'">'+(nw?'<span class="bzNewTag">חדש</span>':'')+'<b>'+esc(r.name||'בלי שם')+'</b>'+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')
   +'<small>'+esc((k?k:'')+(r.status?(k?' · ':'')+r.status:''))+(r.amount?' · '+esc(bzMoney(r.amount)):'')+'</small>'
-  +(r.phone?'<small>'+bzTel(r.phone)+' <button type="button" class="yb ctc" data-cp="'+esc(String(r.phone).split('-').join('').split(' ').join(''))+'">📋 העתק טלפון</button></small>':'')
+  +(r.phone?'<small>'+bzTel(r.phone)+' <button type="button" class="yb ctc" data-cp="'+esc(String(r.phone).split('-').join('').split(' ').join(''))+'">📋 העתק טלפון</button>'+(r.kind==='lead'&&window.ckBtn?' '+window.ckBtn(r):'')+'</small>':'')
   +(r.email?'<small><a href="mailto:'+esc(r.email)+'">'+esc(r.email)+'</a> <button type="button" class="yb ctc" data-cp="'+esc(r.email)+'">📋 העתק מייל</button></small>':'')
   +(r.note?'<small>'+esc(r.note)+'</small>':'')
   +(bzAgo(r)?'<small>'+esc(bzAgo(r))+'</small>':'')
@@ -21026,6 +21029,7 @@ function bizSheet(t0){
    var i=ldInfo(r),dd=i.dd,hm=i.hm,em=i.em,src=i.src,meta=/comment|messenger|dm|leadform/.test(r.source||'');
    var rep='';
    if(r.phone){rep+='<a class="yb yb2" href="'+ldWa(r.phone)+'" target="_blank" rel="noopener">💬 וואטסאפ</a><a class="yb" href="tel:'+esc(String(r.phone).replace(/[^0-9+]/g,''))+'">📞 להתקשר</a>';}
+   if(window.ckBtn)rep+=window.ckBtn(r);
    if(em)rep+='<a class="yb" href="mailto:'+esc(em)+'">✉️ מייל</a>';
    if(meta&&(r.link||LD_INBOX))rep+='<a class="yb yb2" href="'+esc(r.link||LD_INBOX)+'" target="_blank" rel="noopener">💬 לענות במטא</a>';
    // 11.11: copy the phone, or all the details at once (name, phone, mail, where from, when, what he wrote, notes)

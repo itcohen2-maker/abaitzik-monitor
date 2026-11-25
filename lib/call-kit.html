@@ -39,6 +39,8 @@ textarea{min-height:44px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .btn{border:0;border-radius:10px;background:var(--acc);color:#fff;font:inherit;font-weight:700;padding:10px 14px;cursor:pointer}
 .btn.ghost{background:var(--chip);color:var(--ink)}
+a.btn{text-decoration:none;display:inline-block}
+#dial{background:var(--ok)}
 .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .muted{color:var(--mute);font-size:13.5px}
 .status{font-size:12.5px;color:var(--mute);margin-inline-start:auto}
@@ -99,6 +101,7 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
 <section class="view on" id="v-call">
   <div class="card">
     <div class="btns" style="margin:0;align-items:center">
+      <a class="btn" id="dial" hidden></a>
       <button class="btn ghost" id="newCall">שיחה חדשה</button>
       <span class="status" id="saved"></span>
     </div>
@@ -299,11 +302,16 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
       h += '</div>';
     });
     $('#form').innerHTML = h;
-    renderOpen();
+    renderOpen(); dial();
     $('#openFree').value = call.openFree || '';
     $('#freeNotes').value = call.free || '';
     renderAsks();
     var so = $('#sumOut'); if (call.summary) { so.hidden = false; so.textContent = call.summary; } else { so.hidden = true; so.textContent = ''; }
+  }
+  function dial() {
+    var d = $('#dial'), p = String(call.a.phone || '').replace(/[^0-9+]/g, '');
+    d.hidden = !p; if (!p) return;
+    d.href = 'tel:' + p; d.textContent = '📞 לחייג ל' + (call.a.name ? call.a.name + ' ' : '') + call.a.phone;
   }
   function renderOpen() {
     $('#openList').innerHTML = call.open.length ? call.open.map(function (t, i) { return '<li>' + esc(t) + ' <button class="x" data-del="' + i + '" aria-label="הסר">×</button></li>'; }).join('') : '<li class="muted">עוד אין.</li>';
@@ -350,7 +358,7 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
 
   document.addEventListener('input', function (e) {
     var k = e.target.getAttribute && e.target.getAttribute('data-k');
-    if (k) { call.a[k] = e.target.value; touch(); }
+    if (k) { call.a[k] = e.target.value; touch(); if (k === 'phone' || k === 'name') dial(); }
     if (e.target.id === 'openFree') { call.openFree = e.target.value; touch(); }
     if (e.target.id === 'freeNotes') { call.free = e.target.value; touch(); }
     if (e.target.tagName === 'TEXTAREA' && e.target.id !== 'freeNotes') { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 2 + 'px'; }
@@ -465,8 +473,30 @@ dl{margin:0}dt{font-weight:700;margin-top:10px}dd{margin:2px 0 0;color:var(--ink
     });
   }
 
-  render();
-  if (Object.keys(call.a).length) $('#saved').textContent = 'ממשיך מהשיחה האחרונה';
+  // 25.11.2026: opened from a lead in the monitor (#lead=<id>&name=&phone=): that lead's own call, filled in.
+  var hp = {};
+  String(location.hash || '').replace(/^#/, '').split('&').forEach(function (kv) { var i = kv.indexOf('='); if (i > 0) { try { hp[kv.slice(0, i)] = decodeURIComponent(kv.slice(i + 1)); } catch (e) {} } });
+  if (hp.lead) {
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    var lid = ('l-' + hp.lead.toLowerCase().replace(/[^a-z0-9-]/g, '')).slice(0, 40);
+    var fill = function () {
+      if (hp.name && !call.a.name) call.a.name = hp.name;
+      if (hp.phone && !call.a.phone) call.a.phone = hp.phone;
+      call.lead = hp.lead; ls('ck-call', JSON.stringify(call)); render(); touch();
+      $('#saved').textContent = 'שיחה עם ' + (call.a.name || 'הליד');
+    };
+    if (call.id === lid) fill();
+    else {
+      call = blank(); call.id = lid; render();
+      api({ op: 'get', id: lid }).then(function (r) {
+        if (r && r.ok && r.call) { call = r.call; call.id = lid; call.a = call.a || {}; call.open = call.open || []; call.asks = call.asks || []; }
+        fill();
+      }, fill);
+    }
+  } else {
+    render();
+    if (Object.keys(call.a).length) $('#saved').textContent = 'ממשיך מהשיחה האחרונה';
+  }
 })();
 </script>
 </body>
