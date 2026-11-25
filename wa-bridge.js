@@ -1631,6 +1631,17 @@ const server = http.createServer(function (q, s) {
     }, function () { s.writeHead(400); s.end(); });
     return;
   }
+  // 25.11.2026: Raindrop's private upload page (lib/rd-upload.js), /u/<token>[/state] and /api/rd-upload. Same origin, files stay in data/.
+  const um = u.pathname.match(/^\/u\/([a-f0-9]{20})(?:\/(state))?\/?$/);
+  if (um && q.method === 'GET') { require('./lib/rd-upload.js').serve(DATA, um[1], um[2], s); return; }
+  if (u.pathname === '/api/rd-upload') {
+    if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
+    readBody(q, 26 * 1024 * 1024).then(function (raw) {
+      const r = require('./lib/rd-upload.js').handleUpload(DATA, { tok: q.headers['x-tok'], item: q.headers['x-item'], name: q.headers['x-name'] }, raw);
+      s.writeHead(r.status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); s.end(JSON.stringify(r.body));
+    }).catch(function () { try { s.writeHead(413, { 'Content-Type': 'application/json' }); s.end('{"ok":false,"error":"big"}'); } catch (e) {} });
+    return;
+  }
   // 25.11.2026: notes from the Raindrop demo (lib/rd-notes.js), kept on our side. One origin only.
   if (u.pathname === '/api/rd-notes') {
     const RN = require('./lib/rd-notes.js');
@@ -1891,5 +1902,6 @@ if (require.main === module) {
   setInterval(function () { try { require('./forms.js').sweep(formNotify); } catch (e) { log('forms sweep: ' + e.message); } }, 60000);
   setInterval(function () { try { require('./setup.js').sweep(formNotify); } catch (e) { log('setup sweep: ' + e.message); } }, 60000);
   setInterval(function () { try { require('./lib/rd-notes.js').sweep(DATA, formNotify, { wa: function (t) { return require('./lib/wa-out.js').sendOwner(DATA, t, { kind: 'answer' }); } }); } catch (e) { log('rd-notes sweep: ' + e.message); } }, 60000);
+  setInterval(function () { try { require('./lib/rd-upload.js').sweep(DATA, formNotify, { wa: function (t) { return require('./lib/wa-out.js').sendOwner(DATA, t, { kind: 'answer' }); } }); } catch (e) { log('rd-upload sweep: ' + e.message); } }, 60000);
 }
 module.exports = { api, connectCodeOk, waConnect, kapsoProject, kapsoEvent, textOf, sigOk, voiceCommand, speakable, shortOf, isAllCommand, route, onMessage, sweep, outboxSweep, _set: function (o) { if (o.push) pushItzik = o.push; if (o.waSend) waSend = o.waSend; if (o.markRead) markRead = o.markRead; if (o.stranger !== undefined) strangerDeps = o.stranger; if (o.owner !== undefined) ownerForTest = o.owner; } };
