@@ -807,9 +807,10 @@ test('board: a phone gets one flat list, newest first, with when each came in (2
   const h = itzik(L).board();
   const flat = h.split('<div class="lbFlat">')[1];
   assert.ok(flat, 'the flat list is there');
-  const ats = [...flat.matchAll(/data-at="([^"]*)"/g)].map((m) => Date.parse(m[1])).filter((n) => n);
+  const ats = [...flat.matchAll(/<details class="lbRow[^>]*? data-at="([^"]*)"/g)].map((m) => Date.parse(m[1])).filter((n) => n);
   assert.ok(ats.length >= 5, 'every lead is in it');
   assert.deepEqual(ats.slice(), ats.slice().sort((a, b) => b - a), 'from the newest to the oldest');
   assert.ok(/class="lbWhen">[^<]+</.test(flat), 'each row says when it came in');
-  assert.ok(h.includes('@container (max-width:639.98px)') && h.includes('.lbNow,.lbToday,.lbGrp{display:none}'), 'on a phone the groups hide');
+  const pg = page(L);
+  assert.ok(pg.includes('@container (max-width:639.98px)') && pg.includes('.lbNow,.lbToday,.lbGrp{display:none}'), 'on a phone the groups hide');
 });
