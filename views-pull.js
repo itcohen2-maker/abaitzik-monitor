@@ -140,6 +140,8 @@ function report(vs) {
     if (st.seen[k]) return; st.seen[k] = e.t;
     if (st.sent >= DAY_CAP) return; st.sent++;
     const who = e.r ? e.r : 'מישהו';
+    // 25.11.2026, Itzik: "תפסיק אותם". No push or WhatsApp per visitor; the visits stay in the views report.
+    if (!process.env.VIEWS_NOTIFY) return;
     try { execFileSync('node', [path.join(HERE, 'notify.js'), '👀 ' + who + ' פתח את ' + PAGES[e.p], [dev(e), e.city, source(e)].filter(Boolean).join(' · ')], { stdio: 'ignore', timeout: 30000 }); } catch (x) { console.error('notify', x.message); }
   });
   st.since = all.length ? all[all.length - 1].t : st.since;
