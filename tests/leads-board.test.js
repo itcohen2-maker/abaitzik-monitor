@@ -110,7 +110,7 @@ test('board: the DOM hooks of Task 4 are there on every row', () => {
     assert.ok(/^[^>]*data-id="biz-[0-9]"[^>]*data-n="[^"]+"/.test(r), 'data-id and data-n');
     ['class="lbSt ldSt" data-s="', 'class="lbNext', 'class="lbSite', 'class="lbRem', 'data-bz="ldsend"', 'data-bz="lddel"', 'data-bz="ldcopy"'].forEach((k) => assert.ok(r.includes(k), k));
   });
-  assert.ok(h.includes('class="lbFlt"') && ['all', 'signup', 'other'].every((f) => h.includes('data-f="' + f + '"')));
+  assert.ok(h.includes('class="lbFlt"') && ['signup', 'other'].every((f) => h.includes('data-f="' + f + '"')));
   assert.ok(h.includes('class="lbQ"'));
   const g = groups(h);
   assert.ok(g['חדש'].includes('class="lbSt ldSt" data-s="חדש">חדש<'), 'xyz shows as חדש');
@@ -612,24 +612,27 @@ test('board: the site is normalised as the server does, a bad one is not sent, a
   assert.ok(r.querySelector('.lbSite').classList.contains('lbNone'));
 });
 
-test('board: filter and search are on the page only, no sending', () => {
+test('board: filter and search are on the page only, no sending (25.11: two tabs, פניות opens first)', () => {
   const M = mount(fx());
-  M.tap(M.root.querySelector('.lbFlt [data-f="signup"]'));
+  const other = () => M.root.querySelector('.lbFlt [data-f="other"]'), signup = () => M.root.querySelector('.lbFlt [data-f="signup"]');
+  assert.ok(!M.root.querySelector('.lbFlt [data-f="all"]'), 'no "הכל" tab');
+  assert.ok(other().classList.contains('on'), 'פניות is the tab that opens');
+  assert.ok(M.root.querySelectorAll('.lbRow').filter((r) => r.getAttribute('data-id') === 'biz-1').every((r) => r.classList.contains('lbHide')), 'a signup is out of פניות from the first draw');
+  M.tap(signup());
   assert.deepEqual([...new Set(M.shown())], ['biz-1']);
-  assert.ok(M.root.querySelector('.lbFlt [data-f="signup"]').classList.contains('on'));
-  assert.ok(!M.root.querySelector('.lbFlt [data-f="all"]').classList.contains('on'));
+  assert.ok(signup().classList.contains('on') && !other().classList.contains('on'));
   assert.ok(M.grp('נסגר').classList.contains('lbHide'), 'a group with nothing to show hides while filtering');
-  M.tap(M.root.querySelector('.lbFlt [data-f="all"]'));
-  M.root.querySelector('.lbQ').value = '052-222';
-  M.B.lbFilter(M.root);
-  assert.deepEqual(M.shown(), ['biz-2'], 'by phone digits');
   M.root.querySelector('.lbQ').value = 'דנה';
   M.B.lbFilter(M.root);
   assert.deepEqual([...new Set(M.shown())], ['biz-1'], 'by name');
   M.root.querySelector('.lbQ').value = '';
+  M.tap(other());
+  M.root.querySelector('.lbQ').value = '052-222';
   M.B.lbFilter(M.root);
-  assert.equal(M.shown().length, 7);
-  assert.equal(M.root.querySelectorAll('.lbHide').length, 0);
+  assert.deepEqual(M.shown(), ['biz-2'], 'by phone digits');
+  M.root.querySelector('.lbQ').value = '';
+  M.B.lbFilter(M.root);
+  assert.ok(!M.shown().includes('biz-1') && M.shown().length === 5);
   assert.equal(M.E.sent.length, 0);
 });
 
@@ -767,7 +770,7 @@ test('board 22.11: a signup gets its own group and comes back to ⏰ היום a 
   assert.ok(t.includes('data-id="n-old"'), 'signed up 15.11, due 22.11 09:00');
   assert.ok(!t.includes('data-id="n-sign"'));
   assert.ok(h.includes('כל הלידים (6)</span><b class="lbCallPill">📞 3 לחזור אליהם</b>'), 'who to call back: n-call, n-late, n-yest');
-  assert.ok(h.includes('📞 פניות <i>4</i>') && h.includes('✅ נרשמו למוניטור <i>2</i>') && h.includes('הכל <i>6</i>'), 'the tabs count');
+  assert.ok(h.includes('📞 פניות <i>4</i>') && h.includes('✅ נרשמו למוניטור <i>2</i>') && !h.includes('data-f="all"'), 'the tabs count, and no "הכל"');
 });
 
 test('board 22.11: a signup that is talked to leaves נרשמו and its week reminder, and comes back in חדש', async () => {
@@ -800,7 +803,7 @@ test('board 22.11: a delete fixes the tab counts and the red pill', () => {
   M.tap(r.querySelector('[data-bz="lddel"]'));
   assert.equal(M.root.querySelector('.lbCallPill').textContent, '📞 2 לחזור אליהם');
   assert.equal(M.root.querySelector('.lbFlt [data-f="other"] i').textContent, '3');
-  assert.equal(M.root.querySelector('.lbFlt [data-f="all"] i').textContent, '5');
+  assert.equal(M.root.querySelector('.lbFlt [data-f="signup"] i').textContent, '2');
 });
 
 test('board: a phone gets one flat list, newest first, with when each came in (25.11)', () => {

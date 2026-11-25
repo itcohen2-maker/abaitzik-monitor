@@ -3789,7 +3789,9 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .lbBoard .lbRow[data-src="other"][data-s="חדש"]:not(.ldTest) .lbTagCall{display:inline-block;background:#e2445c;color:#fff}
 .lbBoard .lbNow .lbRow[data-src="signup"] .lbTagSign{display:inline-block;background:#00c875;color:#fff}
 .lbBoard .lbRow.ldRow[data-src="other"][data-s="חדש"]:not(.ldTest){border:2px solid #e2445c;border-inline-start:7px solid #e2445c;background:rgba(226,68,92,.08)}
-.lbGrp[data-g="נרשמו"],.lbRow[data-src="signup"][data-s="חדש"]{--c:#00c875}
+.lbGrp[data-g="נרשמו"],.lbRow[data-src="signup"]{--c:#00c875}
+/* 25.11.2026, Itzik: "לידים למוניטור בצבע אחד, שיהיה יותר ברור". A signup is green everywhere, its stage chip too: nobody to call. */
+.lbBoard .lbRow[data-src="signup"] .lbSt{--c:#00c875;color:#fff}
 .lbSgHint{display:block;opacity:.75;padding:0 8px 6px}
 .lbGrp,.lbRow,.lbSt{--c:#e2445c}
 .lbGrp[data-g="בשיחה"],.lbRow[data-s="בשיחה"],.lbSt[data-s="בשיחה"]{--c:#fdab3d}
@@ -21130,6 +21132,7 @@ function bizSheet(t0){
   function ldBoardHtml(){
    var nowK=lbKey(Date.now()),todayK=nowK.slice(0,10);
    var A=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return ldT(b.at)-ldT(a.at);});
+   var hasSg=A.some(function(r){return r.source==='signup';}); // 25.11: with signups the board has two tabs, פניות opens first and signups stay out of it
    var LC=A.filter(function(r){return !r.test;}),nNew=LC.filter(function(r){return lbStage(r)==='חדש'&&!lbSign(r);}).length;
    var h='<div class="lbBoard"><div class="bzSec"><span class="lbAllN">📋 כל הלידים ('+LC.length+')</span><b class="lbCallPill">'+lbCallTxt(nNew)+'</b></div>'+ldScanHtml();
    if(!LC.length)h+=LB_HI;
@@ -21140,7 +21143,7 @@ function bizSheet(t0){
     var site=String(r.site||'').trim();
     var hist=r.note?ldNote(r.note).split(String.fromCharCode(10)).filter(Boolean).reverse():[];
     var tel=String(r.phone||'').replace(/[^0-9]/g,'');
-    return '<details class="lbRow ldRow'+(r.test?' ldTest':(st==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'" data-at="'+esc(r.at||'')+'" data-s="'+esc(st)+'" data-src="'+(r.source==='signup'?'signup':'other')+'" data-q="'+esc((String(r.name||'')+' '+String(r.email||'')).toLowerCase()+' '+tel)+'"><summary>'
+    return '<details class="lbRow ldRow'+(r.test?' ldTest':(st==='חדש'?' ldNew':''))+(hasSg&&r.source==='signup'?' lbHide':'')+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'" data-at="'+esc(r.at||'')+'" data-s="'+esc(st)+'" data-src="'+(r.source==='signup'?'signup':'other')+'" data-q="'+esc((String(r.name||'')+' '+String(r.email||'')).toLowerCase()+' '+tel)+'"><summary>'
      +'<span class="lbName"><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+'</b><small><bdi>'+esc(r.phone||i.em||'אין טלפון')+'</bdi></small>'+LB_TAGS+'</span>'
      +'<span data-bz="lbed" data-k="st"'+mk('st')+' class="lbSt ldSt" data-s="'+esc(st)+'">'+esc(st)+'</span>'
      +'<span class="lbWhen">'+esc(lbWhenTxt(r.at,todayK))+'</span>'
@@ -21152,23 +21155,23 @@ function bizSheet(t0){
      +'</summary>'+ldBodyHtml(r,hist,st,1)+'</details>';
    }
    // the filter is for trial week signups (IT Solution's); a board with none has only the search
-   h+='<div class="lbBar">'+(A.some(function(r){return r.source==='signup';})?'<div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל <i>'+LC.length+'</i></button><button type="button" data-bz="lbflt" data-f="other">📞 פניות <i>'+LC.filter(function(r){return r.source!=='signup';}).length+'</i></button><button type="button" data-bz="lbflt" data-f="signup">✅ נרשמו למוניטור <i>'+LC.filter(function(r){return r.source==='signup';}).length+'</i></button></div>':'')
+   h+='<div class="lbBar">'+(A.some(function(r){return r.source==='signup';})?'<div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="other">📞 פניות <i>'+LC.filter(function(r){return r.source!=='signup';}).length+'</i></button><button type="button" data-bz="lbflt" data-f="signup">✅ נרשמו למוניטור <i>'+LC.filter(function(r){return r.source==='signup';}).length+'</i></button></div>':'')
     +'<input class="lbQ" type="search" placeholder="🔎 חיפוש לפי שם או טלפון" enterkeyhint="search"></div>';
    var N=A.filter(function(r){return lbKey(ldT(r.at)).slice(0,10)===todayK;});
    if(N.length){
     var rk=function(r){return r.source==='signup'?2:(lbStage(r)==='חדש'?0:1);};
     var nC=N.filter(function(r){return !r.test&&rk(r)===0;}).length,nS=N.filter(function(r){return !r.test&&r.source==='signup';}).length;
-    h+='<div class="lbNow"><div class="lbTh">🆕 נכנסו היום ('+N.filter(function(r){return !r.test;}).length+')</div><small class="lbNs">'+lbNowSub(nC,nS)+'</small>'
+    h+='<div class="lbNow'+(hasSg&&N.every(function(r){return r.source==='signup';})?' lbHide':'')+'"><div class="lbTh">🆕 נכנסו היום ('+N.filter(function(r){return !r.test;}).length+')</div><small class="lbNs">'+lbNowSub(nC,nS)+'</small>'
      +N.slice().sort(function(a,b){return rk(a)-rk(b)||ldT(b.at)-ldT(a.at);}).map(row).join('')+'</div>';
    }
    var T=A.filter(function(r){var k=lbRemOf(r);return k&&k.slice(0,10)<=todayK&&!lbShut(lbStage(r));}).sort(function(a,b){return lbRemOf(a)<lbRemOf(b)?-1:1;});
    var nT=T.filter(function(r){return !r.test;}).length;
-   h+='<div class="lbToday'+(T.length?'':' lbNone')+'"><div class="lbTh">⏰ היום'+(nT?' ('+nT+')':'')+'</div>'+(T.length?T.map(row).join(''):'<small class="lbTNo">אין תזכורות להיום.</small>')+'</div>';
+   h+='<div class="lbToday'+(T.length?'':' lbNone')+(hasSg&&T.length&&T.every(function(r){return r.source==='signup';})?' lbHide':'')+'"><div class="lbTh">⏰ היום'+(nT?' ('+nT+')':'')+'</div>'+(T.length?T.map(row).join(''):'<small class="lbTNo">אין תזכורות להיום.</small>')+'</div>';
    var GS=BZ_ORDER.slice();
    if(A.some(function(r){return r.source==='signup';})){var gi=GS.indexOf('נסגר');GS.splice(gi<0?GS.length:gi,0,LB_SG);}
    GS.forEach(function(g){
     var sg=g===LB_SG,rs=A.filter(function(r){return sg?lbSign(r):(lbStage(r)===g&&!lbSign(r));}),n=rs.filter(function(r){return !r.test;}).length;
-    h+='<details class="lbGrp'+(lbShut(g)?' lbShut"':'"')+' data-g="'+g+'"'+(lbShut(g)?'':' open')+'><summary class="lbGh"><b>'+(sg?'✅ נרשמו למוניטור':g)+'</b><small>('+n+')</small></summary>'
+    h+='<details class="lbGrp'+(hasSg&&sg?' lbHide':'')+(lbShut(g)?' lbShut"':'"')+' data-g="'+g+'"'+(lbShut(g)?'':' open')+'><summary class="lbGh"><b>'+(sg?'✅ נרשמו למוניטור':g)+'</b><small>('+n+')</small></summary>'
      +(sg?'<small class="lbSgHint">לא צריך לחזור אליהם מיד. שבוע אחרי ההרשמה כל אחד עולה לבד ל ⏰ היום.</small>':'')
      +(rs.length?LB_HD+rs.map(row).join(''):'<small class="lbEmpty">אין כאן לידים.</small>')+'</details>';
    });

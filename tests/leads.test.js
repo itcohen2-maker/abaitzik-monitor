@@ -248,3 +248,11 @@ test('review 6: snooze from WhatsApp moves the lead\'s nextAt; a deleted lead is
     assert.strictEqual(L.readAll(d).find((x) => x.id === r.id).nextAt, '');
   } finally { fs.rmSync(d, { recursive: true, force: true }); }
 });
+
+test('25.11: a trial signup is created with no "לחזור מחר", every other lead keeps it', () => {
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'ld-'));
+  const a = L.addFound(d, { src: 'signup', key: 'signup:t1', name: 'נרשם', phone: '0501234567', at: '2026-11-24T22:26:00.000Z' });
+  const b = L.addFound(d, { src: 'whatsapp', key: 'wa:1', name: 'פונה', phone: '0507654321', at: '2026-11-24T22:26:00.000Z' });
+  assert.strictEqual(a.next, ''); assert.strictEqual(a.nextAt, '');
+  assert.strictEqual(b.next, 'לחזור מחר'); assert.ok(b.nextAt);
+});
