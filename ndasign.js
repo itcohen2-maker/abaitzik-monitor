@@ -54,7 +54,7 @@ function agreement(v) {
   return '<div class="doc">'
     + '<h2>הסכם סודיות ואי גילוי</h2><div class="c">(Non Disclosure Agreement, NDA)</div>'
     + '<div class="c">שנערך ונחתם ביום ' + v('day') + ' לחודש ' + v('month') + ' שנת ' + v('year') + '</div>'
-    + '<div class="party"><b>בין:</b><br>IT Solution<br>ח.פ./ע.מ.: ' + ITS_ID + '<br>מרחוב: ' + v('itsAddr') + '<br>(להלן: "המקבל" או "IT Solution")</div>'
+    + '<div class="party"><b>בין:</b><br>IT Solution<br>ח.פ./ע.מ.: ' + ITS_ID + (v('itsAddr') === BLANK ? '' : '<br>מרחוב: ' + v('itsAddr')) + '<br>(להלן: "המקבל" או "IT Solution")</div>'
     + '<div class="party"><b>לבין:</b><br>' + v('co') + '<br>ח.פ./ע.מ.: ' + v('id') + '<br>מרחוב: ' + v('addr') + '<br>(להלן: "המגלה" או "החברה")</div>'
     + P('הואיל והצדדים מנהלים משא ומתן ו/או שיחות מקדימות לבחינת אפשרות להתקשרות עסקית ביניהם, במסגרתה עשויה IT Solution לספק לחברה שירותי פיתוח תוכנה, ייעוץ טכנולוגי ו/או שירותים נלווים (להלן: "ההתקשרות המיועדת");')
     + P('והואיל ובמסגרת הבחינה האמורה, החברה עשויה לגלות ולמסור למקבל מידע סודי וקנייני השייך לה ו/או לצדדים שלישיים הקשורים אליה;')
@@ -177,10 +177,10 @@ function ownerPage(d) {
   if (o.sig) h += '<div class="done"><div class="big">✅</div><h2>חתמת בשם IT Solution</h2><p>' + esc(o.name) + ', ' + esc(o.role) + '</p><img src="' + o.sig + '" alt="" style="max-height:80px"></div>';
   h += '<p class="sub">' + (list.length ? 'לקוחות שחתמו: ' + list.length + '. ' : 'עוד אף לקוח לא חתם. ') + 'פתחו את הקישור ללקוחות: ' + (readJson(path.join(d.dir, 'stats.json'), {}).opens || 0) + '.</p>'
     + '<div class="step"><i>' + (o.sig ? '🔄' : '1') + '</i>' + (o.sig ? 'לעדכן את הפרטים או את החתימה' : 'הפרטים של IT Solution וחתימה') + '</div>'
-    + field('itsName', 'שם החותם', '', o.name) + field('itsRole', 'תפקיד', 'למשל בעלים', o.role) + field('itsAddr', 'כתובת העסק', 'רחוב, מספר ועיר', o.addr)
+    + field('itsName', 'שם החותם', '', o.name) + field('itsRole', 'תפקיד', 'למשל בעלים', o.role) + field('itsAddr', 'כתובת העסק (לא חובה)', 'אפשר להשאיר ריק', o.addr)
     + padHtml() + '<button class="go" id="go" type="button">✍️ לשמור את החתימה של IT Solution</button><div class="err" id="err"></div>'
     + '<script>(function(){var T="' + d.def.ownerTok + '";function $(i){return document.getElementById(i)}' + PAD_JS
-    + '$("go").onclick=function(){var er=$("err"),f={};for(var k of ["itsName","itsRole","itsAddr"]){f[k]=$(k).value.trim();if(f[k].length<2){er.textContent="חסר: "+document.querySelector(\'label[for="\'+k+\'"]\').textContent;$(k).focus();return}}'
+    + '$("go").onclick=function(){var er=$("err"),f={};for(var k of ["itsName","itsRole","itsAddr"]){f[k]=$(k).value.trim();if(k!=="itsAddr"&&f[k].length<2){er.textContent="חסר: "+document.querySelector(\'label[for="\'+k+\'"]\').textContent;$(k).focus();return}}'
     + 'if(!inked){er.textContent="צריך לחתום עם האצבע בתוך המסגרת";return}var g=$("go");g.disabled=true;g.textContent="שומר...";'
     + 'post({tok:T,f:f,sig:cv.toDataURL("image/png")}).then(function(j){if(!j.ok)throw 0;location.reload()}).catch(function(){g.disabled=false;g.textContent="✍️ לשמור את החתימה של IT Solution";er.textContent="השמירה לא עברה, נסה שוב."})};'
     + '})();</script>';
@@ -242,7 +242,7 @@ function handlePost(b, notify, ip, ua, done) {
   const f = b.f || {};
   if (d.kind === 'owner') {
     const o = { name: clean(f.itsName), role: clean(f.itsRole), addr: clean(f.itsAddr), sig, at: new Date().toISOString() };
-    if (o.name.length < 2 || o.role.length < 2 || o.addr.length < 2 || !sigOk) return done({ status: 400, body: { ok: false } });
+    if (o.name.length < 2 || o.role.length < 2 || !sigOk) return done({ status: 400, body: { ok: false } });
     writeJson(path.join(d.dir, 'owner.json'), o);
     execFile('node', [path.join(__dirname, 'push.js'), 'nda: IT Solution חתם'], { cwd: __dirname, timeout: 180000 }, () => {});
     return done({ status: 200, body: { ok: true } });
