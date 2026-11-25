@@ -37,3 +37,9 @@ test('bizLeadsItem: a reminder at 00:30 Israel time is due on that Israel day, n
   const it2 = bizLeadsItem([{ kind: 'lead', name: 'דנה', status: 'בשיחה', at: '2026-11-01T07:30:00Z', nextAt: '2026-11-13T22:30:00.000Z' }], NOW);
   assert.match(it2.sub, /הגיע היום לחזור: דנה/);
 });
+
+// 25.11.2026: a trial signup still 'חדש' is not a lead to call back, so it is not on the card as not handled
+test('bizLeadsItem: a trial signup that is still new is not on the card', () => {
+  const it = bizLeadsItem([{ kind: 'lead', name: 'Shir', status: 'חדש', source: 'signup', at: '2026-11-14T07:30:00Z' }], NOW);
+  assert.strictEqual(it.st, 'done');
+});
