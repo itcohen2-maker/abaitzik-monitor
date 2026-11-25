@@ -63,6 +63,8 @@
 <main id="m"><p class="empty">טוען…</p></main>
 <div class="toast" id="toast"></div>
 <script>
+// 25.11.2026: the reels are on our server, not on GitHub Pages (over its 1GB limit).
+var MB='https://wa.abaitzik.com/ai/';
 (function(){
  function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
  var SEND=null;try{SEND=JSON.parse(sessionStorage.getItem('nerSend')||'null');}catch(e){}
@@ -109,7 +111,7 @@
  function card(it){
   var posted=!!it.posted;
   var h='<div class="card '+(posted?'done':'todo')+'" data-id="'+esc(it.id)+'" data-n="'+esc(it.id)+'">'
-   +'<div class="media"><video src="'+esc(it.file)+'" poster="'+esc(it.poster)+'" controls playsinline preload="none"></video></div>'
+   +'<div class="media"><video src="'+esc(MB+it.file)+'" poster="'+esc(MB+it.poster)+'" controls playsinline preload="none"></video></div>'
    +'<div class="meta">'
    +'<span class="nm">'+esc(it.name)+'</span>'
    +'<span class="st '+(posted?'ok':'wait')+'">'+(posted?'✅ עלה ב'+nice(ymd(it.postedAt))+' בשעה '+hhmm(it.postedAt):(it.hold?'👀 ממתין לאישור שלך, לא יעלה לבד. אחרי האישור: יתוכנן לפי הסדר בתור':(PLAN[it.id]?'📅 מתוכנן לעלות: '+nice(PLAN[it.id])+' ב 20:00'+(it.approvedAt?' (אושר '+nice(ymd(it.approvedAt))+' '+hhmm(it.approvedAt)+')':''):'⏳ עוד לא עלה')))+'</span>'
@@ -117,7 +119,7 @@
    +'<div class="cap">'+esc(it.ig||'')+'</div>'
    +'<div class="row">'
    +'<button type="button" class="full" data-dl="'+esc(it.id)+'">💾 שמירה לטלפון</button>'
-   +'<a class="b" href="'+esc(it.poster)+'" target="_blank" rel="noopener">🖼️ הכריכה</a>'
+   +'<a class="b" href="'+esc(MB+it.poster)+'" target="_blank" rel="noopener">🖼️ הכריכה</a>'
    +'<button type="button" class="cp" data-cp="ig" data-id2="'+esc(it.id)+'">📋 כיתוב אינסטגרם</button>'
    +'<button type="button" class="cp" data-cp="tt" data-id2="'+esc(it.id)+'">📋 כיתוב טיקטוק</button>'
    +'<button type="button" class="cp" data-cp="yt" data-id2="'+esc(it.id)+'">📋 יוטיוב, כותרת</button>'
@@ -155,7 +157,7 @@
    var it=find(b.getAttribute('data-id2')),k=b.getAttribute('data-cp');if(it&&it[k])copy(it[k],b.textContent.replace('📋 ',''));});});
   document.querySelectorAll('[data-dl]').forEach(function(b){b.addEventListener('click',function(){
    var it=find(b.getAttribute('data-dl'));if(!it)return;
-   location.href='../save.html?f='+encodeURIComponent('ai/'+String(it.file).split('?')[0])+'&n='+encodeURIComponent(it.name);});});
+   location.href='../save.html?f='+encodeURIComponent(MB+String(it.file).split('?')[0])+'&n='+encodeURIComponent(it.name);});});
   document.querySelectorAll('[data-posted]').forEach(function(b){b.addEventListener('click',function(){
    var id=b.getAttribute('data-posted'),it=find(id);
    if(b.getAttribute('data-sure')!=='1'){b.setAttribute('data-sure','1');b.textContent='✅ לחץ שוב לאישור: העליתי';setTimeout(function(){if(b.isConnected&&!b.disabled){b.removeAttribute('data-sure');b.textContent='☐ העליתי את זה';}},4000);return;}

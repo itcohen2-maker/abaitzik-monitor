@@ -24,7 +24,8 @@ const { execFileSync, execFile } = require('child_process');
 
 const QUEUE = '/home/monitor/ai-queue.json';
 const STATE = '/home/monitor/ai-post-state.json';
-const BASE = 'https://itcohen2-maker.github.io/abaitzik-monitor/ai/';
+// 25.11.2026: the reels live on our server (/srv/ai/media), GitHub Pages went over its 1GB limit.
+const BASE = 'https://wa.abaitzik.com/ai/';
 const API = 'https://graph.facebook.com/v23.0/';
 const CHANNELS = {
   he: { name: 'itsolution.ai', id: '17841456612749770', tokenFile: '/home/monitor/.ig-token-itsolution-ai',

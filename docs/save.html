@@ -37,7 +37,8 @@
    The file is fetched as a Blob at load, so the tap shares it right away (iOS needs the share inside the tap). */
 (function(){
  var q=new URLSearchParams(location.search),f=q.get('f')||'',n=q.get('n')||'סרטון';
- var ok=/^[a-z0-9_\/.\-]+\.mp4(\?v=[a-z0-9]+)?$/i.test(f)&&f.indexOf('..')<0;
+ // 25.11.2026: the AI channel reels are served from our server, only that one folder is allowed besides the relative paths.
+ var ok=/^(https:\/\/wa\.abaitzik\.com\/ai\/media\/)?[a-z0-9_\/.\-]+\.mp4(\?v=[a-z0-9]+)?$/i.test(f)&&f.indexOf('..')<0;
  var v=document.getElementById('v'),b=document.getElementById('save'),sub=document.getElementById('sub');
  document.getElementById('ttl').textContent=n;
  function toast(t){var e=document.getElementById('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(function(){e.style.display='none';},2600);}

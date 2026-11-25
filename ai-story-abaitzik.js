@@ -24,7 +24,8 @@ const social = require('./lib/social.js');
 
 const QUEUE = '/home/monitor/ai-queue.json';
 const STATE = '/home/monitor/abaitzik-story-state.json';
-const BASE = 'https://itcohen2-maker.github.io/abaitzik-monitor/ai/';
+// 25.11.2026: the reels live on our server (/srv/ai/media), GitHub Pages went over its 1GB limit.
+const BASE = 'https://wa.abaitzik.com/ai/';
 const CH = { name: 'abaitzik', id: '17841439995081131', tokenFile: '/home/monitor/.ig-token-abaitzik' };
 // 12.11.2026, Itzik: he wants the channel's own post shared to his story (the card with the channel), which only the
 // Instagram app can do. So by default this sends him a WhatsApp with today's post link, Hebrew and English in turn,
