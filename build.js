@@ -15954,6 +15954,10 @@ var REEL_ITEMS=[
 {n:'IT 01 פרסום',p:'it01',t:'טקסט לסטורי באינסטגרם ולטיקטוק, עם קישור לכל רשת',r:'it01-post.txt'},
 // 9.11, Itzik: sardine sandwich, three things he stopped buying; caption copied from his reference post.
 // 18.11, Itzik: the drive with dual capture; only the text stays here ("אני רק צריך את המלל"), music like the reference (U2).
+// 26.11, Itzik: forward bend stretch edited like his Instagram reference (sticker of the goal pose on top, opening and closing tags, no music burned in).
+{n:'40',t:'ריל: מתיחה, כפיפה קדימה כמו ברפרנס · 4K הכי איכותי, לשמירה בגלריה',r:'reel-40-stretch.mp4'},
+{n:'40 כריכה',t:'הכריכה · 4K',r:'reel-40-cover.jpg'},
+{n:'40 פרסום',t:'מתיחה: כיתוב עם השלבים, מוזיקה והאשטגים לכל רשת',r:'reel-40-post.txt'},
 {n:'39',t:'ריל: צ׳ופי חזר הביתה, עם המוזיקה. ה 4K בתיקייה בדרייב',r:'reel-39-chupi.mp4'},
 {n:'39 כריכה',t:'הכריכה · 4K',r:'reel-39-cover.jpg'},
 {n:'39 פרסום',t:'צ׳ופי חזר הביתה: כיתוב והאשטגים לכל רשת',r:'reel-39-post.txt'},
