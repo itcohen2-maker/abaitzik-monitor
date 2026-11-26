@@ -3375,7 +3375,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-26T15:35:36.420Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-26T15:36:16.374Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4200,7 +4200,6 @@ body.offHome .wrap:has(#pA:not([hidden]))>#pA{flex:1;min-height:0}
   <button type="button" class="ic icNew" data-grp="work" id="icBoard" data-new="1"><span class="c c-board">🎛️</span>לוח בקרה</button><button type="button" class="ic icNew" data-grp="work" id="icLeadBoard" data-new="1"><span class="c c-lboard">🔔</span>לוח לידים</button>
   <button type="button" class="ic icNew" data-grp="work" id="icSignup" data-new="1"><span class="c c-its">🚀</span>דף הרשמה</button>
   <button type="button" class="ic icNew" data-grp="work" id="icPrices" data-new="1"><span class="c c-its">💰</span>מחירון</button>
-  <button type="button" class="ic icNew" data-grp="work" id="icCampForm" data-new="1"><span class="c c-its">📣</span>טופס קמפיין</button>
   <button type="button" class="ic icNew" data-grp="work" id="icCallKit" data-new="1"><span class="c c-its">📞</span>שיחה עם לקוח</button>
   <button type="button" class="ic icNew" data-grp="work" id="icCamp" data-new="1"><span class="c c-camp">📣</span>קמפיין</button>
   <button type="button" class="ic icNew" data-grp="proj" id="icSites" data-new="1" data-upd="20261124-monitor-ru"><span class="c c-its"><em class="icN">2</em>🌐</span>האתרים שלי</button>
@@ -5915,7 +5914,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='e923a391b7';
+var CODE_ID='fdb492d551';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","ownerLook":true,"uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[],"chatExamples":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15858,7 +15857,6 @@ function boardMore(){
 }
 on('icSignup',function(){signupShare();});
 on('icPrices',function(){window.open('https://form.it-solution.co.il/p/e9e946f35a0bea1868a5.html','_blank','noopener');});
-on('icCampForm',function(){window.open('https://form.it-solution.co.il/p/5100c3b8e29eea71ebb2.html','_blank','noopener');});
 on('icCallKit',function(){window.open('https://form.it-solution.co.il/k/64c9d962067dddf298d5','_blank','noopener');});
 window.CK_URL="https://form.it-solution.co.il/k/64c9d962067dddf298d5";
 window.ckBtn=function(r,st){if(!window.CK_URL||!r||!r.id)return '';return '<a class="yb yb2"'+(st?' style="'+st+'"':'')+' href="'+esc(window.CK_URL+'#lead='+encodeURIComponent(r.id)+'&name='+encodeURIComponent(r.name||'')+'&phone='+encodeURIComponent(r.phone||''))+'" target="_blank" rel="noopener">📋 שאלון שיחה</a>';};

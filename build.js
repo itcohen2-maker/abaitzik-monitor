@@ -5401,7 +5401,6 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icSignup" data-new="1"><span class="c c-its">🚀</span>דף הרשמה</button>' : ''}
   <!-- 21.11.2026, Itzik: "שים לי אייקון במוניטור, מחירון". The price list of the two products, his eyes only. -->
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icPrices" data-new="1"><span class="c c-its">💰</span>מחירון</button>' : ''}
-  ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icCampForm" data-new="1"><span class="c c-its">📣</span>טופס קמפיין</button>' : ''}
   ${inst.name === 'abaitzik' && CALLKIT_URL ? '<button type="button" class="ic icNew" data-grp="work" id="icCallKit" data-new="1"><span class="c c-its">📞</span>שיחה עם לקוח</button>' : ''}
   <!-- 19.11.2026, Itzik: "תעשה לי אייקון במוניטור, תרשום עליו קמפיין ותיתן לי אופציה לשתף אותו" (round, not a tile). Opens campShare():
        the page of every active ad per campaign plus the videos waiting to replace them, built by /root/campaign-page.js. -->
@@ -19777,7 +19776,6 @@ function boardMore(){
 }
 on('icSignup',function(){signupShare();});
 on('icPrices',function(){window.open('https://form.it-solution.co.il/p/e9e946f35a0bea1868a5.html','_blank','noopener');});
-on('icCampForm',function(){window.open('https://form.it-solution.co.il/p/5100c3b8e29eea71ebb2.html','_blank','noopener');});
 ${CALLKIT_URL ? "on('icCallKit',function(){window.open('" + CALLKIT_URL + "','_blank','noopener');});" : ''}
 // 25.11.2026, Itzik: every lead opens the call sheet already filled with his name and phone (lib/call-kit.html reads the hash).
 window.CK_URL=${JSON.stringify(CALLKIT_URL)};
