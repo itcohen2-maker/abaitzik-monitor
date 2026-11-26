@@ -5202,7 +5202,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? require('./lib/sendlist-ui.js').tile : '') + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gDemoSt" data-new="1"><b>📊 מוניטור ההדגמה</b><small>כניסות, שאלות ווואטסאפ</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + leadsTile() + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261116-vids-link' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109-cb1115"><b>💼 העסק שלי</b><small>' + (leadsHiddenHere() ? 'לקוחות, כסף, ומה לחזור אליו' : 'לידים, לקוחות, כסף, ומה לחזור אליו') + '</small></button>' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g13" data-grp="work" id="gBhQuote" data-new="1"><b>🧾 הצעות מחיר</b><small>הצעה עם הלוגו שלך, לפני מע״מ, ב PDF</small></button>' : '') + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? require('./lib/sendlist-ui.js').tile : '') + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gDemoSt" data-new="1"><b>📊 מוניטור ההדגמה</b><small>כניסות, שאלות ווואטסאפ</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + leadsTile() + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261126-paycard' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109-cb1115"><b>💼 העסק שלי</b><small>' + (leadsHiddenHere() ? 'לקוחות, כסף, ומה לחזור אליו' : 'לידים, לקוחות, כסף, ומה לחזור אליו') + '</small></button>' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g13" data-grp="work" id="gBhQuote" data-new="1"><b>🧾 הצעות מחיר</b><small>הצעה עם הלוגו שלך, לפני מע״מ, ב PDF</small></button>' : '') + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -15934,54 +15934,20 @@ var REEL_ITEMS=[
 // with it-solution.co.il at the end (source ~/clip/monitor_ps_story). Shows in the 💻 IT Solution tab.
 // 3.11, Itzik: "אין יותר רשימת המתנה, הרשמה וישר נכנסים". All of Shachar in one group, shown first;
 // 'p' is the reel-posts.json key for a פרסום item whose name does not start with its number.
-{n:'שחר סטורי',t:'שחר פתוח עכשיו, נרשמים ונכנסים מיד · 4K הכי איכותי, לשמירה בגלריה',r:'shachar-story-open.mp4'},
-{n:'שחר פוסט',t:'תמונה לשיתוף: פתוח עכשיו, נרשמים ונכנסים מיד',r:'shachar-post-open.png'},
-{n:'שחר 29',t:'ריל: איזה כיף, יש עם מי לדבר · 4K הכי איכותי, לשמירה בגלריה',r:'shachar-reel-29-open.mp4'},
-{n:'שחר 29 כריכה',t:'הכריכה · 4K',r:'reel-29-cover.jpg'},
-{n:'שחר 29 פרסום',p:'29',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-29-post.txt'},
-{n:'שחר 30',t:'ריל: מאחורי הקלעים · 4K הכי איכותי, לשמירה בגלריה',r:'shachar-reel-30-open.mp4'},
-{n:'שחר 30 כריכה',t:'הכריכה · 4K',r:'reel-30-cover.jpg'},
-{n:'שחר 30 פרסום',p:'30',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-30-post.txt'},
-{n:'שחר 32',t:'ריל: למי זה, תמיכה רגשית ועם מי לדבר · 4K הכי איכותי, לשמירה בגלריה',r:'reel-32-shachar-open.mp4'},
-{n:'שחר 32 כריכה',t:'הכריכה · 4K',r:'reel-32-cover.jpg'},
-{n:'שחר 32 פרסום',p:'32',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-32-post-open.txt'},
-{n:'שחר 33',t:'מודעה: ככה נראה הבוקר שלי · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33-ad-morning.mp4'},
-{n:'שחר 33 כריכה',t:'הכריכה · 4K',r:'reel-33-cover.png'},
-{n:'שחר 33 פרסום',p:'sh33',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-sh33-post.txt'},
 // 5.11, Itzik: the monitor with WhatsApp and the control panel, for Instagram story and TikTok (IT Solution).
-{n:'IT 01',t:'חדש: המוניטור, וואטסאפ ולוח בקרה אחד, לסטורי באינסטגרם ובטיקטוק · הכי איכותי, לשמירה בגלריה',r:'it01-monitor-v2.mp4'},
-{n:'IT 01 כריכה',t:'הכריכה: מי לא שילם לך החודש?',r:'it01-cover.jpg'},
-{n:'IT 01 פרסום',p:'it01',t:'טקסט לסטורי באינסטגרם ולטיקטוק, עם קישור לכל רשת',r:'it01-post.txt'},
 // 9.11, Itzik: sardine sandwich, three things he stopped buying; caption copied from his reference post.
 // 18.11, Itzik: the drive with dual capture; only the text stays here ("אני רק צריך את המלל"), music like the reference (U2).
 // 26.11, Itzik: forward bend stretch edited like his Instagram reference (sticker of the goal pose on top, opening and closing tags, no music burned in).
 {n:'40',t:'ריל: מתיחה, מיושר לפלס, הכיתוב מתחת לרגליים · 4K הכי איכותי, לשמירה בגלריה',r:'reel-40e-stretch.mp4'},
 {n:'40 כריכה',t:'הכריכה · 4K',r:'reel-40-cover.jpg'},
 {n:'40 פרסום',t:'מתיחה: כיתוב עם השלבים, מוזיקה והאשטגים לכל רשת',r:'reel-40-post.txt'},
-{n:'41',t:'ריל: מאה צעדים אחרי ארוחה, הסינית בכרטיס כמו ברפרנס · 4K הכי איכותי, לשמירה בגלריה',r:'reel-41-100steps.mp4'},
-{n:'41ב',t:'ריל: מאה צעדים, הסינית קפואה בזמן ההוק וזום כתפיים כמו ברפרנס · 4K הכי איכותי, לשמירה בגלריה',r:'reel-41b-100steps.mp4'},
+{n:'41ג',t:'ריל: מאה צעדים, הסינית מתחילה אחרי שהטלפון אצלך · 4K הכי איכותי, לשמירה בגלריה',r:'reel-41c-100steps.mp4'},
 {n:'41 כריכה',t:'הכריכה עם ההוק: לסינים יש הרגל',r:'reel-41-cover.jpg'},
 {n:'41 פרסום',t:'מאה צעדים: כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-41-post.txt'},
-{n:'39',t:'ריל: צ׳ופי חזר הביתה, עם המוזיקה. ה 4K בתיקייה בדרייב',r:'reel-39-chupi.mp4'},
-{n:'39 כריכה',t:'הכריכה · 4K',r:'reel-39-cover.jpg'},
-{n:'39 פרסום',t:'צ׳ופי חזר הביתה: כיתוב והאשטגים לכל רשת',r:'reel-39-post.txt'},
-{n:'37 פרסום',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-37-post.txt'},
-{n:'36ה',t:'ריל: 3 דברים שהפסקתי לעשות במטבח, 20 שניות · 4K הכי איכותי, לשמירה בגלריה',r:'reel-36e-yogurt.mp4'},
-{n:'36 כריכה',t:'הכריכה · 4K',r:'reel-36-cover.jpg'},
-{n:'36 פרסום',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-36-post.txt'},
-{n:'35',t:'ריל: שלושה דברים שהפסקתי לקנות · 4K הכי איכותי, לשמירה בגלריה',r:'reel-35-sardines.mp4'},
-{n:'35 כריכה',t:'הכריכה · 4K',r:'reel-35-cover.jpg'},
-{n:'35 פרסום',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-35-post.txt'},
+{n:'42 כריכה',t:'הכריכה עם ההוק: מה אופרה הבינה בגיל 72',r:'reel-42-cover.jpg'},
+{n:'42 פרסום',t:'אופרה: כיתוב, מקור, מוזיקה והאשטגים לכל רשת',r:'reel-42-post.txt'},
 // 5.11, Itzik: post "the fire stopped here", his own text; music Sign of the Times.
-{n:'34 פרסום',t:'פוסט האש נעצרה כאן: הכיתוב שלך, Sign of the Times והאשטגים לכל רשת',r:'reel-34-post.txt'},
-{n:'28 סטורי האתר',t:'יש לי אתר חדש, כולם מוזמנים (מתוקן: שחר כבר פתוח, ועם לוגו) · 4K הכי איכותי, לשמירה בגלריה',r:'story-28-site-open.mp4'},
 // 13.11, Itzik: stories from the monitor ads shoot, one now and one half an hour later. "תשים לי את זה ... כמו נגיד הרילים שלי".
-{n:'סטורי סט 1',t:'להעלות עכשיו: שקט, מצלמים 🤫 · התמונה המלאה',r:'story-1-now.jpg'},
-{n:'סטורי סט 2',t:'בעוד חצי שעה: חצי שעה אחרי, לשמור שכולם יהיו בשקט 🤫 · סרטון',r:'story-2-in-30min.mp4'},
-{n:'מדבקת המוניטור',t:'המוניטור בטלפון עם: זה המוניטור, כל העסק בטלפון אחד · רקע שקוף',r:'sticker-monitor.png'},
-{n:'מדבקת המוניטור בלי כיתוב',t:'רק הטלפון עם המוניטור · רקע שקוף',r:'sticker-monitor-phone-only.png'},
-{n:'מדבקת המוניטור קטנה',t:'טלפון עם מיקרופון ומדדים, רקע שקוף, להניח איפה שרוצים',r:'sticker-monitor-mini.png'},
-{n:'סטורי סט מדבקה',t:'המשפט על רקע שקוף, לשים על כל סרטון',r:'story-set-sticker.png'},
 ];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
@@ -21528,6 +21494,9 @@ function bizSheet(t0){
    // Three clean templates, no customer name. Shai's files and answers are in data/_archive/shai-20261108.
    return '<div class="bzHead">💻 IT Solution</div>'+planBoardHtml()
     // 5.11, Itzik: "זה מסמך סודיות שמעבירים ללקוח חדש": the original is the PDF, signed once by IT Solution, then one link for every client.
+    // 26.11.2026, Itzik: "תשים לי את הכרטיס הזה בעסק שלי שאני אוכל לשלוח אותו". The bank transfer card for clients; the file view has the share button.
+    +'<div class="bzSec">🏦 פרטי העברה בנקאית</div>'
+    +'<button type="button" class="yb yb1" data-bz="anim" data-f="pay-card-it-solution.png" data-new="1">🏦 כרטיס פרטי ההעברה, לשליחה ללקוח</button>'
     +'<div class="bzSec">🔒 טופס סודיות</div>'+ndaHtml()
     // 4.11, Itzik: "אני צריך חוזה מול לקוח". One service agreement for every client, signed inside the quote page, before any build.
     +'<div class="bzSec">📜 הסכם בינינו</div>'
@@ -21624,7 +21593,7 @@ function bizSheet(t0){
    return '<div class="bzHead">🔔 לידים: כל מה שנכנס, במקום אחד</div>'+ldBoardHtml()+newLeadHtml();
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261111-leads'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104',li:'li-queue-20261109'};
+  var BZ_UPD={its:'20261126-paycard'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104',li:'li-queue-20261109'};
   ((D.agr&&D.agr.clients)||[]).forEach(function(c,i){BZ_UPD['agr'+i]='a8-'+String(c.signedAt||c.openedAt||'new').replace(/\\D/g,'').slice(0,12);});
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
