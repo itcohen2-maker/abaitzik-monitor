@@ -756,8 +756,16 @@
   "ytd": "The store never gets your card number, only a token and a one-time code that works for a few moments. A thief who steals the token can't use it. Source: Apple Support, Apple Pay security and privacy overview.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-15T06:00:45.408Z"
+  "posted": true,
+  "postedAt": "2026-11-26T18:04:28.096Z",
+  "approvedAt": "2026-11-15T06:00:45.408Z",
+  "auto": {
+   "reel": "18104160179406069",
+   "story": "18109544276251388",
+   "storyError": null,
+   "page": "1908127177292615",
+   "pageError": null,
+   "channel": "itsolution.global"
+  }
  }
 ]
