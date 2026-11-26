@@ -45,6 +45,8 @@ function events(prev, cur) {
   cur.chat.filter((f) => !seenC.has(f)).forEach((f) => {
     const m = rd(path.join(cur.chatDir, f), null);
     if (!m || m.mergedInto) return;
+    // 26.11.2026, Itzik got the daily Gmail tip as "המוניטור ענה" and asked what it means. A tip the monitor sends on its own is not an answer to him.
+    if (m.kind === 'tip') return;
     const at = Date.parse(m.at) || 0;
     if (m.from === 'claude') {
       const fix = /^תיקון:/.test(String(m.text || ''));
