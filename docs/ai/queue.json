@@ -731,9 +731,17 @@
   "ytd": "בית העסק לא מקבל את מספר הכרטיס שלכם אלא טוקן, וקוד חד פעמי שעובד רק לכמה רגעים. גם גנב שלוקח את הטוקן לא יכול להשתמש בו. מקור: Apple Support, Apple Pay security and privacy overview.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-15T06:00:45.408Z"
+  "posted": true,
+  "postedAt": "2026-11-26T18:01:58.381Z",
+  "approvedAt": "2026-11-15T06:00:45.408Z",
+  "auto": {
+   "reel": "18190618729414140",
+   "story": "18012847682777996",
+   "storyError": null,
+   "page": "2239483300253555",
+   "pageError": null,
+   "channel": "itsolution.ai"
+  }
  },
  {
   "id": "tokenpay-en",
