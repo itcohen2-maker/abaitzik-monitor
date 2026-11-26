@@ -15955,10 +15955,7 @@ var REEL_ITEMS=[
 // 9.11, Itzik: sardine sandwich, three things he stopped buying; caption copied from his reference post.
 // 18.11, Itzik: the drive with dual capture; only the text stays here ("אני רק צריך את המלל"), music like the reference (U2).
 // 26.11, Itzik: forward bend stretch edited like his Instagram reference (sticker of the goal pose on top, opening and closing tags, no music burned in).
-{n:'40ה',t:'ריל: מתיחה, מיושר לפלס, הכיתוב מתחת לרגליים · 4K הכי איכותי, לשמירה בגלריה',r:'reel-40e-stretch.mp4'},
-{n:'40ד',t:'ריל: מתיחה, הסוף ארוך יותר, 22.7 שניות · 4K הכי איכותי, לשמירה בגלריה',r:'reel-40d-stretch.mp4'},
-{n:'40ג',t:'ריל: מתיחה עם האיור מהרפרנס, מואץ, 21 שניות · 4K הכי איכותי, לשמירה בגלריה',r:'reel-40c-stretch.mp4'},
-{n:'40',t:'ריל: מתיחה, כפיפה קדימה כמו ברפרנס · 4K הכי איכותי, לשמירה בגלריה',r:'reel-40-stretch.mp4'},
+{n:'40',t:'ריל: מתיחה, מיושר לפלס, הכיתוב מתחת לרגליים · 4K הכי איכותי, לשמירה בגלריה',r:'reel-40e-stretch.mp4'},
 {n:'40 כריכה',t:'הכריכה · 4K',r:'reel-40-cover.jpg'},
 {n:'40 פרסום',t:'מתיחה: כיתוב עם השלבים, מוזיקה והאשטגים לכל רשת',r:'reel-40-post.txt'},
 {n:'41',t:'ריל: מאה צעדים אחרי ארוחה, הסינית בכרטיס כמו ברפרנס · 4K הכי איכותי, לשמירה בגלריה',r:'reel-41-100steps.mp4'},
