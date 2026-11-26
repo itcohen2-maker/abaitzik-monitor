@@ -1285,7 +1285,7 @@ function build() {
   try {
     const pio = require('./lib/plan-io.js');
     if (inst.name === 'abaitzik') payload.planBoard = pio.board(inst.dataPath, Date.now());
-    else payload.plan = require('./lib/i18n.js').fields(inst.lang, require('./lib/plan.js').view(pio.statusOf(inst.name, path.join(inst.dataPath, 'status'), Date.now())), ['label', 'launch', 'say', 'warnLine']);
+    else payload.plan = require('./lib/i18n.js').fields(inst.lang, require('./lib/plan.js').view(pio.statusOf(inst.name, path.join(inst.dataPath, 'status'), Date.now())), ['label', 'launch', 'say', 'warnLine', 'freeLine']);
     if (inst.name !== 'abaitzik') payload.payOffer = require('./lib/pay-offer.js').view(inst.name);
     // 14.11.2026: the add-ons and upgrades the customer can buy and pay on SUMIT (lib/addons.js).
     if (inst.name !== 'abaitzik') {
