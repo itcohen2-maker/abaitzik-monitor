@@ -3559,6 +3559,10 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .tk{display:flex;align-items:center;gap:12px;padding:12px;margin:8px 0;border-radius:12px;background:rgba(127,127,127,.12);cursor:pointer;font-size:1.05em}
 .tk input{width:24px;height:24px;flex:0 0 24px}
 .tkSearch{width:100%;box-sizing:border-box;padding:10px 12px;margin:4px 0 6px;border-radius:12px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);color:inherit;font:inherit;font-size:16px}
+.cvTabs{display:flex;gap:6px;margin:4px 0 8px}.cvTabs button{flex:1;padding:8px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;font-size:15px}.cvTabs button.on{background:#26a69a;color:#fff;border-color:#26a69a}
+.cvDay{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:6px 0}.cvDay.cvToday{border-color:#26a69a}.cvH{font-weight:700;margin-bottom:4px}.cvIt{font-size:15px;padding:2px 0}.cvNo{opacity:.55}
+.cvMon{display:flex;justify-content:space-between;align-items:center;font-weight:700;margin:4px 0 6px}.cvMon button{font-size:14px;padding:6px 10px}
+.cvGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}.cvGrid b{font-size:13px;opacity:.7}.cvGrid button{position:relative;padding:8px 0;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;font-size:15px;font-variant-numeric:tabular-nums}.cvGrid button.cvOut{opacity:.4}.cvGrid button.cvToday{border-color:#26a69a;font-weight:700}.cvGrid button.cvSel{background:#26a69a;color:#fff}.cvGrid i{position:absolute;top:1px;left:3px;font-style:normal;font-size:11px;background:#e65100;color:#fff;border-radius:8px;padding:0 4px}
 .tk.done span{text-decoration:line-through;opacity:.55}
 .tk.tnc{cursor:default}.tk.tnc span{flex:1}
 .tkDel{margin-inline-start:auto;border:0;background:none;font-size:18px;padding:4px 6px;cursor:pointer}
@@ -6292,6 +6296,7 @@ __RIVSHARE__
  <h2>משימות</h2>
  <div class="rephint">לחיצה על משימה מסמנת שבוצעה. הסימון נשמר בטלפון שלך.</div>
  <!-- 22.11, idea he took: "אין שורת חיפוש במסך המשימות". Filters the list on the phone as he types. -->
+ <div class="cvTabs" id="tkView"></div>
  <input type="search" id="tkSearch" class="tkSearch" placeholder="🔍 חיפוש במשימות" autocomplete="off" aria-label="חיפוש במשימות">
  <div id="tkBox"></div>
  <!-- 17.10, idea he took: "במסך המשימות אין איך להוסיף משימה". The same box as מה יש לי היום, with a day picker. -->
@@ -6303,6 +6308,7 @@ __RIVSHARE__
 <!--ITZIK:BEGIN-->
 <section id="pAp" hidden>
  <h2>תורים עתידיים</h2>
+ <div class="cvTabs" id="apView"></div>
  <div id="apBox"></div>
  <!-- 13.10, idea he took: "תורים אי אפשר להוסיף, וגם לא כתוב איך". The form sends one line "תור חדש: ..." and the server writes it to the list. -->
  <div class="rephint">להוסיף תור: ממלאים כאן תאריך, שעה, מה ואיפה, ושולחים. אפשר גם לכתוב או להקליט בצ׳אט "תור חדש" עם הפרטים, או לשלוח צילום של ההודעה מהקופה.</div>
@@ -13733,9 +13739,48 @@ function remUndoUndo(){
  clearTimeout(remUndo.t);remUndo=null;
  notesSend(false);renderReminders();
 }
+// 26.11.2026, idea he took: "תצוגת שבוע וחודש לתורים ולמשימות". Appointments and tasks together, by day.
+function cvDay(iso){try{return new Date(iso).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});}catch(e){return '';}}
+function cvItems(){
+ var m={},gone=clearedIds('tasksCleared'),done=tkDone();
+ (D.appts||[]).forEach(function(a){var k=cvDay(a.when);if(!k)return;var h='';
+  if(!a.noTime)try{h=new Date(a.when).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});}catch(e){}
+  (m[k]=m[k]||[]).push({ic:'🏥',t:(h?h+' ':'')+a.what,s:h||'00'});});
+ (D.tasks||[]).forEach(function(t){if(!t.day||gone[t.id])return;(m[t.day]=m[t.day]||[]).push({ic:done[t.id]?'✅':'☐',t:t.text,s:'99'});});
+ Object.keys(m).forEach(function(k){m[k].sort(function(a,b){return a.s<b.s?-1:1;});});
+ return m;
+}
+function cvMode(w){try{return localStorage.getItem('cv_'+w)||'list';}catch(e){return 'list';}}
+function cvTabs(w,re){
+ var el=document.getElementById(w+'View');if(!el)return;var m=cvMode(w);
+ el.innerHTML=[['list','רשימה'],['week','שבוע'],['month','חודש']].map(function(x){return '<button type="button" data-cv="'+x[0]+'"'+(m===x[0]?' class="on"':'')+'>'+x[1]+'</button>';}).join('');
+ el.onclick=function(e){var b=e.target.closest&&e.target.closest('[data-cv]');if(!b)return;try{localStorage.setItem('cv_'+w,b.getAttribute('data-cv'));}catch(e2){}re();};
+}
+function cvRender(host,mode){
+ var m=cvItems(),today=cvDay(new Date().toISOString()),h='';
+ var lbl=function(k,o){o.timeZone='UTC';try{return new Date(k+'T12:00:00Z').toLocaleDateString('he-IL',o);}catch(e){return k;}};
+ var add=function(k,n){var d=new Date(k+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);};
+ var list=function(k){return (m[k]||[]).map(function(x){return '<div class="cvIt">'+x.ic+' '+esc(x.t)+'</div>';}).join('')||'<div class="cvIt cvNo">פנוי</div>';};
+ if(mode==='week'){
+  for(var i=0;i<7;i++){var k=add(today,i);h+='<div class="cvDay'+(k===today?' cvToday':'')+'"><div class="cvH">'+esc(lbl(k,{weekday:'long',day:'numeric',month:'numeric'}))+'</div>'+list(k)+'</div>';}
+ }else{
+  var mo=+host.dataset.mo||0,d0=new Date(today.slice(0,8)+'01T12:00:00Z');d0.setUTCMonth(d0.getUTCMonth()+mo);
+  var first=d0.toISOString().slice(0,10),ym=first.slice(0,7),start=add(first,-d0.getUTCDay()),sel=host.dataset.sel||today;
+  h+='<div class="cvMon"><button type="button" data-cvm="-1">הקודם</button><span>'+esc(lbl(first,{month:'long',year:'numeric'}))+'</span><button type="button" data-cvm="1">הבא</button></div><div class="cvGrid">'+['א','ב','ג','ד','ה','ו','ש'].map(function(x){return '<b>'+x+'</b>';}).join('');
+  for(var j=0;j<42;j++){var k2=add(start,j),n=(m[k2]||[]).length;if(j>=35&&k2.slice(0,7)!==ym)break;
+   h+='<button type="button" data-cvd="'+k2+'" class="'+(k2.slice(0,7)!==ym?'cvOut ':'')+(k2===today?'cvToday ':'')+(k2===sel?'cvSel':'')+'">'+Number(k2.slice(8))+(n?'<i>'+n+'</i>':'')+'</button>';}
+  h+='</div><div class="cvDay"><div class="cvH">'+esc(lbl(sel,{weekday:'long',day:'numeric',month:'numeric'}))+'</div>'+list(sel)+'</div>';
+ }
+ host.innerHTML=h;
+ host.onclick=function(e){
+  var mv=e.target.closest&&e.target.closest('[data-cvm]');if(mv){host.dataset.mo=(+host.dataset.mo||0)+(+mv.getAttribute('data-cvm'));cvRender(host,'month');return;}
+  var b=e.target.closest&&e.target.closest('[data-cvd]');if(!b)return;host.dataset.sel=b.getAttribute('data-cvd');cvRender(host,'month');};
+}
 function renderAppts(){
  var host=document.getElementById('apBox');
  if(!host)return;
+ cvTabs('ap',renderAppts);
+ if(cvMode('ap')!=='list'){cvRender(host,cvMode('ap'));return;}
  var now=Date.now();
  var A=(D.appts||[]).filter(function(a){var t=Date.parse(a.when);return isNaN(t)||t>now-3*3600e3;});
  // 22.11.2026, idea he took: "תורים שכבר עברו נעלמים לגמרי". Past ones fold under the list, newest first, read only.
@@ -14370,6 +14415,9 @@ function renderTasks(){
  tkAddInit();
  var host=document.getElementById('tkBox');
  if(!host)return;
+ cvTabs('tk',renderTasks);
+ var sq0=document.getElementById('tkSearch');if(sq0)sq0.hidden=cvMode('tk')!=='list';
+ if(cvMode('tk')!=='list'){cvRender(host,cvMode('tk'));return;}
  /*
    איציק, 25.9, בהקלטה: "רשימת מטלות, בכפתור עשיתי הכל תאפס". The button
    hides every task on the screen now, on his phone only. A task added later
