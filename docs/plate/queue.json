@@ -485,7 +485,7 @@
   "order": 15,
   "file": "media/plate-almonds-v1.mp4",
   "poster": "media/plate-almonds-v1.jpg",
-  "approved": false,
+  "approved": true,
   "screens": [
    {
     "head": "שקדים",
