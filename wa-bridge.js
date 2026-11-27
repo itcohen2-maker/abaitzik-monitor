@@ -1700,8 +1700,9 @@ const server = http.createServer(function (q, s) {
   const mk = u.pathname.match(/^\/l\/m\/([a-f0-9]{32})\/?$/);
   if (mk && q.method === 'GET') {
     const okm = require('./owner-mark.js').redeem(mk[1], s);
+    if (okm) { try { require('./lib/ledger-lock.js').markItzikPhone(q); } catch (e) {} }
     s.writeHead(okm ? 200 : 410, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
-    s.end('<!doctype html><html lang="he" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font-family:Arial;text-align:center;padding:60px 16px;font-size:20px">' + (okm ? '✅ המכשיר הזה מסומן עכשיו כשלך.' : 'הקישור כבר שומש או שפג תוקפו.') + '</body></html>');
+    s.end('<!doctype html><html lang="he" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font-family:Arial;text-align:center;padding:60px 16px;font-size:20px">' + (okm ? '✅ המכשיר הזה מסומן עכשיו כשלך. אפשר לחזור למוניטור ולפתוח את האריח.' : 'הקישור כבר שומש או שפג תוקפו.') + '</body></html>');
     return;
   }
   // 15.11.2026: a page locked to one phone, with a tracker (lib/ledger-lock.js), /l/<token>[/view] and /api/ledger.
