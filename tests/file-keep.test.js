@@ -32,6 +32,7 @@ function fresh() {
   put(P, 'setup/logo.png', 90);        // setup form: always
   put(P, 'nda-20261001-ab12cd.pdf', 500); // signed: always
   put(P, 'stk/sticker.png', 90);       // stickers: always
+  put(P, 'campaign-20261119-1857.mp4', 90); // an ad video a draft links to: always
   put(P, 'pinned.jpg', 90);            // marked 📌: always
   put(P, 'sale-photo.jpg', 90);        // named by the sale screen: always
   put(P, 'lab/report-old.pdf', 31, 'LAB REPORT OLD'); // lab: 30 days
@@ -61,7 +62,7 @@ test('old voice notes, photos, copies and slices go; documents, setup, signed, p
   for (const rel of ['voice-1.m4a', 'photo.jpg', 'invoice-2025.pdf', 'lab/report-old.pdf', 'setup/lab/report-setup.pdf'])
     assert.ok(!exists(d, 'files-private/' + rel), rel + ' should be gone');
   for (const rel of ['voice-2.m4a', 'invoice-oct.pdf', 'setup/logo.png', 'nda-20261001-ab12cd.pdf', 'stk/sticker.png',
-    'pinned.jpg', 'sale-photo.jpg', 'lab/report-new.pdf'])
+    'pinned.jpg', 'sale-photo.jpg', 'lab/report-new.pdf', 'campaign-20261119-1857.mp4'])
     assert.ok(exists(d, 'files-private/' + rel), rel + ' should stay');
   for (const rel of ['voice-1.m4a', 'big.mov.part2of3', 'only-here.png']) assert.ok(!exists(d, 'inbox/' + rel), 'inbox/' + rel);
   assert.ok(exists(d, 'inbox/contract.docx'));
@@ -79,6 +80,7 @@ test('expiry: a date for what goes, null for what is kept for good', () => {
   const ctx = { pins: new Set(['a.jpg']), named: '' };
   assert.strictEqual(K.expiry('a.jpg', NOW, ctx), null);
   assert.strictEqual(K.expiry('setup/x.pdf', NOW, ctx), null);
+  assert.strictEqual(K.expiry('campaign-20261119-1857.mp4', NOW, ctx), null);
   assert.strictEqual(K.expiry('b.jpg', NOW, ctx), new Date(NOW + 7 * DAY).toISOString());
   assert.strictEqual(K.expiry('lab/r.pdf', NOW, ctx), new Date(NOW + 30 * DAY).toISOString());
   assert.strictEqual(K.expiry('doc.pdf', NOW, ctx), new Date(NOW + 365 * DAY).toISOString());
