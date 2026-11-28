@@ -871,8 +871,7 @@
   "song": "",
   "song_tt": "",
   "order": 39,
-  "hold": true,
-  "note": "סגנון תלת ממד, ממתין לאישור איציק"
+  "approvedAt": "2026-11-28T16:08:18.893Z"
  },
  {
   "id": "passkey-he",
