@@ -902,5 +902,21 @@
   "song_tt": "",
   "order": 41,
   "approvedAt": "2026-11-28T16:10:01.882Z"
+ },
+ {
+  "id": "wasend-en",
+  "lang": "en",
+  "name": "Where does your WhatsApp message go",
+  "ig": "Just sent a WhatsApp message? Do you know where it went?\nBefore it even leaves your phone, it gets locked, and only the receiver's phone has the key. WhatsApp's server holds only a locked box until your friend's phone connects, and once the message is delivered it's deleted from the server. One tick: the server got it. Two ticks: delivered. Two blue ticks: read.\nSo who can really read your messages? Whoever holds the phone. Who holds yours when you're not around?\n#אבאאיציק #tech #privacy #whatsapp #security #explained\nSource: WhatsApp Privacy Policy, end to end encryption",
+  "tt": "Your WhatsApp message is locked before it leaves your phone, and the server only sees a locked box. Who holds your phone when you're not around?\n#אבאאיציק #tech #privacy #whatsapp",
+  "yt": "Where does your WhatsApp message go #אבאאיציק #tech #privacy",
+  "ytd": "Messages are locked on your phone, the server only holds a locked box and deletes it after delivery. Source: WhatsApp Privacy Policy.",
+  "file": "media/wasend-en.mp4",
+  "poster": "media/wasend-en.jpg",
+  "song": "",
+  "song_tt": "",
+  "order": 42,
+  "hold": true,
+  "note": "סגנון תלת ממד, ממתין לאישור איציק"
  }
 ]
