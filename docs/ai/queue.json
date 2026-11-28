@@ -826,8 +826,7 @@
   "song": "",
   "song_tt": "",
   "order": 36,
-  "hold": true,
-  "note": "סגנון תלת ממד, ממתין לאישור איציק"
+  "approvedAt": "2026-11-28T16:05:09.359Z"
  },
  {
   "id": "delete-he",
