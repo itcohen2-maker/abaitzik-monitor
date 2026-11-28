@@ -66,6 +66,7 @@ function toItzik(text, wa) {
     const q = rd(path.join(Q, n), null);
     if (!q || q.state !== 'ready' || !q.host) continue;
     const id = q.id || n.slice(0, -5);
+    if (fs.existsSync(path.join(DATA, 'tenants', 'disconnected', id + '.json'))) continue; // 28.11.2026: a monitor Itzik disconnected is no trial to care for or mail; its address now answers 410
     if (!fs.existsSync(path.join(home(id), 'data'))) continue;
     const plan = rd('/srv/monitor-changes/' + id + '.plan.json', null);
     if (!plan || plan.plan !== 'trial' || !plan.start) continue;
