@@ -53,6 +53,11 @@ for l in L:
     if l.startswith(host+' {'):
         skip=True
         out+= [host+' {','\theader Content-Type "text/html; charset=utf-8"',
+               '\theader Strict-Transport-Security "max-age=31536000"',
+               '\theader X-Frame-Options "DENY"',
+               '\theader X-Content-Type-Options "nosniff"',
+               '\theader Referrer-Policy "no-referrer"',
+               '\theader Content-Security-Policy "default-src \x27none\x27; style-src \x27unsafe-inline\x27; frame-ancestors \x27none\x27"',
                '\trespond "<!doctype html><html lang=he dir=rtl><meta charset=utf-8><meta name=viewport content=\'width=device-width,initial-scale=1\'><title>המוניטור מנותק</title><body style=\'font-family:Heebo,Arial,sans-serif;text-align:center;padding:80px 20px;font-size:22px\'>המוניטור הזה מנותק. תודה רבה.</body></html>" 410','}']
         continue
     if skip:
